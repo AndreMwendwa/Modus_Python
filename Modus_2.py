@@ -244,6 +244,7 @@ def generation(n, per):
     TX_EM = use_tx('EM', per)
     TX_ATT = use_tx('ATT', per)
 
+    # Kiko -> Une seule matrice de TX_EM. Check avec timeit
     for iMotif in range(cNbMotif):
         EM[:, iMotif] = EM_base.iloc[:, iMotif] * TX_EM[:, iMotif]
         EM[:, iMotif + 22] = EM_base.iloc[:, iMotif] * (1 - TX_EM[:, iMotif])
@@ -251,8 +252,9 @@ def generation(n, per):
         ATT[:, iMotif + 22] = ATT_base.iloc[:, iMotif] * (1 - TX_ATT[:, iMotif])
 
     EM, ATT = equilib(EM, ATT)
-
-    Fusion = np.zeros((44,28))
+    # Matrice diagonales avec les 1 additionnels là ou il y a
+    # Kiko -> refait avec fonction de matrice diagonale.
+    Fusion = np.zeros((44, 28))
     Fusion[0, 0] = 1
     Fusion[1, 1] = 1
     Fusion[2, 2] = 1
