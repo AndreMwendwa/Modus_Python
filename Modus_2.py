@@ -153,12 +153,13 @@ def generation(n, per):
         depts = zone['DPRT']
 
         depts.index = range(1, cNbZone+1)
-        TX = np.ones((cNbZone, cNbMotif))
+        TX = np.ones((cNbZone, cNbMotif*cNbCat))
 
         for zon in range(1, cNbZone + 1):
             dep = depts[zon] - 1
             for motif in range(0, cNbMotif):
                 TX[zon-1, motif] = tx_desagr.iloc[motif, dep]
+                TX[zon - 1, motif+cNbMotif] = 1 - tx_desagr.iloc[motif, dep]
         return TX
 
 
@@ -246,11 +247,12 @@ def generation(n, per):
     TX_ATT = use_tx('ATT', per)
 
     # Kiko -> Une seule matrice de TX_EM. Check avec timeit
-    for iMotif in range(cNbMotif):
-        EM[:, iMotif] = EM_base.iloc[:, iMotif] * TX_EM[:, iMotif]
-        EM[:, iMotif + 22] = EM_base.iloc[:, iMotif] * (1 - TX_EM[:, iMotif])
-        ATT[:, iMotif] = ATT_base.iloc[:, iMotif] * TX_ATT[:, iMotif]
-        ATT[:, iMotif + 22] = ATT_base.iloc[:, iMotif] * (1 - TX_ATT[:, iMotif])
+    for iCat in cNbCat:
+        for iMotif in range(cNbMotif):
+            ident = iMotif + iCat
+            EM[:, ident] = EM_base.iloc[:, iMotif] * TX_EM[:, ident]
+            ATT[:, ident] = ATT_base.iloc[:, iMotif] * TX_ATT[:, ident]
+
 
     EM, ATT = equilib(EM, ATT)
     # Matrice diagonales avec les 1 additionnels là ou il y a
