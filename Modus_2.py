@@ -10,6 +10,7 @@ MWENDWA KIKO    19 juin 2021
 # Importation des modules nécessaires
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 import CstesStruct
 import CstesModus_0
 
@@ -254,51 +255,33 @@ def generation(n, per):
     EM, ATT = equilib(EM, ATT)
     # Matrice diagonales avec les 1 additionnels là ou il y a
     # Kiko -> refait avec fonction de matrice diagonale.
+    Motifs_Gen_Dist = defaultdict(list)     # C'est une nouvelle étape qu'on vient de créer après le rendez-vous de 22-06-21, dans
+    # laquelle on va décrire les combinaisons de motifs et à partir de ça la matrice de fusion.
+    # Les clés du dictionnaire corréspondent aux motifs - distribution, et les élements aux motifs génération (selon
+    # diapo 6 de la documentation de Modus)
+
+
+    Motifs_Gen_Dist[1].extend((1, ))
+    Motifs_Gen_Dist[2].extend((2, ))
+    Motifs_Gen_Dist[3].extend((3, 4))
+    Motifs_Gen_Dist[4].extend((5, 6))
+    Motifs_Gen_Dist[5].extend((7, 8))
+    Motifs_Gen_Dist[6].extend((9, 10))
+    Motifs_Gen_Dist[7].extend((11, 12))
+    Motifs_Gen_Dist[8].extend((13, 14))
+    Motifs_Gen_Dist[9].extend((15, 16))
+    Motifs_Gen_Dist[10].extend((17, 18))
+    Motifs_Gen_Dist[11].extend((19, ))
+    Motifs_Gen_Dist[12].extend((20,))
+    Motifs_Gen_Dist[13].extend((21,))
+    Motifs_Gen_Dist[14].extend((22,))
+
     Fusion = np.zeros((44, 28))
-    Fusion[0, 0] = 1
-    Fusion[1, 1] = 1
-    Fusion[2, 2] = 1
-    Fusion[3, 2] = 1
-    Fusion[4, 3] = 1
-    Fusion[5, 3] = 1
-    Fusion[6, 4] = 1
-    Fusion[7, 4] = 1
-    Fusion[8, 5] = 1
-    Fusion[9, 5] = 1
-    Fusion[10, 6] = 1
-    Fusion[11, 6] = 1
-    Fusion[12, 7] = 1
-    Fusion[13, 7] = 1
-    Fusion[14, 8] = 1
-    Fusion[15, 8] = 1
-    Fusion[16, 9] = 1
-    Fusion[17, 9] = 1
-    Fusion[18, 10] = 1
-    Fusion[19, 11] = 1
-    Fusion[20, 12] = 1
-    Fusion[21, 13] = 1
-    Fusion[22, 14] = 1
-    Fusion[23, 15] = 1
-    Fusion[24, 16] = 1
-    Fusion[25, 16] = 1
-    Fusion[26, 17] = 1
-    Fusion[27, 17] = 1
-    Fusion[28, 18] = 1
-    Fusion[29, 18] = 1
-    Fusion[30, 19] = 1
-    Fusion[31, 19] = 1
-    Fusion[32, 20] = 1
-    Fusion[33, 20] = 1
-    Fusion[34, 21] = 1
-    Fusion[35, 21] = 1
-    Fusion[36, 22] = 1
-    Fusion[37, 22] = 1
-    Fusion[38, 23] = 1
-    Fusion[39, 23] = 1
-    Fusion[40, 24] = 1
-    Fusion[41, 25] = 1
-    Fusion[42, 26] = 1
-    Fusion[43, 27] = 1
+    for colonne, value in Motifs_Gen_Dist.items():
+        for ligne in value:
+            Fusion[ligne-1, colonne-1] = 1
+            Fusion[ligne -1 + 22, colonne - 1 + 14] = 1
+
 
 
     EM_final = EM @ Fusion
