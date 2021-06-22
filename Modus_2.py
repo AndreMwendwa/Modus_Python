@@ -26,13 +26,13 @@ from CstesStruct import *
 # 0. TELETRAVAIL
 # ------------
 
-def teletravail(hor):   # Kiko - Il me semble que scen et n parlent finalement de la même chose. À confirmer. 
+def teletravail(per):   # Kiko - Il me semble que scen et n parlent finalement de la même chose. À confirmer. 
 
     TTVAQ = pd.read_csv(tauxTTVAQ.path, sep=tauxTTVAQ.sep)
     Modus_BD_zone = pd.DataFrame()      # Crées un dataframe vide pour aider à mettre les colonnes dans le bon ordre.
-    if hor == 'actuel':
+    if per == 'actuel':
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
-    elif hor == 'scen':
+    elif per == 'scen':
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
 
     for var in ['ZONE', 'PACT', 'PACTHQ', 'PACTAQ', 'ETOT', 'EMPHQ', 'EMPAQ']:
@@ -247,9 +247,9 @@ def generation(n, per):
     TX_ATT = use_tx('ATT', per)
 
     # Kiko -> Une seule matrice de TX_EM. Check avec timeit
-    for iCat in cNbCat:
+    for iCat in range(cNbCat):
         for iMotif in range(cNbMotif):
-            ident = iMotif + iCat
+            ident = iCat*cNbMotif + iMotif
             EM[:, ident] = EM_base.iloc[:, iMotif] * TX_EM[:, ident]
             ATT[:, ident] = ATT_base.iloc[:, iMotif] * TX_ATT[:, ident]
 
