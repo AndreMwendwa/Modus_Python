@@ -3,10 +3,24 @@
 # Importation des modules nécessaires à la réalisation des tests
 import pandas as pd
 import numpy as np
-from CstesModus_0 import *
+#from CstesModus_initiaux import *
+#from A_CstesModus import *
+#from CstesStruct import *
+
+import CstesStruct
+import A_CstesModus
+
+# Cette partie assure l'importation des constants,
+# et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
+from importlib import reload
+reload(A_CstesModus)
+reload(CstesStruct)
+from A_CstesModus import *
 from CstesStruct import *
 
-from Modus_2 import generation
+
+
+from C_Modus import generation
 
 EM_test_PPM, ATT_test_PPM = generation('actuel', 'PPM')
 EM_test_PPM = pd.DataFrame(EM_test_PPM)
