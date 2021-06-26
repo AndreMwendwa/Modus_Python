@@ -34,6 +34,7 @@ def teletravail(per):   # Kiko - Il me semble que scen et n parlent finalement d
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
     elif per == 'scen':
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
+    # Kiko - There's a problem here. You've confused per and hor I think.
 
     for var in ['ZONE', 'PACT', 'PACTHQ', 'PACTAQ', 'ETOT', 'EMPHQ', 'EMPAQ']:
         Modus_BD_zone[var] = Modus_BD_zone_Temp[var]
@@ -67,56 +68,27 @@ def teletravail(per):   # Kiko - Il me semble que scen et n parlent finalement d
 # ------------
 
 def generation(n, per):
+    from Prepare_Data import generation
+    generation = generation()
+    generation.n = n
+    generation.per = per
 
     # 0. Lecture des données de base
     # - a. Lecture des OS utilisées pour la génération
 
-    if n == 'actuel':         # Ce sont les résultats du modèle P + E (diapo 8 - chaine modus).
-        Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
-    elif n == 'scen':
-        Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
-
-    # VARGEN = PTOT PACT	PACTHQ PACTAQ RETR SCOLSUP SCOLSEC SCOLPRIM PSCOL CHOM PNACTA
-    # PNACTACHO ETOT EMPHQ EMPAQ EMPCOM EMPLOI EMPACH SUP_LE SEC_LE PRIM_LE SCOL_LE dans CtesCalibr
-    Pop_Emp = pd.DataFrame()    # Comme précedemment, un dataframe vide pour permettre de réorganiser le colonnes.
-    for VAR in list(VARGEN):
-        Pop_Emp[VAR] = Pop_Emp_temp[VAR]
-
-    Pop_Emp.index = range(1, cNbZone + 1)  # Pour donner les mêmes indices que SAS.
+    Pop_Emp = generation.Pop_Emp()
 
     # - b. Lecture des paramètres de génération
 
-    if per == 'PPM':
-        EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hpm_par.sas7bdat'))
-        ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                          '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hpm_par.sas7bdat'))
-    elif per == 'PCJ':
-        EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hc_par.sas7bdat'))
-        ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                          '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hc_par.sas7bdat'))
-    elif per =='PPS':
-        EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hps_par.sas7bdat'))
-        ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                          '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hps_par.sas7bdat'))
-
-    # On fait en sorte que les indices soient les motifs des déplacements
-    EM_PAR.index = EM_PAR['MOTIF'].astype('int64')
-    ATT_PAR.index = ATT_PAR['MOTIF'].astype('int64')
-
-    # La même que la ligne 55 du code SAS, permettant de garder le même ordre de colonnes que dans VARGEN.
-    EM_PAR = EM_PAR[VARGEN]
-    ATT_PAR = ATT_PAR[VARGEN]
-
+    EM_PAR = generation.EM_PAR()
+    ATT_PAR = generation.ATT_PAR()
 
     # - c. Lecture des taux de désagrégation en différentes catégories d'usagers
 
     # Combinés dans une seule fonction avec l'étape de la multiplication par ces taux,
     # contrairement à ce qui se passe sous SAS
 
-    def use_tx(type, per):   # À remplacer par les bonnes localisation:
+    '''def use_tx(type, per):   # À remplacer par les bonnes localisation:
         if type == 'EM':
             if per == 'PPM':
                 tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
@@ -160,7 +132,7 @@ def generation(n, per):
             for motif in range(0, cNbMotif):
                 TX[zon-1, motif] = tx_desagr.iloc[motif, dep]
                 TX[zon - 1, motif+cNbMotif] = 1 - tx_desagr.iloc[motif, dep]
-        return TX
+        return TX'''
 
 
 
@@ -243,8 +215,8 @@ def generation(n, per):
     EM = np.ones((cNbZone,(cNbCat-1)*cNbMotif + cNbMotif))
     ATT = np.ones((cNbZone, (cNbCat - 1) * cNbMotif + cNbMotif))
 
-    TX_EM = use_tx('EM', per)
-    TX_ATT = use_tx('ATT', per)
+    TX_EM = generation.use_tx('EM')
+    TX_ATT = generation.use_tx('ATT')
 
     # Kiko -> Une seule matrice de TX_EM. Check avec timeit
     for iCat in range(cNbCat):
