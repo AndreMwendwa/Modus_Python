@@ -31,10 +31,11 @@ class generation:
         # VARGEN = PTOT PACT	PACTHQ PACTAQ RETR SCOLSUP SCOLSEC SCOLPRIM PSCOL CHOM PNACTA
         # PNACTACHO ETOT EMPHQ EMPAQ EMPCOM EMPLOI EMPACH SUP_LE SEC_LE PRIM_LE SCOL_LE dans CtesCalibr
         if self.n == 'actuel':
+        #Attention! n est la variable d'instance ici, pas la variable de classe.
             Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
         elif self.n == 'scen':
             Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
-        #Pop_Emp_temp = pd.read_sas(Pop_Emp[f'{generation.n}'])
+        #Pop_Emp_temp = pd.read_sas(Pop_Emp[self.n])
         Pop_Emp = pd.DataFrame()  # Un dataframe vide pour permettre de réorganiser le colonnes.
 
         for VAR in list(VARGEN):
@@ -129,6 +130,14 @@ class generation:
                 TX[zon - 1, motif+cNbMotif] = 1 - tx_desagr.iloc[motif, dep]
         return TX
 
+    def CSTAT_ClasseAcc(self):
+        temp_df = pd.read_sas(Pop_Emp[self.n])
+        CSTAT = temp_df.CSTAT
+        ClasseAcc = temp_df.ClasseAcc
+        CSTAT.index = range(1, cNbZone+1)
+        ClasseAcc.index = range(1, cNbZone + 1)
+        return CSTAT, ClasseAcc
+
 
 # 2. Lecture des donnés interzonales
 
@@ -172,8 +181,14 @@ class calcul_util:
 
     def DVOL(self):
         return pd.read_csv(Donnees_Interz[f'dist_vol_{n}'].path, sep=Donnees_Interz[f'dist_vol_{n}'].sep)
+
     def CTTC(self):
         return pd.read_csv(Donnees_Interz[f'couttc_{n}'].path, sep=Donnees_Interz[f'couttc_{n}'].sep)
+
+    def NBVELIB(self):
+        NBVELIB = pd.read_csv(Capa_Velib[n].path, sep=Capa_Velib[n].sep)
+        NBVELIB.index = range(1, cNbZone+1)
+        return NBVELIB
 
 calcul_util = calcul_util()
 generation = generation()
@@ -182,13 +197,36 @@ generation.n = 'actuel'
 
 OD = pd.concat([calcul_util.TTCM(), calcul_util.TTCS(), calcul_util.TTCC(), calcul_util.TVPM(), calcul_util.TVPS(),
            calcul_util.TVPC(), calcul_util.DVOL(), calcul_util.CTTC()], axis = 1)
-
-OD['CTATO'] = generation.Pop_Emp()['CSTAT']
-
-
-
 OD = OD.loc[:,~OD.columns.duplicated()]
 
+CSTAT, ClasseAcc = generation.CSTAT_ClasseAcc()
+OD = pd.merge(OD, CSTAT, left_on='ZONEO', right_index=True, how = 'left')
+OD = pd.merge(OD, CSTAT, left_on='ZONED', right_index=True, how = 'left')
+OD['CSTAT'] = (OD['CSTAT_x'] + OD['CSTAT_y'])/2
+del OD['CSTAT_x'], OD['CSTAT_y']
+
+OD = pd.merge(OD, ClasseAcc, left_on='ZONEO', right_index=True, how = 'left')
+OD = pd.merge(OD, ClasseAcc, left_on='ZONED', right_index=True, how = 'left')
+
+OD = OD.rename(columns = {'ClasseAcc_x': 'ORCLACC', 'ClasseAcc_y': 'DESTCLACC'})
+
+# import de la capacité des stations vélib
+NBVELIB = calcul_util.NBVELIB()
+OD = pd.merge(OD, NBVELIB['CAPA'], left_on='ZONEO', right_index=True, how='left')
+OD = pd.merge(OD, NBVELIB['NBSTAT'], left_on='ZONEO', right_index=True, how='left')
+OD = OD.rename(columns = {'CAPA': 'CAPAO', 'NBSTAT':'NBSTATO'})
+
+OD = pd.merge(OD, NBVELIB['CAPA'], left_on='ZONED', right_index=True, how='left')
+OD = pd.merge(OD, NBVELIB['NBSTAT'], left_on='ZONED', right_index=True, how='left')
+OD = OD.rename(columns = {'CAPA': 'CAPAD', 'NBSTAT':'NBSTATD'})
+
+OD['CAPVELIB'] = (OD['CAPAO'] * OD['CAPAD'])**0.5
+OD['NBVELIB'] = (OD['NBSTATO']*OD['NBSTATD'])**0.5
+
+del OD['CAPAO'], OD['CAPAD'], OD['NBSTATO'], OD['NBSTATD']
+
+# 3. Remplacement des valeurs manquantes par des 0
+OD.fillna(0, inplace=True)
 
 
 
