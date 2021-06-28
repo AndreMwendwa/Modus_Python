@@ -34,6 +34,7 @@ class generation:
             Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
         elif self.n == 'scen':
             Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
+        #Pop_Emp_temp = pd.read_sas(Pop_Emp[f'{generation.n}'])
         Pop_Emp = pd.DataFrame()  # Un dataframe vide pour permettre de réorganiser le colonnes.
 
         for VAR in list(VARGEN):
@@ -110,6 +111,7 @@ class generation:
                 tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
                                                      '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hps.txt')
                                         , sep='\t')
+        #tx_desagr = pd.read_csv(tx_desagr[f'{type}_{per}'].path, sep = tx_desagr[f'{type}_{per}'].sep)
         del tx_desagr['MOTIF']
         tx_desagr.index = range(1, 23)
 
@@ -133,8 +135,8 @@ class generation:
 
 # IV. DONNES INTERZONALES
 OD = pd.DataFrame(np.zeros((cNbZone,cNbZone)))
-OD.columns = range(1, 1290)
-OD.index = range(1, 1290)
+OD.columns = range(1, cNbZone+1)
+OD.index = range(1, cNbZone+1)
 OD = OD.stack().reset_index()
 OD.map({'level_0': 'ZONEO', 'level_1 ': 'ZONED'})
 OD.columns = ['ZONEO', 'ZONED', 0]
