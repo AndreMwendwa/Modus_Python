@@ -22,7 +22,8 @@ from CstesStruct import *
 
 @dataclass
 class generation:
-
+# Kiko -> can perhaps be done like the other dataclass, with instead of if statements, a dictionary with names and,
+# based on what is entered as n and per different values are read.
     per: str = ''
     n: str = ''
 
@@ -144,13 +145,19 @@ class calcul_util:
     n: str = ''
 
     def TTCM(self):
-        return pd.read_csv(Donnees_Interz[f'tps_TC_M_{n}'].path, sep = Donnees_Interz[f'tps_TC_M_{n}'].sep)
+        return pd.read_csv(Donnees_Interz[f'tps_TC_M_{n}'].path, sep = Donnees_Interz[f'tps_TC_M_{n}'].sep,
+                           header = 0, names = ['ZONEO', 'ZONED', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM',
+                                                'TATT_PPM', 'TACC_PPM'])
 
     def TTCS(self):
-        return pd.read_csv(Donnees_Interz[f'tps_TC_S_{n}'].path, sep = Donnees_Interz[f'tps_TC_S_{n}'].sep)
+        return pd.read_csv(Donnees_Interz[f'tps_TC_S_{n}'].path, sep = Donnees_Interz[f'tps_TC_S_{n}'].sep,
+                           header = 0, names = ['ZONEO', 'ZONED', 'TRAB_PPS', 'TVEH_PPS', 'TMAR_PPS',
+                                                'TATT_PPS', 'TACC_PPS'])
 
     def TTCC(self):
-        return pd.read_csv(Donnees_Interz[f'tps_TC_C_{n}'].path, sep = Donnees_Interz[f'tps_TC_C_{n}'].sep)
+        return pd.read_csv(Donnees_Interz[f'tps_TC_C_{n}'].path, sep = Donnees_Interz[f'tps_TC_C_{n}'].sep,
+                           header = 0, names = ['ZONEO', 'ZONED', 'TRAB_PCJ', 'TVEH_PCJ', 'TMAR_PCJ',
+                                                'TATT_PCJ', 'TACC_PCJ'])
 
     def TVPM(self):
         return pd.read_csv(Donnees_Interz[f'tps_VP_M_{n}'].path, sep=Donnees_Interz[f'tps_VP_M_{n}'].sep)
@@ -163,15 +170,22 @@ class calcul_util:
 
     def DVOL(self):
         return pd.read_csv(Donnees_Interz[f'dist_vol_{n}'].path, sep=Donnees_Interz[f'dist_vol_{n}'].sep)
+    def CTTC(self):
+        return pd.read_csv(Donnees_Interz[f'couttc_{n}'].path, sep=Donnees_Interz[f'couttc_{n}'].sep)
 
 calcul_util = calcul_util()
+generation = generation()
 calcul_util.n = 'actuel'
+generation.n = 'actuel'
 
 OD = pd.concat([calcul_util.TTCM(), calcul_util.TTCS(), calcul_util.TTCC(), calcul_util.TVPM(), calcul_util.TVPS(),
-           calcul_util.TVPC(), calcul_util.DVOL()], axis = 1)
-OD.drop(['ZONEO', 'ZONED'], axis = 1, inplace = True)
+           calcul_util.TVPC(), calcul_util.DVOL(), calcul_util.CTTC()], axis = 1)
+
+OD['CTATO'] = generation.Pop_Emp()['CSTAT']
 
 
+
+OD = OD.loc[:,~OD.columns.duplicated()]
 
 
 
