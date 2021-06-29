@@ -28,13 +28,6 @@ class generation:
     n: str = ''
 
     def Pop_Emp(self):
-        '''# VARGEN = PTOT PACT	PACTHQ PACTAQ RETR SCOLSUP SCOLSEC SCOLPRIM PSCOL CHOM PNACTA
-        # PNACTACHO ETOT EMPHQ EMPAQ EMPCOM EMPLOI EMPACH SUP_LE SEC_LE PRIM_LE SCOL_LE dans CtesCalibr
-        if self.n == 'actuel':
-        #Attention! n est la variable d'instance ici, pas la variable de classe.
-            Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
-        elif self.n == 'scen':
-            Pop_Emp_temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))'''
 
         Pop_Emp_temp = pd.read_sas(Pop_Emp[self.n])
         Pop_Emp_df = pd.DataFrame()  # Un dataframe vide pour permettre de réorganiser le colonnes.
@@ -46,17 +39,6 @@ class generation:
         return Pop_Emp_df
 
     def EM_PAR(self):
-        '''if self.per == 'PPM':
-            EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                              '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hpm_par.sas7bdat'))
-
-        elif self.per == 'PCJ':
-            EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                              '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hc_par.sas7bdat'))
-
-        elif self.per == 'PPS':
-            EM_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                              '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hps_par.sas7bdat'))'''
 
         # On fait en sorte que les indices soient les motifs des déplacements
         EM_PAR_df = pd.read_sas(EM_PAR[self.per])
@@ -67,15 +49,6 @@ class generation:
         return EM_PAR_df
 
     def ATT_PAR(self):
-        '''if self.per == 'PPM':
-            ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                               '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hpm_par.sas7bdat'))
-        elif self.per == 'PCJ':
-            ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                               '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hc_par.sas7bdat'))
-        elif self.per == 'PPS':
-            ATT_PAR = pd.read_sas(os.path.join(dir_resultCalibrage,
-                                               '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hps_par.sas7bdat'))'''
 
         # On fait en sorte que les indices soient les motifs des déplacements
         ATT_PAR_df = pd.read_sas(ATT_PAR[self.per])
@@ -87,34 +60,6 @@ class generation:
 
     def use_tx(self, type):   # À remplacer par les bonnes localisation:
         # Kiko fonction avec une cc elevé
-        '''if type == 'EM':
-            if self.per == 'PPM':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hpm.txt')
-                                        , sep = '\t')
-                # Kiko - C'est quoi la différence entre tx_desagr_em1 et tx_desagr_em2 ?
-            elif self.per == 'PCJ':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hc.txt')
-                                            , sep='\t')
-            elif self.per == 'PPS':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hps.txt')
-                                        , sep='\t')
-
-        if type == 'ATT':
-            if self.per == 'PPM':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hpm.txt')
-                                        , sep = '\t')
-            elif self.per == 'PCJ':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hc.txt')
-                                        , sep='\t')
-            elif self.per == 'PPS':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hps.txt')
-                                        , sep='\t')'''
         tx_desagr_df = pd.read_csv(tx_desagr[f'{type}_{self.per}'].path, sep = tx_desagr[f'{type}_{self.per}'].sep)
         del tx_desagr_df['MOTIF']
         tx_desagr_df.index = range(1, 23)
@@ -134,22 +79,15 @@ class generation:
         return TX
 
     def Pop_Emp_All_Cols(self):
-        temp_df = pd.read_sas(Pop_Emp[self.n])
-        CSTAT = temp_df.CSTAT
-        ClasseAcc = temp_df.ClasseAcc
-        DENSH = temp_df.DENSH
-        PTOT = temp_df.PTOT
-        ETOT = temp_df.ETOT
-        CSTAT.index = range(1, cNbZone+1)
-        ClasseAcc.index = range(1, cNbZone + 1)
-        DENSH.index = range(1, cNbZone+1)
-        PTOT.index = range(1, cNbZone+1)
-        ETOT.index = range(1, cNbZone + 1)
-        return CSTAT, ClasseAcc, DENSH, PTOT, ETOT
+        Pop_Emp_df = pd.read_sas(Pop_Emp[self.n])
+        return Pop_Emp_df
 
 
 
-# 2. Lecture des donnés interzonales
+
+'''# 2. Lecture des donnés interzonales
+
+# Kiko - mets tout ça dans une classe.
 
 # IV. DONNES INTERZONALES
 OD = pd.DataFrame(np.zeros((cNbZone,cNbZone)))
@@ -185,7 +123,9 @@ class calcul_util:
         return pd.read_csv(Donnees_Interz[f'tps_VP_S_{self.n}'].path, sep=Donnees_Interz[f'tps_VP_S_{self.n}'].sep)
 
     def TVPC(self):
-        return pd.read_csv(Donnees_Interz[f'tps_VP_C_{self.n}'].path, sep=Donnees_Interz[f'tps_VP_C_{self.n}'].sep)
+        df = pd.read_csv(Donnees_Interz[f'tps_VP_C_{self.n}'].path, sep=Donnees_Interz[f'tps_VP_C_{self.n}'].sep)
+        df.rename(columns={"TVPM":"TVPC"}, inplace=True)
+        return df
 
     def DVOL(self):
         return pd.read_csv(Donnees_Interz[f'dist_vol_{self.n}'].path, sep=Donnees_Interz[f'dist_vol_{self.n}'].sep)
@@ -207,7 +147,15 @@ OD = pd.concat([calcul_util.TTCM(), calcul_util.TTCS(), calcul_util.TTCC(), calc
            calcul_util.TVPC(), calcul_util.DVOL(), calcul_util.CTTC()], axis = 1)
 OD = OD.loc[:,~OD.columns.duplicated()]
 
-CSTAT, ClasseAcc, DENSH, PTOT, ETOT = generation.Pop_Emp_All_Cols()
+Pop_Emp_All_colsdf = generation.Pop_Emp_All_Cols()  #Dataframe de tous les 34 colonnes, contrairement au dataframe
+# Pop-Emp, qui ne contient que 28
+Pop_Emp_All_colsdf.index = range(1, cNbZone+1)
+CSTAT = Pop_Emp_All_colsdf.CSTAT
+ClasseAcc = Pop_Emp_All_colsdf.ClasseAcc
+DENSH = Pop_Emp_All_colsdf.DENSH
+PTOT = Pop_Emp_All_colsdf.PTOT
+ETOT = Pop_Emp_All_colsdf.ETOT
+CSTAT.index = range(1, cNbZone+1)
 OD = pd.merge(OD, CSTAT, left_on='ZONEO', right_index=True, how = 'left')
 OD = pd.merge(OD, CSTAT, left_on='ZONED', right_index=True, how = 'left')
 OD['CSTAT'] = (OD['CSTAT_x'] + OD['CSTAT_y'])/2
@@ -258,15 +206,12 @@ OD.fillna(0, inplace=True)
 OD.replace(np.nan, 0, inplace=True)
 
 # IV. DONNEES INTRAZONALES
+# - a. identification des 3 zones les plus proches au départ d'une zone
 # Trouver les trois zones les plus proches, sans faire d'itération, plutôt en utilisant les opérations de pandas.
-OD1 = OD.sort_values(by=['DVOL'])
+OD_sans_intra = OD[OD['ZONEO'] != OD['ZONED']]
+OD1 = OD_sans_intra.sort_values(by=['DVOL'])
 OD1ST = OD1.drop_duplicates(subset='ZONEO', keep='first')
-#OD1ST.sort_values(by=['ZONEO'], inplace = True)
 OD1 = OD1[~OD1.isin(OD1ST)].dropna()
-#Repeat to get second and third closest.
-# OD3 = OD1.loc[OD2.index]
-# cond = OD3['Email'].isin(df2['Email'])
-# OD1 = OD1.sort_values(by=['DVOL'])
 OD2ND = OD1.drop_duplicates(subset='ZONEO', keep='first')
 OD1 = OD1[~OD1.isin(OD2ND)].dropna()
 OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
@@ -275,12 +220,40 @@ OD_3_proches = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
 OD_3_proches = OD_3_proches.sort_values(by = ['ZONEO'])
 # Kiko -> Beaucoup des résultats sont 0 pour la DVOL -> est-ce qu'il y a un problème?
 
+# - b. calcul d'une distance caractéristique et du temps intrazonal d'après MODUSv2.0
 DCAR = OD_3_proches.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
+DINTRA = 0.09*np.sqrt(Pop_Emp_All_colsdf['STOT']) + 0.2*np.sqrt(Pop_Emp_All_colsdf['SBAT']) + 0.05
+
+# -  Calcul des temps minimaux au départ d'une zone : préciser "Tab" en 1ère lecture des tempsVP, puis à chaque iter
+
+def TVPMIN(type):
+    OD1 = OD_sans_intra.sort_values(by=[f'TVP{type}'])
+    OD1ST = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    OD1 = OD1[~OD1.isin(OD1ST)].dropna()
+    OD2ND = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    OD1 = OD1[~OD1.isin(OD2ND)].dropna()
+    OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
+
+    OD_3_proches = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
+    OD_3_proches = OD_3_proches.sort_values(by = ['ZONEO'])
+    TCAR = OD_3_proches.groupby(by = 'ZONEO').mean().loc[:, f'TVP{type}']
+    return TCAR
+
+def prepare_TVPintra(n):
+    TVPMCAR = TVPMIN('M')
+    TVPSCAR = TVPMIN('S')
+    TVPCCAR = TVPMIN('C')
+    TVPINTRA = pd.concat([TVPMCAR, TVPSCAR, TVPCCAR], axis = 1)
+    TVPINTRA['TVPM'] *= DINTRA/DCAR     # temps HPM intra par "homothétie"
+    TVPINTRA['TVPS'] *= DINTRA / DCAR   # temps HPS intra par "homothétie"
+    TVPINTRA['TVPC'] *= DINTRA / DCAR   # temps HC intra par "homothétie"
+    TVPINTRA = TVPINTRA[TVPINTRA.notna().any(axis = 1)]     # Kiko - > On se retrouve finalement avec une série de
+    # colonnes difficiles à expliquer. Pourquoi 0 à 1273 ?
+
+def prepare_TTCintra(n):
 
 
-
-
-#Kiko -> groupby DVOL mean
+#Kiko -> groupby DVOL mean'''
 
 
 
