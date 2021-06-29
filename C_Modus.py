@@ -88,58 +88,7 @@ def generation(n, per):
     # Combinés dans une seule fonction avec l'étape de la multiplication par ces taux,
     # contrairement à ce qui se passe sous SAS
 
-    '''def use_tx(type, per):   # À remplacer par les bonnes localisation:
-        if type == 'EM':
-            if per == 'PPM':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hpm.txt')
-                                        , sep = '\t')
-                # Kiko - C'est quoi la différence entre tx_desagr_em1 et tx_desagr_em2 ?
-            elif per == 'PCJ':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hc.txt')
-                                            , sep='\t')
-            elif per == 'PPS':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hps.txt')
-                                        , sep='\t')
 
-        if type == 'ATT':
-            if per == 'PPM':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hpm.txt')
-                                        , sep = '\t')
-            elif per == 'PCJ':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hc.txt')
-                                        , sep='\t')
-            elif per == 'PPS':
-                tx_desagr = pd.read_csv(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hps.txt')
-                                        , sep='\t')
-        del tx_desagr['MOTIF']
-        tx_desagr.index = range(1, 23)
-
-        zone = pd.read_sas(os.path.join(dir_data, 'Zonage\\zone.sas7bdat'))
-        zone['DPRT'] = zone['DPRT'].astype('int64')
-        depts = zone['DPRT']
-
-        depts.index = range(1, cNbZone+1)
-        TX = np.ones((cNbZone, cNbMotif*cNbCat))
-
-        for zon in range(1, cNbZone + 1):
-            dep = depts[zon] - 1
-            for motif in range(0, cNbMotif):
-                TX[zon-1, motif] = tx_desagr.iloc[motif, dep]
-                TX[zon - 1, motif+cNbMotif] = 1 - tx_desagr.iloc[motif, dep]
-        return TX'''
-
-
-
-    '''#Kiko - Ce n'est pas vraiment ce qui se passe avec le code on MODUS. 
-    TX_EM = TX_EM.T
-    TX_ATT = TX_ATT.T'''
-    
     # 1. Réalisation de l'étape de génération
 
     # - a. Module d'équilibrage des émissions et attractions par moyennage
