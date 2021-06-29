@@ -1,0 +1,16 @@
+# .gitignore
+
+__pycache__
+.idea
+calcul utilités données
+__init__.py
+CstesModus_initiaux.py
+em_hps_2012.sas7bdat
+em_hpm_2012.sas7bdat
+EM_PPM.csv
+Modus_2b.py
+130523_ZONE_COMMUNE.txt
+Outils.py
+Exec_Modus.py
+CstesStruct.py
+README.md
