@@ -150,7 +150,7 @@ class generation:
 
 
 # 2. Lecture des donnés interzonales
-'''
+
 # IV. DONNES INTERZONALES
 OD = pd.DataFrame(np.zeros((cNbZone,cNbZone)))
 OD.columns = range(1, cNbZone+1)
@@ -254,18 +254,33 @@ OD = pd.merge(OD, DENSH, left_on='ZONED', right_index=True, how='left')
 OD = pd.merge(OD, PTOT, left_on='ZONED', right_index=True, how='left')
 OD = pd.merge(OD, ETOT, left_on='ZONED', right_index=True, how='left')
 OD = OD.rename(columns = {'DENSH': 'DENSHD', 'PTOT':'PTOTD', 'ETOT': 'ETOTD'})
-
+OD.fillna(0, inplace=True)
+OD.replace(np.nan, 0, inplace=True)
 
 # IV. DONNEES INTRAZONALES
+# Trouver les trois zones les plus proches, sans faire d'itération, plutôt en utilisant les opérations de pandas.
 OD1 = OD.sort_values(by=['DVOL'])
-OD2 = OD1.drop_duplicates(subset='ZONEO', keep='first')
-OD2.sort_values(by=['ZONEO'], inplace = True)
-
+OD1ST = OD1.drop_duplicates(subset='ZONEO', keep='first')
+#OD1ST.sort_values(by=['ZONEO'], inplace = True)
+OD1 = OD1[~OD1.isin(OD1ST)].dropna()
 #Repeat to get second and third closest.
+# OD3 = OD1.loc[OD2.index]
+# cond = OD3['Email'].isin(df2['Email'])
+# OD1 = OD1.sort_values(by=['DVOL'])
+OD2ND = OD1.drop_duplicates(subset='ZONEO', keep='first')
+OD1 = OD1[~OD1.isin(OD2ND)].dropna()
+OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
 
-OD3 = OD1.loc[OD2.index]'''
+OD_3_proches = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
+OD_3_proches = OD_3_proches.sort_values(by = ['ZONEO'])
+# Kiko -> Beaucoup des résultats sont 0 pour la DVOL -> est-ce qu'il y a un problème?
+
+DCAR = OD_3_proches.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
 
 
+
+
+#Kiko -> groupby DVOL mean
 
 
 
