@@ -84,8 +84,7 @@ class generation:
 
 
 
-
-'''# 2. Lecture des donnés interzonales
+# 2. Lecture des donnés interzonales
 
 # Kiko - mets tout ça dans une classe.
 
@@ -158,8 +157,8 @@ ETOT = Pop_Emp_All_colsdf.ETOT
 CSTAT.index = range(1, cNbZone+1)
 OD = pd.merge(OD, CSTAT, left_on='ZONEO', right_index=True, how = 'left')
 OD = pd.merge(OD, CSTAT, left_on='ZONED', right_index=True, how = 'left')
-OD['CSTAT'] = (OD['CSTAT_x'] + OD['CSTAT_y'])/2
-del OD['CSTAT_x'], OD['CSTAT_y']
+OD['CSTATMOY'] = (OD['CSTAT_x'] + OD['CSTAT_y'])/2
+OD.rename(columns={'CSTAT_x':'CSTATO', 'CSTAT_y':'CSTATD'}, inplace=True)
 
 OD = pd.merge(OD, ClasseAcc, left_on='ZONEO', right_index=True, how = 'left')
 OD = pd.merge(OD, ClasseAcc, left_on='ZONED', right_index=True, how = 'left')
@@ -204,6 +203,10 @@ OD = pd.merge(OD, ETOT, left_on='ZONED', right_index=True, how='left')
 OD = OD.rename(columns = {'DENSH': 'DENSHD', 'PTOT':'PTOTD', 'ETOT': 'ETOTD'})
 OD.fillna(0, inplace=True)
 OD.replace(np.nan, 0, inplace=True)
+OD.drop(OD.index[OD['ZONEO'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
+OD.drop(OD.index[OD['ZONED'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
 
 # IV. DONNEES INTRAZONALES
 # - a. identification des 3 zones les plus proches au départ d'une zone
@@ -216,12 +219,12 @@ OD2ND = OD1.drop_duplicates(subset='ZONEO', keep='first')
 OD1 = OD1[~OD1.isin(OD2ND)].dropna()
 OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
 
-OD_3_proches = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
-OD_3_proches = OD_3_proches.sort_values(by = ['ZONEO'])
+OD_proche_dvol = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
+OD_proche_dvol = OD_proche_dvol.sort_values(by = ['ZONEO'])
 # Kiko -> Beaucoup des résultats sont 0 pour la DVOL -> est-ce qu'il y a un problème?
 
 # - b. calcul d'une distance caractéristique et du temps intrazonal d'après MODUSv2.0
-DCAR = OD_3_proches.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
+DCAR = OD_proche_dvol.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
 DINTRA = 0.09*np.sqrt(Pop_Emp_All_colsdf['STOT']) + 0.2*np.sqrt(Pop_Emp_All_colsdf['SBAT']) + 0.05
 
 # -  Calcul des temps minimaux au départ d'une zone : préciser "Tab" en 1ère lecture des tempsVP, puis à chaque iter
@@ -234,12 +237,12 @@ def TVPMIN(type):
     OD1 = OD1[~OD1.isin(OD2ND)].dropna()
     OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
 
-    OD_3_proches = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
-    OD_3_proches = OD_3_proches.sort_values(by = ['ZONEO'])
-    TCAR = OD_3_proches.groupby(by = 'ZONEO').mean().loc[:, f'TVP{type}']
+    OD_proche_temps = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
+    OD_proche_temps = OD_proche_temps.sort_values(by = ['ZONEO'])
+    TCAR = OD_proche_temps.groupby(by = 'ZONEO').mean().loc[:, f'TVP{type}']
     return TCAR
 
-def prepare_TVPintra(n):
+def prepare_TVPintra():
     TVPMCAR = TVPMIN('M')
     TVPSCAR = TVPMIN('S')
     TVPCCAR = TVPMIN('C')
@@ -249,12 +252,43 @@ def prepare_TVPintra(n):
     TVPINTRA['TVPC'] *= DINTRA / DCAR   # temps HC intra par "homothétie"
     TVPINTRA = TVPINTRA[TVPINTRA.notna().any(axis = 1)]     # Kiko - > On se retrouve finalement avec une série de
     # colonnes difficiles à expliquer. Pourquoi 0 à 1273 ?
+    return TVPINTRA
 
-def prepare_TTCintra(n):
+def prepare_TTCintra():
+    OD_proche_TTC = pd.concat([OD1ST, OD2ND, OD3RD], axis=0)
+    OD_proche_TTC = OD_proche_dvol.sort_values(by=['ZONEO'])
+    OD_proche_TTC['TTOT'] = OD_proche_TTC['TRAB_PPM'] + OD_proche_TTC['TVEH_PPM'] + OD_proche_TTC['TATT_PPM'] + \
+                            OD_proche_TTC['TMAR_PPM'] + OD_proche_TTC['TACC_PPM']
+    OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT'])
+    OD_proche_TTC = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    TTCINTRA = OD_proche_TTC[['ZONEO', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM', 'TATT_PPM', 'TACC_PPM', 'TRAB_PPS', 'TVEH_PPS',
+                             'TMAR_PPS', 'TATT_PPS', 'TACC_PPS', 'TRAB_PCJ', 'TVEH_PCJ', 'TMAR_PCJ', 'TATT_PCJ',
+                              'TACC_PCJ']]
+    TTCINTRA = TTCINTRA.sort_values(by = ['ZONEO'])
+    return TTCINTRA
 
 
-#Kiko -> groupby DVOL mean'''
+
+TVPINTRA = prepare_TVPintra()
+TTCINTRA = prepare_TTCintra()
+list_cols_TTC = list(TTCINTRA.columns)
+
+OD.loc[OD['ZONEO'] == OD['ZONED'], ['TVPM', 'TVPS', 'TVPC']] = TVPINTRA
+OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
+
+#Kiko -> groupby DVOL mean
 
 
+# set(list(bdinter['ZONEO'])) - set(list(TTCINTRA['ZONEO']))
+# set(list(bdinter['ZONEO'])) - set(list(TVPINTRA.index))
+# set(list(TTCINTRA['ZONEO'])) - set(list(bdinter['ZONEO']))
+#
+# set(list(bdinter.columns)).symmetric_difference(set(list(OD.columns)))
 
-
+bdinter = pd.read_sas('bdinter2012.sas7bdat')
+bdinter.rename(columns={'TMAR_HC':'TMAR_PCJ', 'TACC_HC':'TACC_PCJ', 'TMAR_HPS':'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
+                        'TACC_HPS':'TACC_PPS', 'TRAB_HPM':'TRAB_PPM', 'TATT_HPS':'TATT_PPS','TRAB_HPS':'TRAB_PPS',
+                        'TMAR_HPM':'TMAR_PPM', 'TVEH_HPS':'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM':'TVEH_PPM',
+                        'TACC_HPM':'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM':'TATT_PPM', 'CTKKM':'CTTKKM'}, inplace=True)
+for i in range(1,19):
+    bdinter.drop(columns=f'CO{i}', inplace=True)
