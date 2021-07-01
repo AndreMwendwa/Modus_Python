@@ -250,7 +250,8 @@ def prepare_TVPintra():
     TVPINTRA['TVPM'] *= DINTRA/DCAR     # temps HPM intra par "homothétie"
     TVPINTRA['TVPS'] *= DINTRA / DCAR   # temps HPS intra par "homothétie"
     TVPINTRA['TVPC'] *= DINTRA / DCAR   # temps HC intra par "homothétie"
-    TVPINTRA = TVPINTRA[TVPINTRA.notna().any(axis = 1)]     # Kiko - > On se retrouve finalement avec une série de
+    TVPINTRA.fillna(value=0, inplace=True)
+    #TVPINTRA = TVPINTRA[TVPINTRA.notna().any(axis = 1)]     # Kiko - > On se retrouve finalement avec une série de
     # colonnes difficiles à expliquer. Pourquoi 0 à 1273 ?
     return TVPINTRA
 
@@ -271,10 +272,16 @@ def prepare_TTCintra():
 
 TVPINTRA = prepare_TVPintra()
 TTCINTRA = prepare_TTCintra()
+TVPINTRA.index = TVPINTRA.index.astype('int64')
+TTCINTRA['ZONEO'] = TTCINTRA['ZONEO'].astype('int64')
+TTCINTRA.index = TTCINTRA['ZONEO']
 list_cols_TTC = list(TTCINTRA.columns)
 
+OD.index = OD['ZONEO']
+del OD['ZONEO']
 OD.loc[OD['ZONEO'] == OD['ZONED'], ['TVPM', 'TVPS', 'TVPC']] = TVPINTRA
 OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
+OD.reset_index(inplace = True)
 
 #Kiko -> groupby DVOL mean
 
@@ -292,3 +299,5 @@ bdinter.rename(columns={'TMAR_HC':'TMAR_PCJ', 'TACC_HC':'TACC_PCJ', 'TMAR_HPS':'
                         'TACC_HPM':'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM':'TATT_PPM', 'CTKKM':'CTTKKM'}, inplace=True)
 for i in range(1,19):
     bdinter.drop(columns=f'CO{i}', inplace=True)
+
+diff = (OD - bdinter)/bdinter
