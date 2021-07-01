@@ -142,8 +142,16 @@ generation = generation()
 calcul_util.n = 'actuel'
 generation.n = 'actuel'
 
-OD = pd.concat([calcul_util.TTCM(), calcul_util.TTCS(), calcul_util.TTCC(), calcul_util.TVPM(), calcul_util.TVPS(),
-           calcul_util.TVPC(), calcul_util.DVOL(), calcul_util.CTTC()], axis = 1)
+OD = pd.concat([calcul_util.TTCM(), calcul_util.TTCS(), calcul_util.TTCC()], axis = 1)
+OD = OD.loc[:,~OD.columns.duplicated()]
+OD.drop(OD.index[OD['ZONEO'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
+OD.drop(OD.index[OD['ZONED'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
+OD.reset_index(inplace=True)
+del OD['index']
+
+OD = pd.concat([OD, calcul_util.TVPM(), calcul_util.TVPS(), calcul_util.TVPC(), calcul_util.DVOL(), calcul_util.CTTC()], axis = 1)
 OD = OD.loc[:,~OD.columns.duplicated()]
 
 Pop_Emp_All_colsdf = generation.Pop_Emp_All_Cols()  #Dataframe de tous les 34 colonnes, contrairement au dataframe
@@ -203,10 +211,10 @@ OD = pd.merge(OD, ETOT, left_on='ZONED', right_index=True, how='left')
 OD = OD.rename(columns = {'DENSH': 'DENSHD', 'PTOT':'PTOTD', 'ETOT': 'ETOTD'})
 OD.fillna(0, inplace=True)
 OD.replace(np.nan, 0, inplace=True)
-OD.drop(OD.index[OD['ZONEO'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
-                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
-OD.drop(OD.index[OD['ZONED'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
-                                   1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
+# OD.drop(OD.index[OD['ZONEO'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+#                                    1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
+# OD.drop(OD.index[OD['ZONED'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
+#                                    1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
 
 # IV. DONNEES INTRAZONALES
 # - a. identification des 3 zones les plus proches au départ d'une zone
@@ -277,10 +285,22 @@ TTCINTRA['ZONEO'] = TTCINTRA['ZONEO'].astype('int64')
 TTCINTRA.index = TTCINTRA['ZONEO']
 list_cols_TTC = list(TTCINTRA.columns)
 
+# for index, row in OD.iterrows():
+#     if row['ZONEO'] == row['ZONED']:
+#         row['DVOL'] = DINTRA[row['ZONEO']]
+#         row[['TVPM', 'TVPS', 'TVPC']] = TVPINTRA.loc[row['ZONEO'], ['TVPM', 'TVPS', 'TVPC']]
+#         row[list_cols_TTC] = TTCINTRA.loc[row['ZONEO'], list_cols_TTC]
+# OD.reset_index(inplace = True)
+# del OD['index']
+
 OD.index = OD['ZONEO']
-del OD['ZONEO']
+# OD['DVOL'].where(OD['ZONEO'] == OD['ZONED'], DINTRA, OD['DVOL'])
+
+
+OD.loc[OD['ZONEO'] == OD['ZONED'], 'DVOL'] = DINTRA
 OD.loc[OD['ZONEO'] == OD['ZONED'], ['TVPM', 'TVPS', 'TVPC']] = TVPINTRA
 OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
+del OD['ZONEO']
 OD.reset_index(inplace = True)
 
 #Kiko -> groupby DVOL mean
@@ -290,7 +310,7 @@ OD.reset_index(inplace = True)
 # set(list(bdinter['ZONEO'])) - set(list(TVPINTRA.index))
 # set(list(TTCINTRA['ZONEO'])) - set(list(bdinter['ZONEO']))
 #
-# set(list(bdinter.columns)).symmetric_difference(set(list(OD.columns)))
+set(list(bdinter.ZONEO)).symmetric_difference(set(list(OD.ZONEO)))
 
 bdinter = pd.read_sas('bdinter2012.sas7bdat')
 bdinter.rename(columns={'TMAR_HC':'TMAR_PCJ', 'TACC_HC':'TACC_PCJ', 'TMAR_HPS':'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
@@ -301,3 +321,11 @@ for i in range(1,19):
     bdinter.drop(columns=f'CO{i}', inplace=True)
 
 diff = (OD - bdinter)/bdinter
+diff.fillna(value=0, inplace=True)
+
+diffdist = (OD.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM']
+# Ca montre qu'il y a toujours un problème dans le calcul de DINTRA, puisque le calcul interzonale est bon.
+diffdist2 = (OD.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM']
+
+
+# Les TC restent problèmatiques.
