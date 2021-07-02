@@ -198,9 +198,20 @@ OD['QBD'] = np.where((
                      (OD['TRAB_PCJ']>seuilRab)|(OD['TVEH_PCJ']>seuilVeh)|(OD['TMAR_PCJ']>seuilMar)|(OD['TACC_PCJ']>seuilRab)|
                      (OD['TATT_PCJ']>seuilAtt)|(OD['TVEH_PCJ'] == 0)|
                      (OD['TRAB_PPS']>seuilRab)|(OD['TVEH_PPS']>seuilVeh)|(OD['TMAR_PPS']>seuilMar)|(OD['TACC_PPS']>seuilRab)|
-                     (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|
-                     (OD['ZONEO']==OD['ZONED'])
+                     (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|(OD['ZONEO']==OD['ZONED'])
                       ), 0, 1)
+
+# OD['QBD'] = np.where((
+#                      (OD['TRAB_PPM']>seuilRab)|(OD['TVEH_PPM']>seuilVeh)|(OD['TMAR_PPM']>seuilMar)|(OD['TACC_PPM']>seuilRab)|
+#                      (OD['TATT_PPM']>seuilAtt)|(OD['TVEH_PPM'] == 0)
+#                     ), 0, 1)
+# OD['QBD'] = np.where(((OD['TRAB_PCJ']>seuilRab)|(OD['TVEH_PCJ']>seuilVeh)|(OD['TMAR_PCJ']>seuilMar)|(OD['TACC_PCJ']>seuilRab)|
+#                      (OD['TATT_PCJ']>seuilAtt)|(OD['TVEH_PCJ'] == 0)
+#                     ), 0, 1)
+#                      (OD['TRAB_PPS']>seuilRab)|(OD['TVEH_PPS']>seuilVeh)|(OD['TMAR_PPS']>seuilMar)|(OD['TACC_PPS']>seuilRab)|
+#                      (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|
+#                      (OD['ZONEO']==OD['ZONED'])
+#                       ), 0, 1)
 
 
 # 6. Agrégation des données zonales utiles pour la BDD interzonale
@@ -287,6 +298,7 @@ TTCINTRA = prepare_TTCintra()
 TVPINTRA.index = TVPINTRA.index.astype('int64')
 TTCINTRA['ZONEO'] = TTCINTRA['ZONEO'].astype('int64')
 TTCINTRA.index = TTCINTRA['ZONEO']
+del TTCINTRA['ZONEO']
 list_cols_TTC = list(TTCINTRA.columns)
 
 # for index, row in OD.iterrows():
@@ -325,7 +337,7 @@ for i in range(1,19):
     bdinter.drop(columns=f'CO{i}', inplace=True)
 
 diff = (OD - bdinter)/bdinter
-diff.fillna(value=0, inplace=True)
+diff = diff.replace(np.inf, 0)
 
 diffdist = (OD.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM']
 # Ca montre qu'il y a toujours un problème dans le calcul de DINTRA, puisque le calcul interzonale est bon.
