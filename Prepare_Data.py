@@ -198,7 +198,8 @@ OD['QBD'] = np.where((
                      (OD['TRAB_PCJ']>seuilRab)|(OD['TVEH_PCJ']>seuilVeh)|(OD['TMAR_PCJ']>seuilMar)|(OD['TACC_PCJ']>seuilRab)|
                      (OD['TATT_PCJ']>seuilAtt)|(OD['TVEH_PCJ'] == 0)|
                      (OD['TRAB_PPS']>seuilRab)|(OD['TVEH_PPS']>seuilVeh)|(OD['TMAR_PPS']>seuilMar)|(OD['TACC_PPS']>seuilRab)|
-                     (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)
+                     (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|
+                     (OD['ZONEO']==OD['ZONED'])
                       ), 0, 1)
 
 
@@ -271,7 +272,7 @@ def prepare_TTCintra():
     OD_proche_TTC['TTOTS'] = OD_proche_TTC['TRAB_PPS'] + OD_proche_TTC['TVEH_PPS'] + OD_proche_TTC['TATT_PPS'] + \
                             OD_proche_TTC['TMAR_PPS'] + OD_proche_TTC['TACC_PPS']
 
-    OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT'])
+    OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT', 'TTOTS'])
     OD_proche_TTC = OD1.drop_duplicates(subset='ZONEO', keep='first')
     TTCINTRA = OD_proche_TTC[['ZONEO', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM', 'TATT_PPM', 'TACC_PPM', 'TRAB_PPS', 'TVEH_PPS',
                              'TMAR_PPS', 'TATT_PPS', 'TACC_PPS', 'TRAB_PCJ', 'TVEH_PCJ', 'TMAR_PCJ', 'TATT_PCJ',
@@ -313,7 +314,7 @@ OD.reset_index(inplace = True)
 # set(list(bdinter['ZONEO'])) - set(list(TVPINTRA.index))
 # set(list(TTCINTRA['ZONEO'])) - set(list(bdinter['ZONEO']))
 #
-set(list(bdinter.ZONEO)).symmetric_difference(set(list(OD.ZONEO)))
+# set(list(bdinter.ZONEO)).symmetric_difference(set(list(OD.ZONEO)))
 
 bdinter = pd.read_sas('bdinter2012.sas7bdat')
 bdinter.rename(columns={'TMAR_HC':'TMAR_PCJ', 'TACC_HC':'TACC_PCJ', 'TMAR_HPS':'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
