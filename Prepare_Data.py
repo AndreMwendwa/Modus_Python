@@ -268,6 +268,9 @@ def prepare_TTCintra():
     OD_proche_TTC = OD_proche_dvol.sort_values(by=['ZONEO'])
     OD_proche_TTC['TTOT'] = OD_proche_TTC['TRAB_PPM'] + OD_proche_TTC['TVEH_PPM'] + OD_proche_TTC['TATT_PPM'] + \
                             OD_proche_TTC['TMAR_PPM'] + OD_proche_TTC['TACC_PPM']
+    OD_proche_TTC['TTOTS'] = OD_proche_TTC['TRAB_PPS'] + OD_proche_TTC['TVEH_PPS'] + OD_proche_TTC['TATT_PPS'] + \
+                            OD_proche_TTC['TMAR_PPS'] + OD_proche_TTC['TACC_PPS']
+
     OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT'])
     OD_proche_TTC = OD1.drop_duplicates(subset='ZONEO', keep='first')
     TTCINTRA = OD_proche_TTC[['ZONEO', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM', 'TATT_PPM', 'TACC_PPM', 'TRAB_PPS', 'TVEH_PPS',
@@ -327,5 +330,5 @@ diffdist = (OD.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZON
 # Ca montre qu'il y a toujours un problème dans le calcul de DINTRA, puisque le calcul interzonale est bon.
 diffdist2 = (OD.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM']
 
-
+diffdist[diffdist!=0]
 # Les TC restent problèmatiques.
