@@ -123,7 +123,6 @@ class calcul_util:
 
     def TVPC(self):
         df = pd.read_csv(Donnees_Interz[f'tps_VP_C_{self.n}'].path, sep=Donnees_Interz[f'tps_VP_C_{self.n}'].sep)
-        df.rename(columns={"TVPM":"TVPC"}, inplace=True)
         return df
 
     def DVOL(self):
@@ -276,22 +275,35 @@ def prepare_TVPintra():
     return TVPINTRA
 
 def prepare_TTCintra():
-    OD_proche_TTC = pd.concat([OD1ST, OD2ND, OD3RD], axis=0)
+    OD_sans_intra2 = OD[(OD['ZONEO'] != OD['ZONED']) & (OD['TVEH_PPM'] != 0)]
+    OD1 = OD_sans_intra2.sort_values(by=['DVOL'])
+    OD1ST = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    OD1 = OD1[~OD1.isin(OD1ST)].dropna()
+    OD2ND = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    OD1 = OD1[~OD1.isin(OD2ND)].dropna()
+    OD3RD = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    # OD1 = OD1[~OD1.isin(OD3RD)].dropna()
+    # OD4TH = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    OD_proche_dvol = pd.concat([OD1ST, OD2ND, OD3RD], axis=0)
+    # OD_proche_dvol = pd.concat([OD1ST, OD2ND, OD3RD, OD4TH], axis=0)
+
     OD_proche_TTC = OD_proche_dvol.sort_values(by=['ZONEO'])
     OD_proche_TTC['TTOT'] = OD_proche_TTC['TRAB_PPM'] + OD_proche_TTC['TVEH_PPM'] + OD_proche_TTC['TATT_PPM'] + \
                             OD_proche_TTC['TMAR_PPM'] + OD_proche_TTC['TACC_PPM']
-    OD_proche_TTC['TTOTS'] = OD_proche_TTC['TRAB_PPS'] + OD_proche_TTC['TVEH_PPS'] + OD_proche_TTC['TATT_PPS'] + \
-                            OD_proche_TTC['TMAR_PPS'] + OD_proche_TTC['TACC_PPS']
-
-    OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT', 'TTOTS'])
-    OD_proche_TTC = OD1.drop_duplicates(subset='ZONEO', keep='first')
+    # OD_proche_TTC['TTOTS'] = OD_proche_TTC['TRAB_PPS'] + OD_proche_TTC['TVEH_PPS'] + OD_proche_TTC['TATT_PPS'] + \
+    #                         OD_proche_TTC['TMAR_PPS'] + OD_proche_TTC['TACC_PPS']
+    #
+    # OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT', 'TTOTS'])
+    OD_proche_TTC = OD_proche_TTC.sort_values(by=['TTOT'])
+    OD_proche_TTC = OD_proche_TTC.drop_duplicates(subset='ZONEO', keep='first')
+    OD_proche_TTC = OD_proche_TTC.sort_values(by = ['ZONEO'])
     TTCINTRA = OD_proche_TTC[['ZONEO', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM', 'TATT_PPM', 'TACC_PPM', 'TRAB_PPS', 'TVEH_PPS',
                              'TMAR_PPS', 'TATT_PPS', 'TACC_PPS', 'TRAB_PCJ', 'TVEH_PCJ', 'TMAR_PCJ', 'TATT_PCJ',
-                              'TACC_PCJ']]
-    TTCINTRA = TTCINTRA.sort_values(by = ['ZONEO'])
+                              'TACC_PCJ']].copy()
+    # TTCINTRA.loc[:, 'TACC_PPM'] = TTCINTRA['TRAB_PPM']
+    TTCINTRA[['TACC_PPM', 'TACC_PCJ', 'TACC_PPS']] = TTCINTRA[['TRAB_PPM', 'TRAB_PCJ', 'TRAB_PPS']]
+    # TTCINTRA = TTCINTRA.sort_values(by = ['ZONEO'])
     return TTCINTRA
-
-
 
 TVPINTRA = prepare_TVPintra()
 TTCINTRA = prepare_TTCintra()
@@ -317,16 +329,16 @@ OD.loc[OD['ZONEO'] == OD['ZONED'], 'DVOL'] = DINTRA
 OD.loc[OD['ZONEO'] == OD['ZONED'], ['TVPM', 'TVPS', 'TVPC']] = TVPINTRA
 OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
 del OD['ZONEO']
-OD.reset_index(inplace = True)
+OD.reset_index(inplace=True)
 
 #Kiko -> groupby DVOL mean
 
 
-# set(list(bdinter['ZONEO'])) - set(list(TTCINTRA['ZONEO']))
+# set(list(bdinter['ZONED'])) - set(list(calcul_util.CTTC()['ZONED']))
 # set(list(bdinter['ZONEO'])) - set(list(TVPINTRA.index))
 # set(list(TTCINTRA['ZONEO'])) - set(list(bdinter['ZONEO']))
 #
-# set(list(bdinter.ZONEO)).symmetric_difference(set(list(OD.ZONEO)))
+# set(list(bdinter.ZONEO)).symmetric_difference(set(list(calcul_util.CTTC().ZONEO)))
 
 bdinter = pd.read_sas('bdinter2012.sas7bdat')
 bdinter.rename(columns={'TMAR_HC':'TMAR_PCJ', 'TACC_HC':'TACC_PCJ', 'TMAR_HPS':'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
@@ -340,8 +352,14 @@ diff = (OD - bdinter)/bdinter
 diff = diff.replace(np.inf, 0)
 
 diffdist = (OD.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TRAB_PPM']
+diffdist = (OD.loc[OD['ZONEO'] == OD['ZONED'], 'TVPC'] - bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TVPC'])/bdinter.loc[OD['ZONEO'] == OD['ZONED'], 'TVPC']
 # Ca montre qu'il y a toujours un problème dans le calcul de DINTRA, puisque le calcul interzonale est bon.
 diffdist2 = (OD.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'] - bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM'])/bdinter.loc[OD['ZONEO'] != OD['ZONED'], 'TRAB_PPM']
 
-diffdist[diffdist!=0]
+list_CTTC = CTTC[['ZONEO', 'ZONED']].values.tolist()
+list_OD = OD[['ZONEO', 'ZONED']].values.tolist()
+tup_OD = [tuple(x) for x in list_OD]
+tup_CTTC = [tuple(x) for x in list_CTTC]
+missing = set(tup_OD).symmetric_difference(tup_CTTC)
+len(missing)
 # Les TC restent problèmatiques.
