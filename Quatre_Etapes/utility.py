@@ -1,6 +1,8 @@
 
 # Importation des modules nécessaires
+import numpy as np
 from Data import util_data, A_CstesModus, CstesStruct
+from Exec_Modus import *
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
@@ -31,17 +33,25 @@ def utilite(n, hor):
     # del OD['TRAB_PPS'], OD['TACC_PPS'], OD['TMAR_PPS']
     # OD.rename(columns = {'TVEH_PPM':'TTC_PPM', 'TVEH_PCJ':'TTC_PCJ', 'TVEH_PPS':'TTC_PPS'}, inplace=True)
 
-
     # OD['TTC_PCJ'] = (OD['TTC_PCJ'] ** lambda_TTC) / (lambda_TTC - 1)
     # OD['TTC_PPS'] = (OD['TTC_PPS'] ** lambda_TTC) / (lambda_TTC - 1)
 
-    OD[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] = (OD[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] ** lambda_TTC) / (lambda_TTC - 1)
-    OD[['TVPM', 'TVPC', 'TVPS']] = (OD[['TVPM', 'TVPC', 'TVPS']]**lambda_TVP)/(lambda_TVP - 1)
-    OD[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']] = (OD[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']]**lambda_TAT)/(lambda_TAT - 1)
-    OD['TCY'] = (1.3 * OD['DVOL']/VCY/60)**(lambda_TCY - 1)/lambda_TCY
-    OD['CTVP'] = 1.3 * OD['DVOL'] * CVPkm
-    OD[['CTTKKM', 'CTVP']] = OD[['CTTKKM', 'CTVP']]**(lambda_COUT - 1)/lambda_COUT
-    OD['CSTATMOY'] = (OD['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
+
+
+    def transformationBC(matrice):
+        matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] = (matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] ** lambda_TTC) / (lambda_TTC - 1)
+        matrice[['TVPM', 'TVPC', 'TVPS']] = (matrice[['TVPM', 'TVPC', 'TVPS']]**lambda_TVP)/(lambda_TVP - 1)
+        matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']] = (matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']]**lambda_TAT)/(lambda_TAT - 1)
+        matrice['TCY'] = matrice['TCY']**(lambda_TCY - 1)/lambda_TCY
+        matrice[['CTTKKM', 'CTVP']] = matrice[['CTTKKM', 'CTVP']]**(lambda_COUT - 1)/lambda_COUT
+        matrice['CSTATMOY'] = (matrice['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
+        if n == 'scen' and idvelo == 1:
+            if idBcl == 0 or iter_count != 1:
+                INTCY = intcy
+                matrice['CAPVELIB'] = capvelib
+        matrice.replace([np.inf, -np.inf], 0, inplace=True)
+        return matrice
+
 
     # if n == 'scen' and idvelo == 1 and (idBcl == 0 or iter != 1):
     # Kiko Then what?
@@ -52,6 +62,15 @@ def utilite(n, hor):
                             'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
                             'CTKKM': 'CTTKKM'}, inplace=True)
     CM_PAR.drop(columns='ID_C', inplace=True)   # Puisque c'est le même que les indices par défaut.
+
+    # Kiko -> Get these to work, since the individual functions are currently working.
+    OD_TC = transformationBC(util_data.var_TC(OD))
+    OD_VP = transformationBC(util_data.var_VP(OD))
+    OD_CY = transformationBC(util_data.var_CY(OD))
+    OD_MD = transformationBC(util_data.var_MD(OD))
+
+
+
 
 # Kiko Everything below this can be deleted.
 
