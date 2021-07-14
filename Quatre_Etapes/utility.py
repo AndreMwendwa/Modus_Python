@@ -1,6 +1,7 @@
 
 # Importation des modules nécessaires
 import numpy as np
+import pandas as pd
 from Data import util_data, A_CstesModus, CstesStruct
 from Exec_Modus import *
 
@@ -18,6 +19,10 @@ lambda_TAT = 0.74
 lambda_CSTAT = -2.35
 lambda_TMD = 1
 lambda_TCY = 0.67
+
+att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
+       'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
+
 
 def utilite(n, hor):
     OD = util_data.OD(n)
@@ -69,8 +74,37 @@ def utilite(n, hor):
     OD_CY = transformationBC(util_data.var_CY(OD))
     OD_MD = transformationBC(util_data.var_MD(OD))
 
+    seU = pd.DataFrame(np.zeros((1289**2, 22)))
+    seUD = seU.copy()
+
+    cFactEch_PPM = [1.4, 2.0, 1.0, 0.8, 1.3, 0.5, 1.4, 0.3, 1.0, 1.3, 0.8, 1.5, 1.0, 1.3, 0.5, 1.0, 0.7, 2.0, 0.3, 1.0,
+                    1.1, 1.3]
+    cFactEch_PPM_diag = np.zeros(((len(cFactEch_PPM)), (len(cFactEch_PPM))))
+    for i in range(len(cFactEch_PPM)):
+        cFactEch_PPM_diag[i, i] = cFactEch_PPM[i]
+    def calc_util(OD_input, seU, seUD):
+        U = OD_input @ CM_PAR.T
+        eU = np.exp(U)
+        eUD = np.exp(U @ cFactEch_PPM_diag)
+        seU += eU
+        seUD += eUD
+        return seU, seUD
 
 
+    seU, seUD = calc_util(OD_TC, seU, seUD)
+    seU, seUD = calc_util(OD_VP, seU, seUD)
+    seU, seUD = calc_util(OD_CY, seU, seUD)
+    seU, seUD = calc_util(OD_MD, seU, seUD)
+
+    UTM = np.log(seU)
+    UTMD = np.log(seUD)
+    UMAX = UTM.max(0)
+    UMAXD = UTMD.max(0)
+    CORRECT = np.where(UMAX>0, UMAX+1, 0)
+    CORRECTD = pd.where(UMAXD > 0, UMAXD + 1, 0)
+
+    UTM -= CORRECT
+    UTMD -= CORRECTD
 
 # Kiko Everything below this can be deleted.
 
