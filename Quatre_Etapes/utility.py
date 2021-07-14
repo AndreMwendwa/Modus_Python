@@ -2,6 +2,7 @@
 # Importation des modules nécessaires
 import numpy as np
 import pandas as pd
+from collections import defaultdict
 from Data import util_data, A_CstesModus, CstesStruct
 from Exec_Modus import *
 
@@ -101,11 +102,35 @@ def utilite(n, hor):
     UMAX = UTM.max(0)
     UMAXD = UTMD.max(0)
     CORRECT = np.where(UMAX>0, UMAX+1, 0)
-    CORRECTD = pd.where(UMAXD > 0, UMAXD + 1, 0)
+    CORRECTD = np.where(UMAXD > 0, UMAXD + 1, 0)
 
     UTM -= CORRECT
     UTMD -= CORRECTD
+    
+    Motifs_Choix_Dist = defaultdict(list)
+    # C'est une nouvelle étape dans laquelle on va décrire la transformation des motifs entre le choix model et 
+    # la distribution. Les clés du dictionnaire corréspondent aux motifs - distribution, et les élements aux motifs 
+    # génération (selon diapo 6 de la documentation de Modus)
 
+    Motifs_Choix_Dist[1].extend((1, 2))
+    Motifs_Choix_Dist[2].extend((3,))
+    Motifs_Choix_Dist[3].extend((4,))
+    Motifs_Choix_Dist[4].extend((5,))
+    Motifs_Choix_Dist[5].extend((6,))
+    Motifs_Choix_Dist[6].extend((7,))
+    Motifs_Choix_Dist[7].extend((8,))
+    Motifs_Choix_Dist[8].extend((9,))
+    Motifs_Choix_Dist[9].extend((10,))
+    Motifs_Choix_Dist[10].extend((11, 12))
+    Motifs_Choix_Dist[11].extend((13, 14))
+
+    Duplication = np.zeros((22, 28))
+    for ligne, value in Motifs_Choix_Dist.items():
+        for colonne in value:
+            Duplication[ligne - 1, colonne - 1] = 1
+            Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
+
+    UTMD = UTMD @ Duplication
 # Kiko Everything below this can be deleted.
 
 sorted(list(set(list(OD.columns)).symmetric_difference(set(list(CM_PAR.columns)))))
