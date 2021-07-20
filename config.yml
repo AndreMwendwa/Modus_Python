@@ -156,6 +156,8 @@ config:
 
 
   # Population_Emplois
-  Pop_Emp_actuel: os.path.join(dir_dataAct, 'bdzone2012.sas7bdat')
-  Pop_Emp_scen: os.path.join(dir_dataScen, 'bdzone2022.sas7bdat')
+  Pop_Emp_actuel: D:\TraDD ENPC 2020-21\Stage\MODUSv3.1.3\Donnees\Input\1_Actuel\bdzone2012.sas7bdat
+  Pop_Emp_scen: D:\TraDD ENPC 2020-21\Stage\MODUSv3.1.3\Donnees\Input\2_Scenario\bdzone2022.sas7bdat
+
+
   

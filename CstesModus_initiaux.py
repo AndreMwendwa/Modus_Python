@@ -10,7 +10,7 @@ Date: 30 septembre 2021
 from collections import namedtuple
 import os
 
-import CstesStruct
+from Data import CstesStruct
 
 # Variables qui sous SAS étaient dans le module 0_CstesCalibr, séction II, III
 

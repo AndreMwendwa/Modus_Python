@@ -11,8 +11,6 @@ reload(CstesStruct)
 from Data.A_CstesModus import *
 from Data.generation_data import generation
 
-# att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
-#        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 # 2. Lecture des donnés interzonales
 
 # Kiko - mets tout ça dans une classe.
@@ -69,50 +67,36 @@ class calcul_util:
         CM_PAR_df = pd.read_sas(CM_PAR_DICT[self.per])
         return CM_PAR_df
 
+def var_TC(OD):
+    OD['INTTC'] = 1
+    OD['TR_PPM'] = OD['TRAB_PPM'] + OD['TACC_PPM'] + OD['TMAR_PPM']
+    del OD['TRAB_PPM'], OD['TACC_PPM'], OD['TMAR_PPM']
+    OD['TR_PCJ'] = OD['TRAB_PCJ'] + OD['TACC_PCJ'] + OD['TMAR_PCJ']
+    del OD['TRAB_PCJ'], OD['TACC_PCJ'], OD['TMAR_PCJ']
+    OD['TR_PPS'] = OD['TRAB_PPS'] + OD['TACC_PPS'] + OD['TMAR_PPS']
+    del OD['TRAB_PPS'], OD['TACC_PPS'], OD['TMAR_PPS']
+    OD.rename(columns={'TVEH_PPM': 'TTC_PPM', 'TVEH_PCJ': 'TTC_PCJ', 'TVEH_PPS': 'TTC_PPS'}, inplace=True)
 
+    OD[['TVPM', 'TVPC', 'TVPS', 'TMD', 'TCY', 'CTVP', 'CSTATMOY', 'CAPVELIB', 'INTCY', 'INTVP']] = 0
+    return OD
 
-def var_TC(OD, att):
-    OD_input = OD.copy()
-    OD_input['INTTC'] = 1
-    OD_input['TR_PPM'] = OD_input['TRAB_PPM'] + OD_input['TACC_PPM'] + OD_input['TMAR_PPM']
-    del OD_input['TRAB_PPM'], OD_input['TACC_PPM'], OD_input['TMAR_PPM']
-    OD_input['TR_PCJ'] = OD_input['TRAB_PCJ'] + OD_input['TACC_PCJ'] + OD_input['TMAR_PCJ']
-    del OD_input['TRAB_PCJ'], OD_input['TACC_PCJ'], OD_input['TMAR_PCJ']
-    OD_input['TR_PPS'] = OD_input['TRAB_PPS'] + OD_input['TACC_PPS'] + OD_input['TMAR_PPS']
-    del OD_input['TRAB_PPS'], OD_input['TACC_PPS'], OD_input['TMAR_PPS']
-    OD_input.rename(columns={'TVEH_PPM': 'TTC_PPM', 'TVEH_PCJ': 'TTC_PCJ', 'TVEH_PPS': 'TTC_PPS'}, inplace=True)
-
-    OD_input[['TVPM', 'TVPC', 'TVPS', 'TMD', 'TCY', 'CTVP', 'CSTATMOY', 'CAPVELIB', 'INTCY', 'INTVP']] = 0
-    OD_input2 = OD_input[att]
-    return OD_input2
-
-def var_VP(OD, att):
-    OD_input = OD.copy()
-    OD_input['INTVP'] = 1
-    OD_input[['TR_PPM', 'TR_PCJ', 'TR_PPS', 'TATT_PPM', 'TATT_PCJ', 'TATT_PPS', 'TTC_PPM', 'TTC_PCJ', 'TTC_PPS', 'TMD',
+def var_VP(OD):
+    OD['INTVP'] = 1
+    OD[['TR_PPM', 'TR_PCJ', 'TR_PPS', 'TATT_PPM', 'TATT_PCJ', 'TATT_PPS', 'TTC_PPM', 'TTC_PCJ', 'TTC_PPS', 'TMD',
         'TCY', 'CTTKKM', 'CAPVELIB', 'INTTC', 'INTCY']] = 0
-    OD_input['CTVP'] = 1.3 * OD_input['DVOL'] * CVPkm
-    OD_input2 = OD_input[att]
-    return OD_input2
+    OD['CTVP'] = 1.3 * OD['DVOL'] * CVPkm
+    return OD
 
-def var_MD(OD, att):
-    OD_input = OD.copy()
-    DVOL_col = OD_input.loc[:, 'DVOL'].copy()
-    for col in att:
-        OD_input[col] = 0
-    OD_input['TMD'] = 1.3 * DVOL_col /(VMD/60)
-    OD_input2 = OD_input[att]
-    return OD_input2
+def var_MD(OD):
+    OD = 0
+    OD['TMD'] = 1.3 * DVOL /(VMD/60)
+    return OD
 
-def var_CY(OD, att):
-    OD_input = OD.copy()
-    DVOL_col = OD_input.loc[:, 'DVOL'].copy()
-    for col in att:
-        OD_input[col] = 0
-    OD_input['INTCY'] = 1
-    OD_input['TCY'] = 1.3 * DVOL_col /(VCY/60)
-    OD_input2 = OD_input[att]
-    return OD_input2
+def var_CY(OD):
+    OD = 0
+    OD['INTCY'] = 1
+    OD['INTCY'] = 1.3 * DVOL /(VCY/60)
+    return OD
 
 
 
