@@ -1,34 +1,24 @@
 
 
 # Importation des modules nécessaires
-import pandas as pd
-import numpy as np
 from collections import defaultdict
-import CstesStruct
-import A_CstesModus
-import Prepare_Data
+from Data.generation_data import *
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
 from importlib import reload
 reload(A_CstesModus)
 reload(CstesStruct)
-from A_CstesModus import *
-from CstesStruct import *
+from Data.A_CstesModus import *
+from Data.teletravail import teletravail
 
 
-def configure(context):
-    VARGEN = context.config('VARGEN')
-    idTTV = context.config('idTTV')
-    n = context.config('n')
-    per = context.config('per')
-    #context.stage('Preparation.teletravail', {'per': n})
+# ------------
+# I. GENERATION
+# ------------
 
-
-def execute(context):
-    n = context.config('n')
-    per = context.config('per')
-    from Prepare_Data import generation
+def generation(n, per):
+    from Data.generation_data import generation
     generation = generation()
     generation.n = n
     generation.per = per
@@ -36,7 +26,16 @@ def execute(context):
     # 0. Lecture des données de base
     # - a. Lecture des OS utilisées pour la génération
 
-    Pop_Emp = generation.Pop_Emp()
+    if idTTV == 0:
+        Pop_Emp = generation.Pop_Emp()
+
+    else:
+        Pop_Emp_temp = pd.read_csv(
+            'D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\Donnees\\Input\\2_Scenario\\210212_OS2025h.txt', sep = '\t')
+        Pop_Emp = pd.DataFrame()
+        for VAR in list(VARGEN):
+            Pop_Emp[VAR] = Pop_Emp_temp[VAR]
+        Pop_Emp.index = range(1, cNbZone + 1)
 
     # - b. Lecture des paramètres de génération
 
@@ -66,7 +65,7 @@ def execute(context):
 
     # - c. Calcul des effets des hypothèses de télétravail sur les émissions et attractions équilibrées
 
-    if context.config('idTTV') == 1:
+    if idTTV == 1:
         TTV = teletravail(n)
         if per == 'PPM':
             EM_base.iloc[:, 0] = EM_base.iloc[:, 0] * TTV.iloc[:, 3]
