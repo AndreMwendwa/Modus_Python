@@ -21,8 +21,6 @@ lambda_CSTAT = -2.35
 lambda_TMD = 1
 lambda_TCY = 0.67
 
-att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
-       'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 
 
 def utilite(n, hor):
@@ -42,7 +40,8 @@ def utilite(n, hor):
     # OD['TTC_PCJ'] = (OD['TTC_PCJ'] ** lambda_TTC) / (lambda_TTC - 1)
     # OD['TTC_PPS'] = (OD['TTC_PPS'] ** lambda_TTC) / (lambda_TTC - 1)
 
-
+    # att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
+    #        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 
     def transformationBC(matrice):
         matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] = (matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] ** lambda_TTC) / (lambda_TTC - 1)
@@ -70,10 +69,10 @@ def utilite(n, hor):
     CM_PAR.drop(columns='ID_C', inplace=True)   # Puisque c'est le même que les indices par défaut.
 
     # Kiko -> Get these to work, since the individual functions are currently working.
-    OD_TC = transformationBC(util_data.var_TC(OD))
-    OD_VP = transformationBC(util_data.var_VP(OD))
-    OD_CY = transformationBC(util_data.var_CY(OD))
-    OD_MD = transformationBC(util_data.var_MD(OD))
+    OD_TC = transformationBC(util_data.var_TC(OD, att))
+    OD_VP = transformationBC(util_data.var_VP(OD, att))
+    OD_CY = transformationBC(util_data.var_CY(OD, att))
+    OD_MD = transformationBC(util_data.var_MD(OD, att))
 
     seU = pd.DataFrame(np.zeros((1289**2, 22)))
     seUD = seU.copy()
@@ -131,30 +130,32 @@ def utilite(n, hor):
             Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
 
     UTMD = UTMD @ Duplication
+    return UTM, UTMD
+
 # Kiko Everything below this can be deleted.
 
-sorted(list(set(list(OD.columns)).symmetric_difference(set(list(CM_PAR.columns)))))
-set(list(CM_PAR.columns)) - set(list(OD.columns))
-sorted(list(set(list(OD.columns)) - set(list(CM_PAR.columns))))
-
-cols = ['INTTC' ,
-'INTVP' ,
-'INTCY' ,
-'TR_HPM'  ,
-'TAT_HPM'  ,
-'TTC_HPM'  ,
-'TR_HPS'  ,
-'TAT_HPS'  ,
-'TTC_HPS'  ,
-'TR_HC'  ,
-'TAT_HC'  ,
-'TTC_HC'  ,
-'TVP_HPM' ,
-'TVP_HPS' ,
-'TVP_HC' ,
-'TMD'  ,
-'TCY'  ,
-'CTKKM' ,
-'CTVP' ,
-'CAPVELIB']
-sorted(list(set(list(CM_PAR.columns)).symmetric_difference(set(cols))))
+# sorted(list(set(list(OD.columns)).symmetric_difference(set(list(CM_PAR.columns)))))
+# set(list(CM_PAR.columns)) - set(list(OD.columns))
+# sorted(list(set(list(OD.columns)) - set(list(CM_PAR.columns))))
+#
+# cols = ['INTTC' ,
+# 'INTVP' ,
+# 'INTCY' ,
+# 'TR_HPM'  ,
+# 'TAT_HPM'  ,
+# 'TTC_HPM'  ,
+# 'TR_HPS'  ,
+# 'TAT_HPS'  ,
+# 'TTC_HPS'  ,
+# 'TR_HC'  ,
+# 'TAT_HC'  ,
+# 'TTC_HC'  ,
+# 'TVP_HPM' ,
+# 'TVP_HPS' ,
+# 'TVP_HC' ,
+# 'TMD'  ,
+# 'TCY'  ,
+# 'CTKKM' ,
+# 'CTVP' ,
+# 'CAPVELIB']
+# sorted(list(set(list(CM_PAR.columns)).symmetric_difference(set(cols))))
