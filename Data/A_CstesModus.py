@@ -7,10 +7,9 @@ Date: 30 septembre 2021
 
 # Modules de Python nécessaires à ce projet.
 from collections import namedtuple
-import os
 
-import CstesStruct
-from CstesStruct import *
+from Data import CstesStruct
+from Data.CstesStruct import *
 
 # Variables qui sous SAS étaient dans le module 0_CstesCalibr, séction II, III
 
@@ -239,7 +238,7 @@ Donnees_Interz['tps_TC_S_actuel'] = Path_sep(os.path.join(dir_dataAct, '20191218
 
 Donnees_Interz['tps_VP_M_actuel'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPM_2012.txt'), '\t')
 # temps VP actuel PPM
-Donnees_Interz['tps_VP_C_actuel'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPM_2012.txt'), '\t')
+Donnees_Interz['tps_VP_C_actuel'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PCJ_2012.txt'), '\t')
 # temps VP actuel PCJ
 Donnees_Interz['tps_VP_S_actuel'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPS_2012.txt'), '\t')
 # temps VP actuel PPS
@@ -530,8 +529,39 @@ seuilMar = 20   # temps de marche maximal
 seuilVeh = 180  # temps en véhicule maximal
 
 
+VCY = 15    # vitesse moyenne des cycles en km/h
+VMD = 4
+
+CVPkm = 0.242
+
+# PARAMETRES DU CHOIX MODAL
+
+CM_PAR_DICT = {}
+
+CM_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\cm_parhpm.sas7bdat')
+CM_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\cm_parhc.sas7bdat')
+CM_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\cm_parhps.sas7bdat')
+
+# PARAMETRES DE LA DISTRIBUTION
+
+DIST_PAR_DICT = {}
+DIST_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\dist_par_hpm.sas7bdat')
+DIST_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\dist_par_hc.sas7bdat')
+DIST_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+                                                 '5_Export\\dist_par_hps.sas7bdat')
 
 
+att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
+           'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
+
+
+cMaxIterDist = 50
+precRMSE = 100
 
 
 
