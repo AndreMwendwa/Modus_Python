@@ -4,7 +4,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-import Prepare_Data
+# import Prepare_Data
 from Data.A_CstesModus import *
 import Data.generation_data
 
@@ -30,21 +30,21 @@ class Test_Generation(unittest.TestCase):
         sommediff = diff.sum().sum()
         self.assertLess(sommediff, 0.001)
 
-    def test_teletravail(self):
-        generation.idTTV = 1
-        # Data.generation_data.jourTTV = 0.3
-        # Data.generation_data.partTTV = 0.75
-        # generation_data.tauxTTVHQ = 0.85
-        # generation_data.tauxTTVAQact = 0.228
-        # generation_data.tauxTTVAQemp = 0.228
-        # generation_data.varJTTVpro = 0.07
-        # generation_data.varJLTHpro = 1.00
-        # generation_data.varJTTVacc = 1.00
-        # generation_data.varJLTHacc = 1.00
-        # generation_data.varJTTVaut = 1.00
-        # generation_data.varJLTHaut = 1.00
-        EM_test_PPM, ATT_test_PPM = generation.generation('scen', 'PPM')
-        self.assertEqual(np.round((EM_test_PPM.sum().sum() - 3631287), 0), 3311030)
+    # def test_teletravail(self):
+    #     generation.idTTV = 1
+    #     # Data.generation_data.jourTTV = 0.3
+    #     # Data.generation_data.partTTV = 0.75
+    #     # generation_data.tauxTTVHQ = 0.85
+    #     # generation_data.tauxTTVAQact = 0.228
+    #     # generation_data.tauxTTVAQemp = 0.228
+    #     # generation_data.varJTTVpro = 0.07
+    #     # generation_data.varJLTHpro = 1.00
+    #     # generation_data.varJTTVacc = 1.00
+    #     # generation_data.varJLTHacc = 1.00
+    #     # generation_data.varJTTVaut = 1.00
+    #     # generation_data.varJLTHaut = 1.00
+    #     EM_test_PPM, ATT_test_PPM = generation.generation('scen', 'PPM')
+    #     self.assertEqual(np.round((EM_test_PPM.sum().sum() - 3631287), 0), 3311030)
 
 
 
