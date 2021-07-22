@@ -44,17 +44,24 @@ def utilite(n, hor):
     #        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 
     def transformationBC(matrice):
-        matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] = (matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] ** lambda_TTC) / (lambda_TTC - 1)
-        matrice[['TVPM', 'TVPC', 'TVPS']] = (matrice[['TVPM', 'TVPC', 'TVPS']]**lambda_TVP)/(lambda_TVP - 1)
-        matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']] = (matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']]**lambda_TAT)/(lambda_TAT - 1)
-        matrice['TCY'] = matrice['TCY']**(lambda_TCY - 1)/lambda_TCY
-        matrice[['CTTKKM', 'CTVP']] = matrice[['CTTKKM', 'CTVP']]**(lambda_COUT - 1)/lambda_COUT
-        matrice['CSTATMOY'] = (matrice['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
+        if matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']].any().any():
+            matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] = (matrice[['TTC_PPM', 'TTC_PCJ', 'TTC_PPS']] ** lambda_TTC - 1) / lambda_TTC
+        if matrice[['TVPM', 'TVPC', 'TVPS']].any().any():
+            matrice[['TVPM', 'TVPC', 'TVPS']] = (matrice[['TVPM', 'TVPC', 'TVPS']]**lambda_TVP - 1)/lambda_TVP
+        if matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']].any().any():
+            matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']] = (matrice[['TATT_PPM', 'TATT_PCJ', 'TATT_PPS']]**lambda_TAT - 1)/lambda_TAT
+        if matrice['TCY'].any():
+            matrice['TCY'] = (matrice['TCY']**lambda_TCY - 1)/lambda_TCY
+        if matrice[['CTTKKM', 'CTVP']].any().any():
+            matrice[['CTTKKM', 'CTVP']] = (matrice[['CTTKKM', 'CTVP']]**lambda_COUT - 1)/lambda_COUT
+        # matrice['CSTATMOY'] = (matrice['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
+        if matrice['CSTATMOY'].any():
+            matrice['CSTATMOY'] = ((matrice['CSTATMOY']+1) ** lambda_CSTAT - 1) / lambda_CSTAT
         if n == 'scen' and idvelo == 1:
             if idBcl == 0 or iter_count != 1:
-                INTCY = intcy
+                matrice['INTCY'] = intcy
                 matrice['CAPVELIB'] = capvelib
-        matrice.replace([np.inf, -np.inf], 0, inplace=True)
+        # matrice.replace([np.inf, -np.inf], 0, inplace=True)
         return matrice
 
 
@@ -159,3 +166,80 @@ def utilite(n, hor):
 # 'CTVP' ,
 # 'CAPVELIB']
 # sorted(list(set(list(CM_PAR.columns)).symmetric_difference(set(cols))))
+
+
+
+OD_TC_valid = pd.read_sas('Other_files\\eutc2012m.sas7bdat')
+OD_TC_valid.columns = range(22)
+U = OD_TC @ CM_PAR.T
+eU = np.exp(U)
+
+OD_MD_valid = pd.read_sas('Other_files\\eumd2012m.sas7bdat')
+OD_MD_valid.columns = range(22)
+U = OD_MD @ CM_PAR.T
+eUMD = np.exp(U)
+
+OD_CY_valid = pd.read_sas('Other_files\\eucy2012m.sas7bdat')
+OD_CY_valid.columns = range(22)
+U = OD_CY @ CM_PAR.T
+eUCY = np.exp(U)
+
+OD_VP_valid = pd.read_sas('Other_files\\euvp2012m.sas7bdat')
+OD_VP_valid.columns = range(22)
+U = OD_VP @ CM_PAR.T
+eUVP = np.exp(U)
+
+np.log(OD_VP_valid)
+
+diff = np.abs((eUCY - OD_CY_valid)) / OD_CY_valid
+diff = (eUVP - OD_VP_valid) / OD_VP_valid
+diff = (eU - OD_TC_valid) / OD_TC_valid
+diff = np.abs((eU - OD_TC_valid)) / OD_TC_valid
+diff = (eUMD - OD_MD_valid) / OD_MD_valid
+diff.max()
+
+for col in diff.columns:
+    diff[col][diff[col] > diff[col].quantile(0.95)] = 0
+
+sommediff = diff.mean().mean()
+
+
+eU.mean().plot()
+t = 100000*OD_TC_valid.mean()
+t.plot()
+plt.show()
+
+OD_TC_test = np.exp(OD_TC)
+
+OD_TC_valid.mean()
+eU.max()
+
+
+OD_CY = util_data.var_CY(bdinter, att)
+OD_CY['TCY'] = (OD_CY['TCY']**lambda_TCY - 1)/lambda_TCY
+OD_CY['CSTATMOY'] = ((OD_CY['CSTATMOY']+1) ** lambda_CSTAT - 1) / lambda_CSTAT
+OD_CY.iloc[0, :] @ CM_PAR.iloc[0, :].T
+OD_TC.iloc[0, :] @ CM_PAR.iloc[0, :].T
+
+transformationBC(OD_CY)
+
+OD_CY['INTCY'] = 0
+OD_CY.max()
+
+bdinter = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
+bdinter.rename(
+            columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
+                     'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
+                     'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
+                     'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
+            inplace=True)
+for i in range(1, 19):
+    bdinter.drop(columns=f'CO{i}', inplace=True)
+
+OD_VP = transformationBC(util_data.var_VP(bdinter, att))
+OD_VP = util_data.var_VP(bdinter, att)
+OD_VP.iloc[0, :] @ CM_PAR.iloc[0, :].T
+for col in diff.columns:
+    print(diff[col].to_numpy().argmax())
+
+diff.max()
