@@ -41,19 +41,7 @@ def utilite(n, hor):
     calcul_util = util_data.calcul_util()
     calcul_util.per = hor
 
-    # OD['TR_PPM'] = OD['TRAB_PPM'] + OD['TACC_PPM'] + OD['TMAR_PPM']
-    # del OD['TRAB_PPM'], OD['TACC_PPM'], OD['TMAR_PPM']
-    # OD['TR_PCJ'] = OD['TRAB_PCJ'] + OD['TACC_PCJ'] + OD['TMAR_PCJ']
-    # del OD['TRAB_PCJ'], OD['TACC_PCJ'], OD['TMAR_PCJ']
-    # OD['TR_PPS'] = OD['TRAB_PPS'] + OD['TACC_PPS'] + OD['TMAR_PPS']
-    # del OD['TRAB_PPS'], OD['TACC_PPS'], OD['TMAR_PPS']
-    # OD.rename(columns = {'TVEH_PPM':'TTC_PPM', 'TVEH_PCJ':'TTC_PCJ', 'TVEH_PPS':'TTC_PPS'}, inplace=True)
 
-    # OD['TTC_PCJ'] = (OD['TTC_PCJ'] ** lambda_TTC) / (lambda_TTC - 1)
-    # OD['TTC_PPS'] = (OD['TTC_PPS'] ** lambda_TTC) / (lambda_TTC - 1)
-
-    # att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
-    #        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 
     def transformationBC(matrice):
         if matrice['TTC_PPM'].any():
@@ -94,10 +82,7 @@ def utilite(n, hor):
         # matrice.replace([np.inf, -np.inf], 0, inplace=True)
         return matrice
 
-    # def correct():
-    #     for iCat in range(cNbCat):
-    #         for iMotif in range(cNbMotifC):
-    #             id_c = iCat*cNbMotifC + iMotif
+
 
 
     # if n == 'scen' and idvelo == 1 and (idBcl == 0 or iter != 1):
