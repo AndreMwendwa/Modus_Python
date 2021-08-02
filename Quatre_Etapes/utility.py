@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from collections import defaultdict
+import pickle as pkl
 from Data import util_data, A_CstesModus, CstesStruct
 from Exec_Modus import *
 
@@ -71,10 +72,10 @@ def utilite(n, hor):
 
         if matrice['TATT_PPM'].any():
             matrice['TATT_PPM'] = (matrice['TATT_PPM']**lambda_TAT - 1)/lambda_TAT
-        if matrice['TATT_PCJ'].any():
-            matrice['TATT_PCJ'] = (matrice['TATT_PCJ']**lambda_TAT - 1)/lambda_TAT
         if matrice['TATT_PPS'].any():
             matrice['TATT_PPS'] = (matrice['TATT_PPS']**lambda_TAT - 1)/lambda_TAT
+        if matrice['TATT_PCJ'].any():
+            matrice['TATT_PPS'] = (matrice['TATT_PCJ']**lambda_TAT - 1)/lambda_TAT  # Kiko -> why this?
 
         if matrice['TCY'].any():
             matrice['TCY'] = (matrice['TCY']**lambda_TCY - 1)/lambda_TCY
@@ -93,6 +94,11 @@ def utilite(n, hor):
         # matrice.replace([np.inf, -np.inf], 0, inplace=True)
         return matrice
 
+    # def correct():
+    #     for iCat in range(cNbCat):
+    #         for iMotif in range(cNbMotifC):
+    #             id_c = iCat*cNbMotifC + iMotif
+
 
     # if n == 'scen' and idvelo == 1 and (idBcl == 0 or iter != 1):
     # Kiko Then what?
@@ -105,10 +111,10 @@ def utilite(n, hor):
     CM_PAR.drop(columns='ID_C', inplace=True)   # Puisque c'est le même que les indices par défaut.
 
     # Kiko -> Get these to work, since the individual functions are currently working.
-    OD_TC = transformationBC(util_data.var_TC(OD, att))
-    OD_VP = transformationBC(util_data.var_VP(OD, att))
-    OD_CY = transformationBC(util_data.var_CY(OD, att))
-    OD_MD = transformationBC(util_data.var_MD(OD, att))
+    util_TC = transformationBC(util_data.var_TC(OD, att))
+    util_VP = transformationBC(util_data.var_VP(OD, att))
+    util_CY = transformationBC(util_data.var_CY(OD, att))
+    util_MD = transformationBC(util_data.var_MD(OD, att))
 
     seU = pd.DataFrame(np.zeros((1289**2, 22)))
     seUD = seU.copy()
@@ -118,164 +124,44 @@ def utilite(n, hor):
     cFactEch_PPM_diag = np.zeros(((len(cFactEch_PPM)), (len(cFactEch_PPM))))
     for i in range(len(cFactEch_PPM)):
         cFactEch_PPM_diag[i, i] = cFactEch_PPM[i]
+
+    list_fichiers = ['util_TC', 'util_VP', 'util_CY', 'util_MD']    # List des noms des fichiers qui va être utilisé pour
+    # les 'pickler', c'est le même que l'ordre des fichiers dans les lignes ci-dessous.
+    num_list = 0
+
     def calc_util(OD_input, seU, seUD):
         U = OD_input @ CM_PAR.T
         eU = np.exp(U)
         eUD = np.exp(U @ cFactEch_PPM_diag)
         seU += eU
         seUD += eUD
-        return seU, seUD
+        return seU, seUD, eU
 
+    UTIL_DB = {}        # Un dictionnaire vide dans lequel seront stockés les résultats du calcul utilitaire picklés
+    seU, seUD, eU = calc_util(util_TC, seU, seUD)
+    UTIL_DB['util_TC'] = eU
+    seU, seUD, eU = calc_util(util_VP, seU, seUD)
+    UTIL_DB['util_VP'] = eU
+    seU, seUD, eU = calc_util(util_CY, seU, seUD)
+    UTIL_DB['util_CY'] = eU
+    seU, seUD, eU = calc_util(util_MD, seU, seUD)
+    UTIL_DB['util_MD'] = eU
 
-    seU, seUD = calc_util(OD_TC, seU, seUD)
-    seU, seUD = calc_util(OD_VP, seU, seUD)
-    seU, seUD = calc_util(OD_CY, seU, seUD)
-    seU, seUD = calc_util(OD_MD, seU, seUD)
+    # Ici on va pickler the dataframes eU
+    dbfile = open(f'{dir_dataTemp}UTIL_DB', 'wb')
+    pkl.dump(UTIL_DB, dbfile)
+    dbfile.close()
 
     UTM = np.log(seU)
     UTMD = np.log(seUD)
     UMAX = UTM.max(0)
     UMAXD = UTMD.max(0)
-    CORRECT = np.where(UMAX>0, UMAX+1, 0)
+    CORRECT = np.where(UMAX > 0, UMAX + 1, 0)
     CORRECTD = np.where(UMAXD > 0, UMAXD + 1, 0)
 
     UTM -= CORRECT
     UTMD -= CORRECTD
     
-    Motifs_Choix_Dist = defaultdict(list)
-    # C'est une nouvelle étape dans laquelle on va décrire la transformation des motifs entre le choix model et 
-    # la distribution. Les clés du dictionnaire corréspondent aux motifs - distribution, et les élements aux motifs 
-    # génération (selon diapo 6 de la documentation de Modus)
-
-    Motifs_Choix_Dist[1].extend((1, 2))
-    Motifs_Choix_Dist[2].extend((3,))
-    Motifs_Choix_Dist[3].extend((4,))
-    Motifs_Choix_Dist[4].extend((5,))
-    Motifs_Choix_Dist[5].extend((6,))
-    Motifs_Choix_Dist[6].extend((7,))
-    Motifs_Choix_Dist[7].extend((8,))
-    Motifs_Choix_Dist[8].extend((9,))
-    Motifs_Choix_Dist[9].extend((10,))
-    Motifs_Choix_Dist[10].extend((11, 12))
-    Motifs_Choix_Dist[11].extend((13, 14))
-
-    Duplication = np.zeros((22, 28))
-    for ligne, value in Motifs_Choix_Dist.items():
-        for colonne in value:
-            Duplication[ligne - 1, colonne - 1] = 1
-            Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
-
     UTMD = UTMD @ Duplication
     return UTM, UTMD
 
-# Kiko Everything below this can be deleted.
-
-# sorted(list(set(list(OD.columns)).symmetric_difference(set(list(CM_PAR.columns)))))
-# set(list(CM_PAR.columns)) - set(list(OD.columns))
-# sorted(list(set(list(OD.columns)) - set(list(CM_PAR.columns))))
-#
-# cols = ['INTTC' ,
-# 'INTVP' ,
-# 'INTCY' ,
-# 'TR_HPM'  ,
-# 'TAT_HPM'  ,
-# 'TTC_HPM'  ,
-# 'TR_HPS'  ,
-# 'TAT_HPS'  ,
-# 'TTC_HPS'  ,
-# 'TR_HC'  ,
-# 'TAT_HC'  ,
-# 'TTC_HC'  ,
-# 'TVP_HPM' ,
-# 'TVP_HPS' ,
-# 'TVP_HC' ,
-# 'TMD'  ,
-# 'TCY'  ,
-# 'CTKKM' ,
-# 'CTVP' ,
-# 'CAPVELIB']
-# sorted(list(set(list(CM_PAR.columns)).symmetric_difference(set(cols))))
-
-
-
-# OD_TC_valid = pd.read_sas('Other_files\\eutc2012m.sas7bdat')
-# OD_TC_valid.columns = range(22)
-# U = OD_TC @ CM_PAR.T
-# eU = np.exp(U)
-#
-# OD_MD_valid = pd.read_sas('Other_files\\eumd2012m.sas7bdat')
-# OD_MD_valid.columns = range(22)
-# U = OD_MD @ CM_PAR.T
-# eUMD = np.exp(U)
-#
-# OD_CY_valid = pd.read_sas('Other_files\\eucy2012m.sas7bdat')
-# OD_CY_valid.columns = range(22)
-# U = OD_CY @ CM_PAR.T
-# eUCY = np.exp(U)
-#
-# OD_VP_valid = pd.read_sas('Other_files\\euvp2012m.sas7bdat')
-# OD_VP_valid.columns = range(22)
-# U = OD_VP @ CM_PAR.T
-# eUVP = np.exp(U)
-#
-# np.log(OD_VP_valid)
-#
-# diff = np.abs((eUCY - OD_CY_valid)) / OD_CY_valid
-# diff = (eUVP - OD_VP_valid) / OD_VP_valid
-# diff = np.abs(eU - OD_TC_valid) / OD_TC_valid
-# diff = np.abs((eU - OD_TC_valid)) / OD_TC_valid
-# diff = (eUMD - OD_MD_valid) / OD_MD_valid
-# diff.max()
-#
-# for col in diff.columns:
-#     diff[col][diff[col] > diff[col].quantile(0.95)] = 0
-#
-# sommediff = diff.mean().mean()
-# diff.mean(1).plot()
-#
-# eU.mean().plot()
-# t = 100000*OD_TC_valid.mean()
-# t.plot()
-# plt.show()
-#
-# OD_TC_test = np.exp(OD_TC)
-#
-# OD_TC_valid.mean()
-# eU.max()
-#
-#
-# OD_CY = util_data.var_CY(bdinter, att)
-# OD_CY['TCY'] = (OD_CY['TCY']**lambda_TCY - 1)/lambda_TCY
-# OD_CY['CSTATMOY'] = ((OD_CY['CSTATMOY']+1) ** lambda_CSTAT - 1) / lambda_CSTAT
-# OD_CY.iloc[0, :] @ CM_PAR.iloc[0, :].T
-# OD_TC.iloc[0, :] @ CM_PAR.iloc[0, :].T
-#
-# transformationBC(OD_CY)
-#
-# OD_CY['INTCY'] = 0
-# OD_CY.max()
-#
-# bdinter = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
-# bdinter.rename(
-#             columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
-#                      'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
-#                      'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
-#                      'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
-#             inplace=True)
-# for i in range(1, 19):
-#     bdinter.drop(columns=f'CO{i}', inplace=True)
-#
-# OD_VP = transformationBC(util_data.var_VP(bdinter, att))
-# OD_VP = util_data.var_VP(bdinter, att)
-# OD_VP.iloc[0, :] @ CM_PAR.iloc[0, :].T
-# for col in diff.columns:
-#     print(diff[col].to_numpy().argmax())
-#
-# diff.max()
-# OD_TC_valid.iloc[1661518]
-# eU.iloc[1661518]
-#
-# OD.loc[1661518, ['CTNAVIGO', 'CTIMAGINR', 'CTTKKM']] = bdinter.loc[1661518, ['CTNAVIGO', 'CTIMAGINR', 'CTTKKM']].copy()
-# OD.iloc[1661518] - bdinter.iloc[1661518]
-# # OD_VP.iloc[0, :] @ CM_PAR.iloc[0, :].T
-#
