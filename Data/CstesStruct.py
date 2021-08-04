@@ -6,7 +6,7 @@ d'après la version crée le 19 août 2007
 
 # Bibliothéques de python qui sont nécessaires
 import os
-import Exec_Modus
+from Quatre_Etapes import Exec_Modus
 
 # 1. Répertoires et versions des logiciels
 # !!! ATTENTION : si la version de Davisum n'est pas la 11, il faut modifier le programme Wait2.exe

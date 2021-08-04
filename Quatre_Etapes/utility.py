@@ -1,11 +1,9 @@
 
 # Importation des modules nécessaires
-import numpy as np
 import pandas as pd
-from collections import defaultdict
 import pickle as pkl
 from Data import util_data, A_CstesModus, CstesStruct
-from Exec_Modus import *
+from Quatre_Etapes.Exec_Modus import *
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
