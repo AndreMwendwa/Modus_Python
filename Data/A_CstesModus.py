@@ -7,6 +7,8 @@ Date: 30 septembre 2021
 
 # Modules de Python nécessaires à ce projet.
 from collections import namedtuple
+from collections import defaultdict
+import numpy as np
 
 from Data import CstesStruct
 from Data.CstesStruct import *
@@ -144,6 +146,9 @@ Path_sep = namedtuple('Path_sep', 'path sep')  # Un namedtuple de la localisatio
 dir_dataScen = CstesStruct.dir_dataScen
 dir_dataAct = CstesStruct.dir_dataAct
 dir_dataRef = CstesStruct.dir_dataRef
+dir_dataTemp = 'D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files\\'   # Pour garder les
+# résultats du calcul utilitaire
+
 
 # 9. Télétravail
 idTTV = 0   # 1 = activation du module télétravail en scénario, 0 sinon
@@ -560,10 +565,34 @@ att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TA
            'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 
 
-cMaxIterDist = 50
-precRMSE = 100
+cMaxIterDist = 10
+precRMSE = 60
 
 
+# Liste de dataframes qui entrent dans la BDD des résultats du calcul utilitaire
+
+Motifs_Choix_Dist = defaultdict(list)
+# C'est une nouvelle étape dans laquelle on va décrire la transformation des motifs entre le choix model et
+# la distribution. Les clés du dictionnaire corréspondent aux motifs - distribution, et les élements aux motifs
+# génération (selon diapo 6 de la documentation de Modus)
+
+Motifs_Choix_Dist[1].extend((1, 2))
+Motifs_Choix_Dist[2].extend((3,))
+Motifs_Choix_Dist[3].extend((4,))
+Motifs_Choix_Dist[4].extend((5,))
+Motifs_Choix_Dist[5].extend((6,))
+Motifs_Choix_Dist[6].extend((7,))
+Motifs_Choix_Dist[7].extend((8,))
+Motifs_Choix_Dist[8].extend((9,))
+Motifs_Choix_Dist[9].extend((10,))
+Motifs_Choix_Dist[10].extend((11, 12))
+Motifs_Choix_Dist[11].extend((13, 14))
+
+Duplication = np.zeros((22, 28))
+for ligne, value in Motifs_Choix_Dist.items():
+    for colonne in value:
+        Duplication[ligne - 1, colonne - 1] = 1
+        Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
 
 
 

@@ -52,6 +52,10 @@ def choix_modal(n, hor):
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
+    return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
+
+
+
 
 
 
