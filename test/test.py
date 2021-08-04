@@ -66,14 +66,14 @@ class Test_Generation(unittest.TestCase):
     #     sommediff = diff.mean(0).sum()
     #     self.assertLess(sommediff, 0.1)
 
-    def test_distribution(self):
-        dist_test = distribution.distribution('actuel', 'PPM')
-        dist_valid = pd.read_sas('Other_files\\modus_motcat_2012_hpm.sas7bdat')
-        dist_valid.columns = range(28)
-        diff = np.abs(dist_test - dist_valid) / dist_valid
-        diff = diff.replace(np.inf, 0)
-        sommediff = diff.mean(0).mean()
-        self.assertLess(sommediff, 0.1)
+    # def test_distribution(self):
+    #     dist_test = distribution.distribution('actuel', 'PPM')
+    #     dist_valid = pd.read_sas('Other_files\\modus_motcat_2012_hpm.sas7bdat')
+    #     dist_valid.columns = range(28)
+    #     diff = np.abs(dist_test - dist_valid) / dist_valid
+    #     diff = diff.replace(np.inf, 0)
+    #     sommediff = diff.mean(0).mean()
+    #     self.assertLess(sommediff, 0.1)
 
 if __name__ == '__main__':
     unittest.main()

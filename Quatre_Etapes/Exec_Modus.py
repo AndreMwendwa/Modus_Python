@@ -1,5 +1,5 @@
 import os
 
-dir_root = os.path.join('D:\\', 'TraDD ENPC 2020-21', 'Stage','MODUSv3.1.3')
+dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))
 
 iter_count = 0
