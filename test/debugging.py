@@ -111,8 +111,8 @@
 
 
 def test_diff(mode, util):
-    U_valid = pd.read_sas(f"D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python"
-                          f"\\Other_files\\Confirmation distribution\\udf_{mode}.sas7bdat")
+    U_valid = pd.read_sas(f"mypath + ""
+                          f"Other_files\\Confirmation distribution\\udf_{mode}.sas7bdat")
     eU_valid = pd.read_sas(f'D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine'
                            f'\\Modus_Python\\Other_files\\Confirmation distribution\\eudf_{mode}.sas7bdat')
     U_valid.columns = range(22)
@@ -155,11 +155,11 @@ euVP = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_
                    '\\Confirmation distribution\\eudf_vp.sas7bdat')
 euVP.columns = range(22)
 
+mypath = 'C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\'
 
 
 def choix_modal(n, hor):
-    Modus_motcat = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
-                               '\\modus_motcat_2012_hpm.sas7bdat')
+    Modus_motcat = pd.read_sas(mypath + 'Other_files\\modus_motcat_2012_hpm.sas7bdat')
     Modus_motcat.columns = range(28)
     Modus_motcat = Modus_motcat @ Duplication.T
 
@@ -197,16 +197,16 @@ def choix_modal(n, hor):
 
 Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat = choix_modal('actuel', 'PPM')
 
-Modus_MD_motcat_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_MD_motcat_valid = pd.read_sas(mypath + 'Other_files'
                               '\\Confirmation distribution\\motcatmd.sas7bdat')
 Modus_MD_motcat_valid.columns = range(22)
-Modus_CY_motcat_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_CY_motcat_valid = pd.read_sas(mypath + 'Other_files'
                               '\\Confirmation distribution\\motcatcy.sas7bdat')
 Modus_CY_motcat_valid.columns = range(22)
-Modus_VP_motcat_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_VP_motcat_valid = pd.read_sas(mypath + 'Other_files'
                               '\\Confirmation distribution\\motcatvp.sas7bdat')
 Modus_VP_motcat_valid.columns = range(22)
-Modus_TC_motcat_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_TC_motcat_valid = pd.read_sas(mypath + 'Other_files'
                               '\\Confirmation distribution\\motcattc.sas7bdat')
 Modus_TC_motcat_valid.columns = range(22)
 
@@ -217,6 +217,12 @@ sommediffMD = diffMD.mean().mean()
 
 diffTC = np.abs(Modus_TC_motcat - Modus_TC_motcat_valid)/Modus_TC_motcat_valid
 sommediffTC = diffTC.mean().mean()
+
+diffVP = np.abs(Modus_VP_motcat - Modus_VP_motcat_valid)/Modus_VP_motcat_valid
+sommediffVP = diffVP.mean().mean()
+
+diffCY = np.abs(Modus_CY_motcat - Modus_CY_motcat_valid)/Modus_CY_motcat_valid
+sommediffCY = diffCY.mean().mean()
 
 
 
@@ -229,14 +235,14 @@ diffTC.mean(1).plot()
 test = np.ones((1661521, 22))
 test_dev = test + np.random.normal(loc=-1.6e-5, scale=0.003, size=(1661521, 22))
 
-eudf_cy = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files\\'
+eudf_cy = pd.read_sas(mypath + 'Other_files\\'
                       'Confirmation distribution\\eudf_cy.sas7bdat')
 eudf_cy.columns = range(22)
 cm_par = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Calibrage\\2_Resultats\\'
                      '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\cm_parhpm.sas7bdat')
 test_res = eudf_cy @ cm_par
 test_res.columns = range(22)
-test_res_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files\\'
+test_res_valid = pd.read_sas(mypath + 'Other_files\\'
                       'Confirmation distribution\\test.sas7bdat')
 test_res_valid.columns = range(22)
 diff = (test_res - test_res_valid)/test_res_valid
@@ -259,7 +265,7 @@ euVP = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_
                    '\\Confirmation distribution\\eudf_vp.sas7bdat')  # Your own path
 euVP.columns = range(22)
 seU = euTC + euVP + euCY + euMD
-Modus_motcat = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_motcat = pd.read_sas(mypath + 'Other_files'
                                '\\modus_motcat_2012_hpm.sas7bdat')  # Your own path
 Duplication = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
                    '\\Confirmation distribution\\dupplication.sas7bdat')  # Your own path
@@ -268,7 +274,7 @@ Modus_motcat.columns = range(28)
 Modus_motcat = Modus_motcat @ Duplication.T
 BASE = Modus_motcat/seU
 Modus_MD_motcat = BASE * euMD
-Modus_MD_motcat_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+Modus_MD_motcat_valid = pd.read_sas(mypath + 'Other_files'
                               '\\Confirmation distribution\\motcatmd.sas7bdat')   # The dataset created by the SAS code
 Modus_MD_motcat_valid.columns = range(22)
 diffMD = np.abs(Modus_MD_motcat - Modus_MD_motcat_valid)/Modus_MD_motcat_valid
