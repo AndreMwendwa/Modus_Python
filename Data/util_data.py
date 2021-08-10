@@ -104,16 +104,28 @@ def var_MD(OD, att):
     OD_input2 = OD_input[att]
     return OD_input2
 
+# def var_CY(OD, att):
+#     OD_input = OD.copy()
+#     att2 = att.copy()
+#     att2.remove('CAPVELIB')
+#     DVOL_col = OD_input.loc[:, 'DVOL'].copy()
+#     for col in att2:
+#         OD_input[col] = 0
+#     OD_input['INTCY'] = 1
+#     OD_input['TCY'] = 1.3 * DVOL_col /(VCY/60)
+#     OD_input2 = OD_input[att2]
+#     return OD_input2
+
 def var_CY(OD, att):
     OD_input = OD.copy()
+
     DVOL_col = OD_input.loc[:, 'DVOL'].copy()
-    for col in att:
-        OD_input[col] = 0
+    OD_input[['INTTC', 'INTVP', 'TR_PPM', 'TR_PCJ', 'TR_PPS', 'TATT_PPM', 'TATT_PCJ', 'TATT_PPS', 'TTC_PPM', 'TTC_PCJ',
+              'TTC_PPS', 'TMD', 'TVPS', 'TVPC', 'TVPM', 'CTTKKM', 'CTVP', 'CSTATMOY']] = 0
     OD_input['INTCY'] = 1
     OD_input['TCY'] = 1.3 * DVOL_col /(VCY/60)
     OD_input2 = OD_input[att]
     return OD_input2
-
 
 
 def OD(n):

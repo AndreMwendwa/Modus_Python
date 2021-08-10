@@ -13,14 +13,66 @@ util_TC_SAS.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TV
                             'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
                             'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
                             'CTKKM': 'CTTKKM'}, inplace=True)
+
+util_CY_SAS = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\vartbc_cy.sas7bdat')
+
+util_CY_SAS.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TVPS',
+                            'TTC_HPM':'TTC_PPM', 'TTC_HC':'TTC_PCJ', 'TTC_HPS':'TTC_PPS',
+                            'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
+                            'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
+                            'CTKKM': 'CTTKKM'}, inplace=True)
+statusCY = util_CY_SAS == util_CY
+statusCY.sum()
+util_CY_SAS['CAPVELIB'].sum()
+util_CY['CAPVELIB'].sum()
 # list_col = list(util_TC.columns)
 # util_TC_SAS = util_TC_SAS[list_col]
 
 statusTC = util_TC_SAS == util_TC
-statusTC = (util_TC - util_TC_SAS)
+statusTC = np.abs(util_TC - util_TC_SAS)
 statusTC.sum()
+util_TC_SAS['TTC_PPM'].sum()
+util_TC['TTC_PPM'].sum()
+util_TC_SAS2['TTC_PPM'].sum()
+(0.9 ** lambda_TTC - 1/lambda_TTC)
+(1.1 ** lambda_TTC - 1)/lambda_TTC
 
 statusTC.sum()
+
+util_TC_SAS2 = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\var_tc.sas7bdat')
+
+util_TC_SAS2.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TVPS',
+                            'TTC_HPM':'TTC_PPM', 'TTC_HC':'TTC_PCJ', 'TTC_HPS':'TTC_PPS',
+                            'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
+                            'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
+                            'CTKKM': 'CTTKKM'}, inplace=True)
+util_TC2 = util_data.var_TC(OD, att)
+statusTC = np.abs(util_TC2 - util_TC_SAS2)
+statusTC.sum()
+rowmax = []
+for i in list(statusTC.columns):
+    rowmax.append(np.argmax(statusTC[i]))
+statusTC.iloc[3891, :]
+util_TC.iloc[3891, :]
+util_TC.iloc[3891, :]
+util_TC_SAS.iloc[3891, :] - util_TC.iloc[3891, :]
+
+statusTC['TATT_PPM'].plot()
+statusTC['TTC_PCJ'].plot()
+
+util_VP_SAS = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\vartbc_vp.sas7bdat')
+
+util_VP_SAS.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TVPS',
+                            'TTC_HPM':'TTC_PPM', 'TTC_HC':'TTC_PCJ', 'TTC_HPS':'TTC_PPS',
+                            'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
+                            'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
+                            'CTKKM': 'CTTKKM'}, inplace=True)
+statusVP = np.abs(util_VP_SAS - util_VP)
+statusVP.sum()
+
+
+
+
 ## util_TC[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
 ## util_TC_SAS[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
 #
@@ -78,6 +130,38 @@ U = util_TC @ CM_PAR.T
 eU = np.exp(U)
 diffTC = np.abs(eU - OD_TC_valid) / OD_TC_valid
 sommediffTC = diffTC.mean().mean()
+
+OD_CY_valid = pd.read_sas('Other_files\\eucy2012m.sas7bdat')
+OD_CY_valid.columns = range(22)
+U = util_CY @ CM_PAR.T
+eU = np.exp(U)
+diffCY = np.abs(eU - OD_CY_valid) / OD_CY_valid
+sommediffCY = diffCY.mean().mean()
+
+OD_CY = util_data.var_CY(OD, att)
+U_valid = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\udf_cy.sas7bdat')
+U_valid.columns = range(22)
+U = util_CY @ CM_PAR.T
+diffCYU = np.abs(U - U_valid)/U_valid
+sommediffCY
+
+OD_MD_valid = pd.read_sas('Other_files\\eumd2012m.sas7bdat')
+OD_MD_valid.columns = range(22)
+U = util_MD @ CM_PAR.T
+eU = np.exp(U)
+diffMD = np.abs(eU - OD_MD_valid) / OD_MD_valid
+sommediffMD = diffMD.mean().mean()
+
+OD_VP_valid = pd.read_sas('Other_files\\euvp2012m.sas7bdat')
+OD_VP_valid.columns = range(22)
+U = util_VP @ CM_PAR.T
+eU = np.exp(U)
+diffVP = np.abs(eU - OD_VP_valid) / OD_VP_valid
+
+sommediffVP = diffVP.mean().mean()
+diffVP.max()
+
+
 rowmax = []
 for i in range(22):
     rowmax.append(np.argmax(diffTC[i]))
@@ -322,3 +406,82 @@ diffMD.mean(1).plot()
 
 M = pd.DataFrame(M)
 UTMD.isna().sum().sum()
+
+
+matrice = util_data.var_TC(OD, att)
+matrice['TTC_PPM'] = np.where(matrice['TTC_PPM'] != 0, (matrice['TTC_PPM'] ** lambda_COUT - 1) / lambda_COUT, 0)
+if matrice['TTC_PCJ'].any():
+    matrice['TTC_PCJ'] = (matrice['TTC_PCJ'] ** lambda_TTC - 1) / lambda_TTC
+if matrice['TTC_PPS'].any():
+    matrice['TTC_PPS'] = (matrice['TTC_PPS'] ** lambda_TTC - 1) / lambda_TTC
+
+if matrice['TVPM'].any():
+    matrice['TVPM'] = (matrice['TVPM']**lambda_TVP - 1)/lambda_TVP
+if matrice['TVPC'].any():
+    matrice['TVPC'] = (matrice['TVPC']**lambda_TVP - 1)/lambda_TVP
+# mask = matrice['TVPC'] != 0   # Kiko - to change
+# matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
+if matrice['TVPS'].any():
+    matrice['TVPS'] = (matrice['TVPS']**lambda_TVP - 1)/lambda_TVP
+
+# if matrice['TATT_PPM'].any():
+#     matrice['TATT_PPM'] = (matrice['TATT_PPM']**lambda_TAT - 1)/lambda_TAT
+mask = matrice['TATT_PPM'] != 0
+matrice.loc[mask, 'TATT_PPM'] = (matrice.loc[mask, 'TATT_PPM'] ** lambda_COUT - 1) / lambda_COUT
+del mask
+if matrice['TATT_PPS'].any():
+    matrice['TATT_PPS'] = (matrice['TATT_PPS']**lambda_TAT - 1)/lambda_TAT
+if matrice['TATT_PCJ'].any():
+    matrice['TATT_PPS'] = (matrice['TATT_PCJ']**lambda_TAT - 1)/lambda_TAT  # Kiko -> why this?
+
+if matrice['TCY'].any():
+    matrice['TCY'] = (matrice['TCY']**lambda_TCY - 1)/lambda_TCY
+# if matrice['CTTKKM'].any():
+#     matrice['CTTKKM'] = (matrice['CTTKKM']**lambda_COUT - 1)/lambda_COUT
+
+mask = matrice['CTTKKM'] != 0
+matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
+
+if matrice['CTVP'].any():
+    matrice['CTVP'] = (matrice['CTVP']**lambda_COUT - 1)/lambda_COUT
+
+# matrice['CSTATMOY'] = (matrice['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
+if matrice['CSTATMOY'].any():
+    matrice['CSTATMOY'] = ((matrice['CSTATMOY']+1) ** lambda_CSTAT - 1) / lambda_CSTAT
+
+mask = matrice['CAPVELIB'] != 0
+matrice.loc[mask, 'CAPVELIB'] = (matrice.loc[mask, 'CAPVELIB'] * capvelib)
+
+# mask = matrice['TTC_PPM'] != 0
+# matrice.loc[mask, 'TTC_PPM'] = (matrice.loc[mask, 'TTC_PPM'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TTC_PCJ'] != 0
+# matrice.loc[mask, 'TTC_PCJ'] = (matrice.loc[mask, 'TTC_PCJ'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TTC_PPS'] != 0
+# matrice.loc[mask, 'TTC_PPS'] = (matrice.loc[mask, 'TTC_PPS'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TVPM'] != 0
+# matrice.loc[mask, 'TVPM'] = (matrice.loc[mask, 'TVPM'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TVPC'] != 0
+# matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TVPS'] != 0
+# matrice.loc[mask, 'TVPS'] = (matrice.loc[mask, 'TVPS'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TATT_PPM'] != 0
+# matrice.loc[mask, 'TATT_PPM'] = (matrice.loc[mask, 'TATT_PPM'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TATT_PPS'] != 0
+# matrice.loc[mask, 'TATT_PPS'] = (matrice.loc[mask, 'TATT_PPS'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TATT_PCJ'] != 0
+# matrice.loc[mask, 'TATT_PPS'] = (matrice.loc[mask, 'TATT_PCJ'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['TCY'] != 0
+# matrice.loc[mask, 'TCY'] = (matrice.loc[mask, 'TCY'] ** lambda_COUT - 1) / lambda_COUT
+# mask = matrice['CTTKKM'] != 0
+# matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
+#
+# mask = matrice['CTVP'] != 0
+# matrice.loc[mask, 'CTVP'] = (matrice.loc[mask, 'CTVP']** lambda_COUT - 1) / lambda_COUT
+#
+# matrice.loc[:, 'CSTATMOY'] = ((matrice.loc[:, 'CSTATMOY'] + 1)** lambda_COUT - 1) / lambda_COUT
+
+if n == 'scen' and idvelo == 1:
+    if idBcl == 0 or iter_count != 1:
+        matrice['INTCY'] = intcy
+        matrice['CAPVELIB'] = capvelib
+# matrice.replace([np.inf, -np.inf], 0, inplace=True)
