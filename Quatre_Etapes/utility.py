@@ -53,8 +53,8 @@ def utilite(n, hor):
             matrice['TVPM'] = (matrice['TVPM']**lambda_TVP - 1)/lambda_TVP
         if matrice['TVPC'].any():
             matrice['TVPC'] = (matrice['TVPC']**lambda_TVP - 1)/lambda_TVP
-        mask = matrice['TVPC'] != 0   # Kiko - to change
-        matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TVPC'] != 0   # Kiko - to change
+        # matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
         if matrice['TVPS'].any():
             matrice['TVPS'] = (matrice['TVPS']**lambda_TVP - 1)/lambda_TVP
 
@@ -67,11 +67,11 @@ def utilite(n, hor):
 
         if matrice['TCY'].any():
             matrice['TCY'] = (matrice['TCY']**lambda_TCY - 1)/lambda_TCY
-        if matrice['CTTKKM'].any():
-            matrice['CTTKKM'] = (matrice['CTTKKM']**lambda_COUT - 1)/lambda_COUT
+        # if matrice['CTTKKM'].any():
+        #     matrice['CTTKKM'] = (matrice['CTTKKM']**lambda_COUT - 1)/lambda_COUT
 
-        # mask = matrice['CTTKKM'] != 0
-        # matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
+        mask = matrice['CTTKKM'] != 0
+        matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
 
         if matrice['CTVP'].any():
             matrice['CTVP'] = (matrice['CTVP']**lambda_COUT - 1)/lambda_COUT

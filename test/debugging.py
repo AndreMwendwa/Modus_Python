@@ -77,7 +77,7 @@ diff_SAS.sum().sum()    # Kiko Very small figure, proving that my eu calc and Gu
 U = util_TC @ CM_PAR.T
 eU = np.exp(U)
 diffTC = np.abs(eU - OD_TC_valid) / OD_TC_valid
-sommediffTC = diffTC.sum().sum()
+sommediffTC = diffTC.mean().mean()
 rowmax = []
 for i in range(22):
     rowmax.append(np.argmax(diffTC[i]))
@@ -86,7 +86,7 @@ sns.heatmap(diffTC.iloc[1489000:1489500, :], annot=False)
 
 diffT = util_TC_SAS - util_TC
 diffT.max()
-sns.heatmap(diffT.iloc[1489000:1489500, :], annot=False)
+sns.heatmap(diffT.iloc[:, :], annot=False)
 
 diffTC.mean(1).plot()
 diffTC.iloc[1480000:1487000, :].plot()
@@ -321,4 +321,4 @@ diffMD.mean(1).plot()
 
 
 M = pd.DataFrame(M)
-M.isna().sum().sum()
+UTMD.isna().sum().sum()
