@@ -53,6 +53,8 @@ def utilite(n, hor):
             matrice['TVPM'] = (matrice['TVPM']**lambda_TVP - 1)/lambda_TVP
         if matrice['TVPC'].any():
             matrice['TVPC'] = (matrice['TVPC']**lambda_TVP - 1)/lambda_TVP
+        mask = matrice['TVPC'] != 0   # Kiko - to change
+        matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
         if matrice['TVPS'].any():
             matrice['TVPS'] = (matrice['TVPS']**lambda_TVP - 1)/lambda_TVP
 
@@ -67,12 +69,46 @@ def utilite(n, hor):
             matrice['TCY'] = (matrice['TCY']**lambda_TCY - 1)/lambda_TCY
         if matrice['CTTKKM'].any():
             matrice['CTTKKM'] = (matrice['CTTKKM']**lambda_COUT - 1)/lambda_COUT
+
+        # mask = matrice['CTTKKM'] != 0
+        # matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
+
         if matrice['CTVP'].any():
             matrice['CTVP'] = (matrice['CTVP']**lambda_COUT - 1)/lambda_COUT
 
         # matrice['CSTATMOY'] = (matrice['CSTATMOY'] + 1)**(lambda_CSTAT - 1)/lambda_CSTAT
         if matrice['CSTATMOY'].any():
             matrice['CSTATMOY'] = ((matrice['CSTATMOY']+1) ** lambda_CSTAT - 1) / lambda_CSTAT
+
+
+        # mask = matrice['TTC_PPM'] != 0
+        # matrice.loc[mask, 'TTC_PPM'] = (matrice.loc[mask, 'TTC_PPM'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TTC_PCJ'] != 0
+        # matrice.loc[mask, 'TTC_PCJ'] = (matrice.loc[mask, 'TTC_PCJ'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TTC_PPS'] != 0
+        # matrice.loc[mask, 'TTC_PPS'] = (matrice.loc[mask, 'TTC_PPS'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TVPM'] != 0
+        # matrice.loc[mask, 'TVPM'] = (matrice.loc[mask, 'TVPM'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TVPC'] != 0
+        # matrice.loc[mask, 'TVPC'] = (matrice.loc[mask, 'TVPC'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TVPS'] != 0
+        # matrice.loc[mask, 'TVPS'] = (matrice.loc[mask, 'TVPS'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TATT_PPM'] != 0
+        # matrice.loc[mask, 'TATT_PPM'] = (matrice.loc[mask, 'TATT_PPM'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TATT_PPS'] != 0
+        # matrice.loc[mask, 'TATT_PPS'] = (matrice.loc[mask, 'TATT_PPS'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TATT_PCJ'] != 0
+        # matrice.loc[mask, 'TATT_PPS'] = (matrice.loc[mask, 'TATT_PCJ'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['TCY'] != 0
+        # matrice.loc[mask, 'TCY'] = (matrice.loc[mask, 'TCY'] ** lambda_COUT - 1) / lambda_COUT
+        # mask = matrice['CTTKKM'] != 0
+        # matrice.loc[mask, 'CTTKKM'] = (matrice.loc[mask, 'CTTKKM'] ** lambda_COUT - 1) / lambda_COUT
+        #
+        # mask = matrice['CTVP'] != 0
+        # matrice.loc[mask, 'CTVP'] = (matrice.loc[mask, 'CTVP']** lambda_COUT - 1) / lambda_COUT
+        #
+        # matrice.loc[:, 'CSTATMOY'] = ((matrice.loc[:, 'CSTATMOY'] + 1)** lambda_COUT - 1) / lambda_COUT
+
         if n == 'scen' and idvelo == 1:
             if idBcl == 0 or iter_count != 1:
                 matrice['INTCY'] = intcy

@@ -1,22 +1,28 @@
 #
-# util_TC_SAS = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\'
-#                           'Other_files\\Confirmation distribution\\vartbc_tc.sas7bdat')
-#
-# util_TC_SAS.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TVPS',
-#                             'TTC_HPM':'TTC_PPM', 'TTC_HC':'TTC_PCJ', 'TTC_HPS':'TTC_PPS',
-#                             'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
-#                             'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
-#                             'CTKKM': 'CTTKKM'}, inplace=True)
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+mypath = 'C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\'
+
+bdinter = pd.read_sas(mypath + '\\Other_files\\bdinter2012.sas7bdat')
+
+util_TC_SAS = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\vartbc_tc.sas7bdat')
+
+util_TC_SAS.rename(columns= {'TVP_HPM': 'TVPM', 'TVP_HC': 'TVPC', 'TVP_HPS': 'TVPS',
+                            'TTC_HPM':'TTC_PPM', 'TTC_HC':'TTC_PCJ', 'TTC_HPS':'TTC_PPS',
+                            'TR_HPM': 'TR_PPM', 'TR_HC': 'TR_PCJ', 'TR_HPS': 'TR_PPS',
+                            'TAT_HPM': 'TATT_PPM', 'TAT_HC': 'TATT_PCJ', 'TAT_HPS': 'TATT_PPS',
+                            'CTKKM': 'CTTKKM'}, inplace=True)
 # list_col = list(util_TC.columns)
 # util_TC_SAS = util_TC_SAS[list_col]
-#
-# statusTC = util_TC_SAS == util_TC
-# statusTC = (util_TC - util_TC_SAS)
-# statusTC.sum()
-#
-# statusTC.sum()
-# util_TC[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
-# util_TC_SAS[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
+
+statusTC = util_TC_SAS == util_TC
+statusTC = (util_TC - util_TC_SAS)
+statusTC.sum()
+
+statusTC.sum()
+## util_TC[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
+## util_TC_SAS[['TATT_PPM', 'TTC_PPM', 'TATT_PPS', 'TTC_PPS', 'TATT_PCJ', 'TTC_PCJ']]
 #
 # df = pd.concat([util_TC[['CTTKKM']], util_TC_SAS[['CTTKKM']]], axis=1)
 # df['difference'] = (util_TC['CTTKKM'] - util_TC_SAS['CTTKKM'])
@@ -54,10 +60,42 @@
 # sorted(set(util_TC_SAS.columns).symmetric_difference(set(util_TC.columns)))
 #
 #
-# U = util_TC @ CM_PAR.T
-# eU = np.exp(U)
-#
-# # OD_TC_valid = pd.read_sas('Other_files\\eutc2012m.sas7bdat')
+U_valid = pd.read_sas(mypath + 'Other_files\\Confirmation distribution\\utc_df.sas7bdat')
+U_valid.columns = range(22)
+util_TC_SAS.loc[1489251, 'CTTKKM']
+
+util_TC.loc[1489251, 'CTTKKM']
+util_TC['CTTKKM'].replace({-6.25:0}, inplace=True)
+
+
+OD_TC_valid = pd.read_sas('Other_files\\eutc2012m.sas7bdat')
+OD_TC_valid.columns = range(22)
+
+diff_SAS = OD_TC_valid - euTC
+diff_SAS.sum().sum()    # Kiko Very small figure, proving that my eu calc and Guillaume's give the same output.
+
+U = util_TC @ CM_PAR.T
+eU = np.exp(U)
+diffTC = np.abs(eU - OD_TC_valid) / OD_TC_valid
+sommediffTC = diffTC.sum().sum()
+rowmax = []
+for i in range(22):
+    rowmax.append(np.argmax(diffTC[i]))
+# plt.pcolor(diffTC.iloc[1480000:1490000, :])
+sns.heatmap(diffTC.iloc[1489000:1489500, :], annot=False)
+
+diffT = util_TC_SAS - util_TC
+diffT.max()
+sns.heatmap(diffT.iloc[1489000:1489500, :], annot=False)
+
+diffTC.mean(1).plot()
+diffTC.iloc[1480000:1487000, :].plot()
+
+# Debugging CTKKM in TBC
+matrice = pd.DataFrame([0,1,2,3])
+if matrice[0].any():
+    matrice['CTTKKM'] = (matrice[0] ** lambda_COUT - 1) / lambda_COUT
+
 # OD_TC_valid = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\'
 #                           'Other_files\\Confirmation distribution\\eutc_df.sas7bdat')
 #
@@ -70,10 +108,7 @@
 # diffTCU.max().max()
 #
 #
-# OD_TC_valid.columns = range(22)
-# diffTC = np.abs(eU - OD_TC_valid) / OD_TC_valid
-# sommediffTC = diffTC.mean().mean()
-# diffTC.max()
+#
 #
 #
 # # Simulating effect of variations
@@ -155,7 +190,7 @@ euVP = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_
                    '\\Confirmation distribution\\eudf_vp.sas7bdat')
 euVP.columns = range(22)
 
-mypath = 'C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\'
+
 
 
 def choix_modal(n, hor):
@@ -282,3 +317,8 @@ meandiffMD = diffMD.mean().mean()
 
 diffMD.mean(1).plot()
 
+
+
+
+M = pd.DataFrame(M)
+M.isna().sum().sum()
