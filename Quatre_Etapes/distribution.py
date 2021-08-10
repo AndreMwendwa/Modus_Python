@@ -89,14 +89,14 @@ def distribution(n, hor):
     dist_calc(Modus_motcat)
     return Modus_motcat
 
-import pandas as pd
-import numpy as np
-Motcat_valid = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
-                           '\\Other_files\\modus_motcat_2012_hpm.sas7bdat')
-Motcat_valid.columns = range(28)
-DIFF = np.abs(Modus_motcat - Motcat_valid)
-
-DIFF.sum().sum()
+# import pandas as pd
+# import numpy as np
+# Motcat_valid = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
+#                            '\\Other_files\\modus_motcat_2012_hpm.sas7bdat')
+# Motcat_valid.columns = range(28)
+# DIFF = np.abs(Modus_motcat - Motcat_valid)/Motcat_valid
+#
+# DIFF.sum().sum()
 
 
 
