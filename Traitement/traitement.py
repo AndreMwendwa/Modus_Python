@@ -1,9 +1,13 @@
 import pandas as pd
 from Data import A_CstesModus, CstesStruct
 from Data.A_CstesModus import *
+from Data.fonctions_gen import *
 import pickle as pkl
+from Data.traitment_data import read_mat
 
 
+
+print(VS_Emp_CDG)
 def ODvide_func(n):
     ODvide = np.ones((n**2, 2))
     for i in range(n):
@@ -165,77 +169,289 @@ def traitementVP(H, n, hor):
     return ModusUVP, ModusUVPcarre, ModusUVPSOLO
 
 def Vecteurs_SpecVP(H, n):
-    CORDVP = pd.read_csv(Mat_Calees[f'CORDVP_{H}_{n}'].path, sep=Mat_Calees[f'CORDVP_{H}_{n}'].sep,
-                         skiprows=Mat_Calees[f'CORDVP_{H}_{n}'].skip, encoding='Latin1', names=['ZONEO', 'ZONED', 'FLUX'])
-    dbfile = open(f'{dir_dataTemp}ModusUVP', 'rb')
-    ModusUVP = pkl.load(dbfile)
 
+    # CORDVP = pd.read_csv(Mat_Calees[f'CORDVP_{H}_{n}'].path, sep=Mat_Calees[f'CORDVP_{H}_{n}'].sep,
+    #                      skiprows=Mat_Calees[f'CORDVP_{H}_{n}'].skip, encoding='Latin1', names=['ZONEO', 'ZONED', 'FLUX'])
+    global read_mat
+    read_mat = read_mat()
+    read_mat.n = n
+    read_mat.per = H
+    PoidsVS, VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = read_mat.vect_spec()
+
+    CORDVP = read_mat.CORDVP_func()
+
+    PoidsVS.index = PoidsVS['ZONE']
+    # Kiko - 16/09/21 taux conversion déplacements - UVP ont changé, alors ne peut pas utiliser mes calculs précedents
+    # dbfile = open(f'{dir_dataTemp}ModusUVP', 'rb')
+    # ModusUVP = pkl.load(dbfile)
+    ModusUVP = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\'
+								   'Modus_Python\\Copie de work\\modusuvpm2012_tmp2.sas7bdat')
+    ModusUVP.rename(columns={'ZoneO':'ZONEO', 'ZoneD':'ZONED'}, inplace=True)
     ModusUVP_tmp = pd.concat([ModusUVP, CORDVP], ignore_index=True)
-    ModusUVP_tmp.sort_values(by=['ZONEO', 'ZONED'], ignore_index=True,inplace=True)
-    MODUSUVP_cord = ODvide_func(1327)
-    MODUSUVP_cord = pd.DataFrame(MODUSUVP_cord, columns=['ZONEO', 'ZONED'])
+    # ModusUVP_tmp = pd.concat([ModusUVP, CORDVP], ignore_index=True)
+    # ModusUVP_tmp.sort_values(by=['ZONEO', 'ZONED'], ignore_index=True, inplace=True)
+    # MODUSUVP_cord = ODvide_func(1327)
+    # MODUSUVP_cord = pd.DataFrame(MODUSUVP_cord, columns=['ZONEO', 'ZONED'])
+    #
+    # MODUSUVP_cord = pd.merge(MODUSUVP_cord, ModusUVP_tmp, on=['ZONEO', 'ZONED'], how='left')
+    # MODUSUVP_cord['FLUX'].fillna(0, inplace=True)
 
-    MODUSUVP_cord = pd.merge(MODUSUVP_cord, ModusUVP_tmp, on=['ZONEO', 'ZONED'], how='left')
-    MODUSUVP_cord['FLUX'].fillna(0, inplace=True)
+    MODUSUVP_cord = complete(ModusUVP_tmp, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
 
     MODUSUVP_cord = MODUSUVP_cord['FLUX'].to_numpy().reshape((cNbZone + cNbZspec + cNbZext, cNbZone + cNbZspec + cNbZext))
 
-    Poids = pd.read_csv(Vect_spec[f'Poids_VS_{n}'].path, sep=Vect_spec[f'Poids_VS_{n}'].sep)
-    Poids.rename(columns={'Em_HPS':'Em_PPS', 'Em_HPM':'Em_PPM', 'Em_HPC':'Em_PCJ',
-                          'Att_HPS': 'Att_PPS', 'Att_HPM': 'Att_PPM', 'Att_HPC': 'Em_PCJ',
-                          }, inplace=True)
-    Poids_H = Poids[['ZONE', f'Em_{H}', f'Att_{H}']]
+    # On crée  une matrice de travail
+    # M_ssCordon = MODUSUVP_cord[:cNbZone, :cNbZone]
+    # SelAtt = M_ssCordon
 
-    def retranche_VS(M,VS1,VS2,Zones1,Zones2,Zemp1,Zemp2,Poids):
-        nr = M.shape[0]
-        nz_CDG = len(ZoneCDG)
-        nz_ORLY = len(ZoneOrly)
-        Poids = np.zeros((nz_CDG + nz_ORLY, 2))
+    # # Tentative la plus correcte jusqu'ici:
+    # SelAtt = ModusUVP[ModusUVP['ZONED'].isin(ZoneADP)]
+    # SelEm = ModusUVP[ModusUVP['ZONEO'].isin(ZoneADP)]
+    #
+    # cible = VS[(VS['ZONEO'].isin(ZoneADP))|(VS['ZONED'].isin(ZoneADP))]
+    # Matt = SelAtt * SelAtt.sum().sum() - (PoidsVS * cible['FLUX'].sum())
 
-
-
-    if IdVsVp == 1:
-        M_ssCordon = ModusUVP
+    ModusUVP_sans_VS = ModusUVP.copy()
 
 
+    for i in ZoneADP:
+        SelAtt = ModusUVP_sans_VS[ModusUVP_sans_VS['ZONED'] == i].copy()
+        SelEm = ModusUVP_sans_VS[ModusUVP_sans_VS['ZONEO'] == i].copy()
+        if i in ZoneOrly:
+            cibleATT = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
+            cibleEM = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
+            # cibleATT = VS_Emp_ORLY.loc[
+            #     ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone), 'Flux_Att'].sum()
+            # cibleEM = VS_Emp_ORLY.loc[
+            #     ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone), 'Flux_Em'].sum()
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt['FLUX'].sum().sum()
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm['FLUX'].sum().sum()
+        else:
+            cibleATT = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
+            cibleEM = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+                'FLUX'].sum().sum()
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+                'FLUX'].sum().sum()
+        ModusUVP_sans_VS[ModusUVP_sans_VS['ZONED'] == i] = SelAtt
+        ModusUVP_sans_VS[ModusUVP_sans_VS['ZONEO'] == i] = SelEm
+
+    ModusUVP_sans_VS_cordon = ModusUVP_sans_VS.copy()
+
+        for i in ZoneADP:
+            SelAtt = ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONED'] == i].copy()
+            SelEm = ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONEO'] == i].copy()
+            if i in ZoneOrly:
+                cibleATT = VS_Emp_ORLY.loc[
+                    ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
+                cibleEM = VS_Emp_ORLY.loc[
+                    ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
+                SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+                    'FLUX'].sum().sum()
+                SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+                    'FLUX'].sum().sum()
+            else:
+                cibleATT = VS_Emp_CDG.loc[
+                    ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
+                cibleEM = VS_Emp_CDG.loc[
+                    ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
+                SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+                    'FLUX'].sum().sum()
+                SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+                    'FLUX'].sum().sum()
+            ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONED'] == i] = SelAtt
+            ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONEO'] == i] = SelEm
+
+    ModusUVP = pd.merge(ModusUVP_sans_VS_cordon, VS, on=['ZONEO', 'ZONED'], how='outer')
+    ModusUVP['FLUX'] = np.where(~(ModusUVP['ZONEO'].isin(ZoneADP))|~(ModusUVP['ZONED'].isin(ZoneADP)), ModusUVP['FLUX_x'],
+                                               ModusUVP['FLUX_y']
+    ModusUVP = ModusUVP.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
+
+    # Change code to make sure its output isn't negative.
+
+    # Poids = pd.read_csv(Vect_spec[f'Poids_VS_{n}'].path, sep=Vect_spec[f'Poids_VS_{n}'].sep)
+    # Poids.rename(columns={'Em_HPS':'Em_PPS', 'Em_HPM':'Em_PPM', 'Em_HPC':'Em_PCJ',
+    #                       'Att_HPS': 'Att_PPS', 'Att_HPM': 'Att_PPM', 'Att_HPC': 'Em_PCJ',
+    #                       }, inplace=True)
+    # Poids_H = Poids[['ZONE', f'Em_{H}', f'Att_{H}']]
 
 
+    # def retranche_VS(M,VS1,VS2,Zones1,Zones2,Zemp1,Zemp2,Poids):
+    #     nr = M.shape[0]
+    #     nz_CDG = len(ZoneCDG)
+    #     nz_ORLY = len(ZoneOrly)
+    #     Poids = np.zeros((max(nz_CDG, nz_ORLY), 2))
+    #
+    #
+    #
+    # if IdVsVp == 1:
+    #     M_ssCordon = ModusUVP
+
+
+
+ADP_res = {}  # Dictionnaire pour sauvegarder les résultats des calculs ADP
 
     # II. IMPLEMENTATION DES VECTEURS SPECIFIQUES (ET CORDON POUR LE CAS VP)
 def Calcul_VSTC(ADP, H, n):
-    if idmethodVSTC == 1:
+    read_mat = read_mat()
+    read_mat.n = n
+    read_mat.per = H
+    VSTcEmp, VSTcVoy = np.zeros((cNbZone + cNbZspec, 2)), np.zeros((cNbZone + cNbZspec, 2))
+
+    PoidsVS, VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = read_mat.vect_spec()
+
+    ZoneCDG_list = [x - 1 for x in ZoneCDG]
+    ZoneOrly_list = [x - 1 for x in ZoneOrly]
+
+    RVpRow = np.zeros((1, cNbZone))  # rapport calulés OD par OD pour chaque ligne
+    RVpCol = np.zeros((cNbZone, 1))  # rapport calulés OD par OD pour chaque colonne
+
+    dbfile = open(f'{dir_dataTemp}ModusUVPcarre', 'rb')
+    ModusUVPcarre = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusTCH', 'rb')
+    ModusTCH = pkl.load(dbfile)
+    if IdmethodeVSTC == 1:
         # calcul des rapports entre MatOD VP sans Vecteurs Spécifiques et MODUSOD avec Vecteurs Spécifiques
         # ( VS_TC(n)=VS(adp&n)*VS_VP(n)/VP(adp&n) )
-        RVpRowCDG, RVpRowORLY = np.zeros((1, cNbZone)), np.zeros((1, cNbZone))   # rapport calulés OD par OD pour chaque ligne
-        RVpColCDG, RVpColORLY = np.zeros((cNbZone, 1)), np.zeros((cNbZone, 1))  # rapport calulés OD par OD pour chaque colonne
 
-        dbfile = open(f'{dir_dataTemp}ModusUVPcarre', 'rb')
-        ModusUVPcarre = pkl.load(dbfile)
         #  En VP, calcul du ratio entre les flux vecteur spécifique emploi et flux zone MODUS interne
-        selRow = (ModusUVPcarre[ZoneCDG, :cNbZone + 1].sum(0) > 0)|(ModusUVPcarre[ZoneOrly, :cNbZone + 1].sum(0) > 0)
-        SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG].sum(1) > 0) | (ModusUVPcarre[:cNbZone + 1, ZoneOrly].sum(1) > 0)
 
-        Vect_specdf = pd.read_csv(Vect_spec[f'VS_{H}{actuel}'].path, sep=Vect_spec[f'VS_{H}{actuel}'].sep)
-        # Vect_specdf = Vect_specdf[Vect_specdf['Zone'] <= cNbZone]
-        CDGEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1290) & (Vect_specdf['Zone'] <= cNbZone)]
-        CDGVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1291) & (Vect_specdf['Zone'] <= cNbZone)]
-        ORLYEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1292) & (Vect_specdf['Zone'] <= cNbZone)]
-        ORLYVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1293) & (Vect_specdf['Zone'] <= cNbZone)]
+        # Puisque les numéros des zones en python ce sont -1 ceux en SAS.
+
+        if ADP == 'CDG':
+            SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone + 1].sum(0) > 0)
+            SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG_list].sum(1) > 0)
+
+            RVpRow[0, SelRow] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneCDG_list, :cNbZone].sum(0)
+            RVpCol[SelCol, 0] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1)
+
+            VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
+            VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+
+            # Même calcul, mais pour les voyageurs.
+            RVpRow[0, SelRow] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneCDG_list,
+                                                                                          :cNbZone].sum(0)
+            RVpCol[SelCol, 0] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
+                                                                                         ZoneCDG_list].sum(1)
+
+            VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
+            VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            if ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() > 0:
+                VSTcEmp[cZEmpCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() * \
+                                            VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em'] / ModusTCH[ZoneCDG_list, ZoneCDG_list].sum()
+                VSTcVoy[cZVoyCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() * \
+                                            VS_Voy_CDG.loc[cZVoyCDG - 1, 'Flux_Em'] / ModusTCH[ZoneCDG_list, ZoneCDG_list].sum()
+        else:
+            SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone + 1].sum(0) > 0)
+            SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneOrly_list].sum(1) > 0)
+
+            RVpRow[0, SelRow] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly_list,
+                                                                                          :cNbZone].sum(0)
+            RVpCol[SelCol, 0] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
+                                                                                         ZoneOrly_list].sum(1)
+            VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+            VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+
+            RVpRow[0, SelRow] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly_list,
+                                                                                          :cNbZone].sum(0)
+            RVpCol[SelCol, 0] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
+                                                                                         ZoneOrly_list].sum(1)
+            VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+            VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
+                VSTcEmp[cZEmpOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
+                                            VS_Emp_ORLY.loc[cZEmpOrly - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+                VSTcVoy[cZVoyOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
+                                            VS_Voy_ORLY.loc[cZVoyOrly - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+
+    else:
+            # calcul des rapports entre MatOD VP sans Vecteurs Spécifiques et MODUSOD avec Vecteurs Spécifiques
+            # ( VS_TC(n)=VS(adp&n)*VS_VP(n)/VP(adp&n) )
+
+            #  En VP, calcul du ratio entre les flux vecteur spécifique emploi et flux zone MODUS interne
+
+            # Puisque les numéros des zones en python ce sont -1 ceux en SAS.
+
+
+            if ADP == 'CDG':
+                SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone + 1].sum(0) > 0)
+                SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG_list].sum(1) > 0)
+
+                RVpRow[0, SelRow] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] - ModusUVPcarre[ZoneCDG_list,:cNbZone].sum(0)[SelRow]
+
+
+                RVpCol[SelCol, 0] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] - ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1)[SelCol]
+
+
+                VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) + RVpRow[0, :]
+                VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) + RVpCol[:, 0].T
+
+                # Même calcul, mais pour les voyageurs.
+                RVpRow[0, SelRow] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] - ModusUVPcarre[ZoneCDG_list,:cNbZone].sum(0)[SelRow]
+
+
+                RVpCol[SelCol, 0] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1)[SelCol]
+
+                VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) + RVpRow[0, :]
+                VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) + RVpCol[:, 0].T
+                if ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() > 0:
+                    VSTcEmp[cZEmpCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() + ModusTCH[
+                                                    ZoneCDG_list, ZoneCDG_list].sum() - \
+                                                VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em']
+                    VSTcVoy[cZVoyCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() + ModusTCH[
+                                                   ZoneCDG_list, ZoneCDG_list].sum() - \
+                                               VS_Voy_CDG.loc[cZVoyCDG - 1, 'Flux_Em']
+            else:
+                SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone + 1].sum(0) > 0)
+                SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneOrly_list].sum(1) > 0)
+
+                RVpRow[0, SelRow] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[
+                                                                                               ZoneOrly_list,
+                                                                                               :cNbZone].sum(0)
+                RVpCol[SelCol, 0] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
+                                                                                              ZoneOrly_list].sum(1)
+                VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+                VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+
+                RVpRow[0, SelRow] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[
+                                                                                               ZoneOrly_list,
+                                                                                               :cNbZone].sum(0)
+                RVpCol[SelCol, 0] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
+                                                                                              ZoneOrly_list].sum(1)
+                VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+                VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+                if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
+                    VSTcEmp[cZEmpOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCH[
+                                                    ZoneOrly_list, ZoneOrly_list].sum() - \
+                                                VS_Emp_ORLY.loc[cZEmpOrly - 1, 'Flux_Em']
+                    VSTcVoy[cZVoyOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCH[
+                                                    ZoneOrly_list, ZoneOrly_list].sum() - \
+                                                VS_Voy_ORLY.loc[cZVoyOrly - 1, 'Flux_Em']
+    ADP_res[ADP] = (VSTcEmp, VSTcVoy)
+        # SelRow = (ModusUVPcarre[ZoneCDG - 1, :cNbZone + 1].sum(0) > 0)|(ModusUVPcarre[ZoneOrly - 1, :cNbZone + 1].sum(0) > 0)
+        # SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG - 1].sum(1) > 0) | (ModusUVPcarre[:cNbZone + 1, ZoneOrly].sum(1) > 0)
+
+        # Vect_specdf = pd.read_csv(Vect_spec[f'VS_{H}{actuel}'].path, sep=Vect_spec[f'VS_{H}{actuel}'].sep)
+        # # Vect_specdf = Vect_specdf[Vect_specdf['Zone'] <= cNbZone]
+        # CDGEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1290) & (Vect_specdf['Zone'] <= cNbZone)]
+        # CDGVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1291) & (Vect_specdf['Zone'] <= cNbZone)]
+        # ORLYEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1292) & (Vect_specdf['Zone'] <= cNbZone)]
+        # ORLYVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1293) & (Vect_specdf['Zone'] <= cNbZone)]
 
         # Kiko - what to do about the length of that array VSEmp?
-        if max(len(SelCol), len(selRow)) > 0:
-            RVpRowCDG[0, selRow] = CDGEMP.loc[selRow, 'Flux_Att']/ModusUVPcarre[ZoneCDG, :cNbZone].sum(0)
-            RVpColCDG[SelCol, 0] = CDGEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG].sum(1)
-
-            RVpRowORLY[0, selRow] = ORLYEMP.loc[selRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly, :cNbZone].sum(0)
-            RVpColORLY[SelCol, 0] = ORLYEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneOrly].sum(1)
-            # RVpRow[0, selRow] = Vect_specdf.loc[selRow, 'Flux_Att'] / ModusUVPcarre[ZoneADP, :cNbZone].sum(0)
-            # RVpCol[SelCol, 0] = Vect_specdf.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneADP].sum(1)
-        VSTcEmp = np.zeros((cNbZone + cNbZspec, 2))
-
+        # if max(len(SelCol), len(SelRow)) > 0:
+        #     RVpRowCDG[0, SelRow] = CDGEMP.loc[SelRow, 'Flux_Att']/ModusUVPcarre[ZoneCDG, :cNbZone].sum(0)
+        #     RVpColCDG[SelCol, 0] = CDGEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG].sum(1)
+        #
+        #     RVpRowORLY[0, SelRow] = ORLYEMP.loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly, :cNbZone].sum(0)
+        #     RVpColORLY[SelCol, 0] = ORLYEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneOrly].sum(1)
+        #     # RVpRow[0, SelRow] = Vect_specdf.loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneADP, :cNbZone].sum(0)
+        #     # RVpCol[SelCol, 0] = Vect_specdf.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneADP].sum(1)
+        #
+        # VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG].sum(1) * RVpRow[0, :]
+        # VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG, :cNbZone].sum(0) * RVpCol[:, 0].T
         # Pickling ModusTCH, ModusUVPcarre  parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
-        dbfile = open(f'{dir_dataTemp}ModusTCH', 'rb')
-        ModusTCH = pkl.load(dbfile)
+
 
 
         VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG].sum(1) * RVpRowCDG[0, :]
@@ -262,8 +478,8 @@ def Calcul_VSTC(ADP, H, n):
         # VSVoy_CDG = pd.read_csv(Vect_spec[f'VSTC_CDG_{H}{actuel}'].path, sep=Vect_spec[f'VSTC_CDG_{H}{actuel}'].sep)
         # VSVoy_ORLY = pd.read_csv(Vect_spec[f'VSTC_ORLY_{H}{actuel}'].path, sep=Vect_spec[f'VSTC_ORLY_{H}{actuel}'].sep)
 
-        if max(len(SelCol), len(selRow)) > 0:
-            RVpRowCDG[0, selRow] = CDGVOY.loc[selRow, 'Flux_Att']/ModusUVPcarre[1291, :cNbZone]
+        if max(len(SelCol), len(SelRow)) > 0:
+            RVpRowCDG[0, SelRow] = CDGVOY.loc[SelRow, 'Flux_Att']/ModusUVPcarre[1291, :cNbZone]
 
     ModusTCH = ModusTC_motcatH.sum(1).to_numpy().reshape((cNbZone, cNbZone))
 
