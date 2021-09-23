@@ -12,6 +12,9 @@ reload(A_CstesModus)
 reload(CstesStruct)
 from Data.A_CstesModus import *
 
+dbfile = open(f'{dir_dataTemp}params_user', 'rb')
+params_user = pkl.load(dbfile)
+
 lambda_COUT = 0.16
 lambda_TVP = 1.36
 lambda_TTC = 1.36
@@ -23,18 +26,24 @@ lambda_TCY = 0.67
 
 
 def utilite(n, hor):
-    bdinter = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
-    bdinter.rename(
-        columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
-                 'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
-                 'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
-                 'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
-        inplace=True)
-    for i in range(1, 19):
-        bdinter.drop(columns=f'CO{i}', inplace=True)
+    if params_user['modus_mode'] == 1:
+        OD = util_data.OD(n)
 
-    OD = bdinter.copy()
-    # OD = util_data.OD(n)
+    else:
+        # bdinter = pd.read_sas(dir_root + '\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
+        bdinter = pd.read_sas(bdinter)
+        bdinter.rename(
+            columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
+                     'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
+                     'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
+                     'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
+            inplace=True)
+        for i in range(1, 19):
+            bdinter.drop(columns=f'CO{i}', inplace=True)
+
+        OD = bdinter.copy()
+
+
 
     calcul_util = util_data.calcul_util()
     calcul_util.per = hor

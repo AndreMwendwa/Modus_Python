@@ -261,7 +261,7 @@ from importlib import reload
 from Data.A_CstesModus import *
 
 
-euTC = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
+euTC = pd.read_sas(dir_root + '\\M3_Chaine\\Modus_Python\\Other_files'
                    '\\Confirmation distribution\\eudf_tc.sas7bdat')
 euTC.columns = range(22)
 euCY = pd.read_sas('D:\\TraDD ENPC 2020-21\\Stage\MODUSv3.1.3\\M3_Chaine\\Modus_Python\\Other_files'
@@ -485,3 +485,120 @@ if n == 'scen' and idvelo == 1:
         matrice['INTCY'] = intcy
         matrice['CAPVELIB'] = capvelib
 # matrice.replace([np.inf, -np.inf], 0, inplace=True)
+
+# SAS distribution résultats
+motcat100 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcat100.sas7bdat')
+motcat60 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcat60.sas7bdat')
+motcatseU0 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcatseU0.sas7bdat')
+
+motcatmd_seu0 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcatmd_seu0.sas7bdat')
+motcatmd_seusum = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcatmd_seusum.sas7bdat')
+
+motcatmddiff = motcatmd_seusum == motcatmd_seu0
+motcatmddiff.sum()
+
+motcatdiff =  np.abs(motcat100 - motcatseU0)/motcat100
+motcatdiff.mean(1).plot()
+motcat100.sum().sum()
+
+
+
+convvp = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\Donnees\\Zonage\\convvp_modus313.sas7bdat')
+
+
+
+# Benford's law
+BEN1 = pd.read_csv('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\Donnees\\Input\\2_Scenario\\2030\\121011_VSVoyTC2030ORLY_HC.txt', sep='\t')
+FLUX = BEN1.Flux
+FLUX = FLUX.astype('str')
+FLUX2 = FLUX.str.split('.', expand=True)
+FLUX3 = FLUX2[1].to_list()
+FLUX4 = []
+for i in FLUX3:
+    for j in list(i):
+        FLUX4.append(j)
+
+from collections import Counter
+import matplotlib.pyplot as plt
+
+Benfords_law = Counter(FLUX4)
+plt.bar(sorted(Benfords_law.keys()), sorted(Benfords_law.values(), key=lambda key))
+plt.show()
+
+
+
+# euTC.query(euTC.col == )
+for col in list(euTC.columns):
+    print(euTC.loc[euTC[col].isin([0.0229131059])])
+
+euTC[np.abs(euTC['COL1'] - 0.0229131059) < 1e-6]
+
+
+# Affectation
+import win32com.client as win32
+myvisum = win32.Dispatch("Visum.Visum")
+myvisum.LoadVersion(dir_dataScen + '\\210219_ReseauVPv4.6_PPS2030.ver')
+# MatV = Visum.Net.DemandSegments.ItemByKey("V")
+# myvisum.INet.DemandSegments.GetAll()
+# myvisum.Filters.InitAll
+MatV = myvisum.Net.DemandSegments.ItemByKey('V')
+
+MatV.ODMatrix = 'ModusUVP'
+# myvisum.DemandSegments.GetAll()
+Proc = myvisum.Procedures
+
+DSeg_Selection= DSeg_Combo.GetValue()
+
+
+links = []
+
+for x in myvisum.Net.Links.GetAll:
+    links.append(x.AttValue("NO"))  # AttValue( "Name of the attribute")
+
+print(links)
+
+attributeList = ["CODE", "NAME"]
+for dSeg in myvisum.Net.DemandSegments.GetMultipleAttributes(attributeList):
+    print(dSeg)
+
+myvisum = None
+
+
+import pywin32
+
+
+
+# Random
+import matplotlib.pyplot as plt
+plt.clf()
+ODvide = pd.DataFrame(ODvide)
+ODvide[0].plot()
+
+ModusUVP_tmp.loc[:, 'ZONEO'].plot()
+plt.show()
+
+
+
+M = ModusUVP
+
+# Affectation 2ème tentative
+import win32com.client as win32
+
+import Data.VisumPy.helpers as helpers
+import numpy
+myvisum = win32.Dispatch("Visum.Visum")
+myvisum.LoadVersion(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030.ver')
+mat1 = helpers.GetODMatrix(myvisum, 'V')
+mat2 = helpers.GetODMatrix(myvisum, 'P')
+mat3 = helpers.GetODMatrix(myvisum, 'VI86')
+
+mat1 = myvisum.Net.ODMatrices.ItemByKey(1).GetValues()
+
+mat1.sum().sum()
+mat2.sum().sum()
+mat3.sum().sum()
+
+type(mat1)
+
+# Checking shapefile
+import geopandas as gpd

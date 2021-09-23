@@ -13,7 +13,8 @@ reload(A_CstesModus)
 reload(CstesStruct)
 from Data.A_CstesModus import *
 
-
+dbfile = open(f'{dir_dataTemp}params_user', 'rb')
+params_user = pkl.load(dbfile)
 
 def distribution(n, hor):
     dist_data_instance = dist_data()
@@ -61,7 +62,7 @@ def distribution(n, hor):
             M *= Dest_Fac
 
 
-            RMSE = (np.sqrt(((M.sum(1) - vEM.T)**2)).sum())/(cNbZone - 1)
+            RMSE = np.sqrt((((M.sum(1) - vEM.T)**2)).sum()/(cNbZone - 1))
 
             iteration = iteration + 1
 
@@ -89,14 +90,27 @@ def distribution(n, hor):
     dist_calc(Modus_motcat)
     return Modus_motcat
 
+# # Modus_motcat = distribution('actuel', 'PPM')
 # import pandas as pd
-# import numpy as np
+# Modus_motcat = pd.DataFrame(Modus_motcat)
+# # import numpy as np
 # Motcat_valid = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
 #                            '\\Other_files\\modus_motcat_2012_hpm.sas7bdat')
+# motcat60 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcat60.sas7bdat')
+# motcatseU0 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcatseU0.sas7bdat')
+# #
+# Motcat_valid = motcat60
+# Motcat_valid = motcatseU0
+# #
 # Motcat_valid.columns = range(28)
 # DIFF = np.abs(Modus_motcat - Motcat_valid)/Motcat_valid
-#
+# # DIFF = np.abs(Modus_motcat - Motcat_valid)
+# #
 # DIFF.sum().sum()
+# #
+# # diffsas = np.abs(Motcat_valid - motcat60)
+# # diffsas.sum().sum()
+
 
 
 

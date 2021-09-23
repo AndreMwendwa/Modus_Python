@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import pickle as pkl
 from dataclasses import dataclass
 from Data import A_CstesModus, CstesStruct
 
@@ -24,6 +25,7 @@ OD.index = range(1, cNbZone+1)
 OD = OD.stack().reset_index()
 OD.columns = ['ZONEO', 'ZONED', 0]
 
+# Dataclass utilisé dans la calcul utilitaire
 @dataclass
 class calcul_util:
     per: str = ''
@@ -70,7 +72,7 @@ class calcul_util:
         return CM_PAR_df
 
 
-
+# Crée les variables utilisés dans le calcul utilitaire pour les TC
 def var_TC(OD, att):
     OD_input = OD.copy()
     OD_input['INTTC'] = 1
@@ -86,6 +88,7 @@ def var_TC(OD, att):
     OD_input2 = OD_input[att]
     return OD_input2
 
+# Crée les variables utilisés dans le calcul utilitaire pour les VP
 def var_VP(OD, att):
     OD_input = OD.copy()
     OD_input['INTVP'] = 1
@@ -95,6 +98,7 @@ def var_VP(OD, att):
     OD_input2 = OD_input[att]
     return OD_input2
 
+# Crée les variables utilisés dans le calcul utilitaire pour les MD
 def var_MD(OD, att):
     OD_input = OD.copy()
     DVOL_col = OD_input.loc[:, 'DVOL'].copy()
@@ -116,6 +120,7 @@ def var_MD(OD, att):
 #     OD_input2 = OD_input[att2]
 #     return OD_input2
 
+# Crée les variables utilisés dans le calcul utilitaire pour les vélos
 def var_CY(OD, att):
     OD_input = OD.copy()
 
@@ -127,7 +132,7 @@ def var_CY(OD, att):
     OD_input2 = OD_input[att]
     return OD_input2
 
-
+# Crée la BDD inter- et intra-zonale
 def OD(n):
     calcul_util_instance = calcul_util()
     generation_instance = generation()
@@ -324,4 +329,7 @@ def OD(n):
     OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
     del OD['ZONEO']
     OD.reset_index(inplace=True)
+    dbfile = open(f'{dir_dataTemp}bdinter', 'wb')
+    pkl.dump(OD, dbfile)
+    dbfile.close()
     return OD

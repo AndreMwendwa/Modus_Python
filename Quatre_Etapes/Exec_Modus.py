@@ -1,5 +1,10 @@
 import os
+from datetime import date
+from Data.CstesStruct import *
 
-dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))
+
+out = os.path.join(dir_resultModus, date.today().strftime("%d_%m_%Y"))
+out_mat = os.path.join(out, '3_Matrices')
+
 
 iter_count = 0

@@ -6,7 +6,7 @@ d'après la version crée le 19 août 2007
 
 # Bibliothéques de python qui sont nécessaires
 import os
-from Quatre_Etapes import Exec_Modus
+# from Quatre_Etapes import Exec_Modus
 
 # 1. Répertoires et versions des logiciels
 # !!! ATTENTION : si la version de Davisum n'est pas la 11, il faut modifier le programme Wait2.exe
@@ -14,7 +14,7 @@ vers_Visum=16
 dir_7zip = os.path.join('C:\\', 'Program Files', '7-Zip')
 
 # 2. Répertoire des données
-dir_root = Exec_Modus.dir_root
+dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))
 dir_data = os.path.join(dir_root, 'Donnees')    # répertoire racine de stockage des données
 dir_EGT = os.path.join(dir_data, 'EGT')     # répertoire de stockage des données de l'EGT
 dir_zonage = os.path.join(dir_data, 'Zonage')    # répertoire de stockage des données de zonage
@@ -23,6 +23,8 @@ dir_macros = os.path.join(dir_data, 'Macros')   # répertoire de stockage des fo
 dir_dataRef = os.path.join(dir_data, 'Input', '0_Reference')    # répertoire de stockage des données actuelles
 dir_dataAct = os.path.join(dir_data, 'Input', '1_Actuel')   # répertoire de stockage des données actuelles
 dir_dataScen = os.path.join(dir_data, 'Input', '2_Scenario')    # répertoire de stockage des données en mode scenario
+dir_dataTemp = dir_root + '\\M3_Chaine\\Modus_Python\\Other_files\\'   # Pour garder les
+# résultats du calcul utilitaire
 
 # 3. Répertoires du calibrage
 dir_calibrage = os.path.join(dir_root, 'M3_Calibrage')  # répertoire de calibrage

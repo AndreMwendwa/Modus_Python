@@ -11,8 +11,10 @@ reload(A_CstesModus)
 reload(CstesStruct)
 from Data.A_CstesModus import *
 from Data.teletravail import teletravail
+import pickle as pkl
 
-
+dbfile = open(f'{dir_dataTemp}params_user', 'rb')
+params_user = pkl.load(dbfile)
 # ------------
 # I. GENERATION
 # ------------
@@ -164,6 +166,11 @@ def generation(n, per):
 
     EM_final = EM @ Fusion
     ATT_final = ATT @ Fusion
+
+    # Pickling des résultats
+    dbfile = open(f'{dir_dataTemp}gen_results', 'wb')
+    pkl.dump([EM_final, ATT_final], dbfile)
+    dbfile.close()
 
     return EM_final, ATT_final
 
