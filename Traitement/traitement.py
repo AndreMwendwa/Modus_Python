@@ -1,8 +1,10 @@
+import numpy as np
 import pandas as pd
 from Data import A_CstesModus, CstesStruct
 from Data.A_CstesModus import *
 from Data.fonctions_gen import *
 import pickle as pkl
+from pathlib import Path
 
 
 
@@ -58,7 +60,7 @@ def traitementTC(H, n, hor):
     ModusTCH = ModusTC_motcatH.sum(1).to_numpy().reshape((cNbZone, cNbZone))
 
     # Pickling ModusTCH parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
-    dbfile = open(f'{dir_dataTemp}ModusTCH', 'wb')
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
     pkl.dump(ModusTCH, dbfile)
     dbfile.close()
 
@@ -104,6 +106,12 @@ def traitementVP(H, n, hor):
                                                 (motif_classe_part[0] == Classe[i])]
         TXCONV = np.concatenate([TXCONV, TXCONV], axis=1)
         TXSOLO = np.concatenate([TXSOLO, TXSOLO], axis=1)
+
+        TX_CONV_SOLO = [TXCONV, TXSOLO]
+        dbfile = open(f'{dir_dataTemp}TX_CONV_SOLO', 'wb')
+        pkl.dump(TX_CONV_SOLO, dbfile)
+        dbfile.close()
+
         return TXCONV, TXSOLO
 
         # TXCONV = np.zeros((cNbZone ** 2, cNbMotifC))
@@ -140,7 +148,12 @@ def traitementVP(H, n, hor):
     if H == 'PCJ':
         ModusVP_motcatH = ModusVP_motcat / 6
 
-    TXCONV, TXSOLO = prepconvvp(H)
+    if not Path(f'{dir_dataTemp}TX_CONV_SOLO').is_file():
+        TXCONV, TXSOLO = prepconvvp(H)
+    else:
+        dbfile = open(f'{dir_dataTemp}TX_CONV_SOLO', 'rb')
+        TX_CONV_SOLO = pkl.load(dbfile)
+        TXCONV, TXSOLO = TX_CONV_SOLO[0], TX_CONV_SOLO[1]
     ModusVP_motcatH_Parmod = ModusVP_motcatH.sum(1)
 
     ModusUVP_motcatH = ModusVP_motcatH * TXCONV
@@ -155,7 +168,7 @@ def traitementVP(H, n, hor):
     ModusUVPcarre = ModusUVP.to_numpy().reshape(cNbZone, cNbZone)
 
     # Pickling ModusUVPcarre parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
-    dbfile = open(f'{dir_dataTemp}ModusUVPcarre', 'wb')
+    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_{n}', 'wb')
     pkl.dump(ModusUVPcarre, dbfile)
     dbfile.close()
 
@@ -237,7 +250,7 @@ def retranche_VS_cordon(n, H, M_sans_VS):
     return M_sans_VS_cordon
 
 def Vecteurs_SpecVP(H, n):
-    dbfile = open(f'{dir_dataTemp}ModusUVP', 'rb')
+    dbfile = open(f'{dir_dataTemp}ModusUVP_{H}_{n}', 'rb')
     ModusUVP = pkl.load(dbfile)
     # ModusUVP = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\'
     #                        'Modus_Python\\Copie de work\\modusuvpm2012_tmp2.sas7bdat')
@@ -259,6 +272,11 @@ def Vecteurs_SpecVP(H, n):
                                          MODUSUVP_cord['FLUX_y'], MODUSUVP_cord['FLUX_x']
                                          )
         MODUSUVP_cord = MODUSUVP_cord.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
+
+    # Pickling temporaire
+    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'wb')
+    pkl.dump(MODUSUVP_cord, dbfile)
+    dbfile.close()
     return MODUSUVP_cord
 
 
@@ -434,10 +452,10 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
             VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
             VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
             if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
-                VSTcEmp[cZEmpOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
-                                            VS_Emp_ORLY.loc[cZEmpOrly - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
-                VSTcVoy[cZVoyOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
-                                            VS_Voy_ORLY.loc[cZVoyOrly - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+                VSTcEmp[cZEmpORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
+                                            VS_Emp_ORLY.loc[cZEmpORLY - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+                VSTcVoy[cZVoyORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
+                                            VS_Voy_ORLY.loc[cZVoyORLY - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
 
     else:
             if ADP == 'CDG':
@@ -459,12 +477,12 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
                                                     ZoneCDG_list, ZoneCDG_list].sum() - \
                                                 VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em']
 
+                VSTcVoy = np.zeros((cNbZone + cNbZspec, 2))
                 VSTcVoyATT = VSTCCDG.loc[VSTCCDG['ZONED'] == cZVoyCDG]
                 VSTcVoyATT.reset_index(inplace=True)
                 VSTcVoyEM = VSTCCDG.loc[VSTCCDG['ZONEO'] == cZVoyCDG]
                 VSTcVoyEM.reset_index(inplace=True)
-                VSTcVoy = pd.concat([VSTcVoyATT['FLUX'], VSTcVoyEM['FLUX']], axis=1).to_numpy()
-                
+                VSTcVoy[:cNbZone, :] = pd.concat([VSTcVoyATT['FLUX'], VSTcVoyEM['FLUX']], axis=1).to_numpy()
             else:
                 SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone + 1].sum(0) > 0)
                 SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneOrly_list].sum(1) > 0)
@@ -479,14 +497,15 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
 
                 
                 if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
-                    VSTcEmp[cZEmpOrly - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCH[
+                    VSTcEmp[cZEmpORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCH[
                                                     ZoneOrly_list, ZoneOrly_list].sum() - \
-                                                VS_Emp_ORLY.loc[cZEmpOrly - 1, 'Flux_Em']
-                VSTcVoyATT = VSTCORLY.loc[VSTCORLY['ZONED'] == cZVoyOrly]
+                                                VS_Emp_ORLY.loc[cZEmpORLY - 1, 'Flux_Em']
+                VSTcVoy = np.zeros((cNbZone + cNbZspec, 2))
+                VSTcVoyATT = VSTCORLY.loc[VSTCORLY['ZONED'] == cZVoyORLY]
                 VSTcVoyATT.reset_index(inplace=True)
-                VSTcVoyEM = VSTCORLY.loc[VSTCORLY['ZONEO'] == cZVoyOrly]
+                VSTcVoyEM = VSTCORLY.loc[VSTCORLY['ZONEO'] == cZVoyORLY]
                 VSTcVoyEM.reset_index(inplace=True)
-                VSTcVoy = pd.concat([VSTcVoyATT['FLUX'], VSTcVoyEM['FLUX']], axis=1).to_numpy()
+                VSTcVoy[:cNbZone, :] = pd.concat([VSTcVoyATT['FLUX'], VSTcVoyEM['FLUX']], axis=1).to_numpy()
     VSTcEmp = np.where(VSTcEmp<0, 0, VSTcEmp)
     VSTcVoy = np.where(VSTcVoy < 0, 0, VSTcVoy)
     ADP_res[ADP] = ADP_tuple(VSTcEmp, VSTcVoy)
@@ -494,27 +513,116 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
 ADP_res = {}  # Dictionnaire pour sauvegarder les résultats des calculs ADP
 
 def Vecteurs_SpecTC (H, n):
-    dbfile = open(f'{dir_dataTemp}ModusUVPcarre', 'rb')
+    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_{n}', 'rb')
     ModusUVPcarre = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}ModusTCH', 'rb')
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
     ModusTCH = pkl.load(dbfile)
 
+    # * 2-b. Calcul des vecteurs spécifiques TC */
+    # /* 2-b-i. Utilisation de la macro VSTC pour le calcul des VS correspondant à chacun des aéroports */
     Calcul_VSTC('CDG', H, n, ModusUVPcarre, ModusTCH)
-    Calcul_VSTC('Orly', H, n, ModusUVPcarre, ModusTCH)
+    Calcul_VSTC('ORLY', H, n, ModusUVPcarre, ModusTCH)
+
+    # 2-c. Soustraction des VS de la matrice */
+    # 			/*--- On soustrait les VS de la matrice de travail
+    ODvide = pd.DataFrame(ODvide_func(cNbZone))
+    ModusTCH = pd.DataFrame(ModusTCH.reshape(cNbZone ** 2))
+    ModusTCH = pd.concat([ODvide, ModusTCH], axis=1)
+    ModusTCH.columns = ['ZONEO', 'ZONED', 'FLUX']
+    ModusTCH = retranche_VS(n, H, ModusTCH)
+    ModusTCH = ModusTCH['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
+    # --- On crée la matrice finale en ajoutant les VS TC
+    ModusTC = np.zeros((cNbZone + cNbZspec, cNbZone + cNbZspec))
+    ModusTC[:cNbZone, :cNbZone] = ModusTCH
+    ModusTC[cZEmpCDG - 1, :] = ADP_res['CDG'].EMP[:, 1]
+    ModusTC[:, cZEmpCDG - 1] = ADP_res['CDG'].EMP[:, 0]
+    ModusTC[cZEmpORLY - 1, :] = ADP_res['ORLY'].EMP[:, 1]
+    ModusTC[:, cZEmpORLY - 1] = ADP_res['ORLY'].EMP[:, 0]
+
+    ModusTC[cZVoyCDG - 1, :] = ADP_res['CDG'].VOY[:, 1]
+    ModusTC[:, cZVoyCDG - 1] = ADP_res['CDG'].VOY[:, 0]
+    ModusTC[cZVoyORLY - 1, :] = ADP_res['ORLY'].VOY[:, 1]
+    ModusTC[:, cZVoyORLY - 1] = ADP_res['ORLY'].VOY[:, 0]
+
+    ODvide = pd.DataFrame(ODvide_func(cNbZone + cNbZspec))
+    ModusTC = pd.DataFrame(ModusTC.reshape((cNbZone + cNbZspec) ** 2, 1))
+    ModusTC = pd.concat([ODvide, ModusTC], axis=1)
+    ModusTC.columns = ['ZONEO', 'ZONED', 'FLUX']
+
+    # Pickling temporaire
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
+    pkl.dump(ModusTC, dbfile)
+    dbfile.close()
+    return ModusTC
 
 
-    return ADP_res
 
-
-def AjoutMode_Gare(H, n ,mode):
+def AjoutMode_Gare(H, n, mode):
     from Data.traitment_data import read_mat
     read_mat = read_mat()
     read_mat.n = n
     read_mat.per = H
+
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
+    ModusTC = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'rb')
+    MODUSUVP_cord = pkl.load(dbfile)
+
     if mode == 'VP':
         if idVGVP == 1:
             VGVP = read_mat.read_VGVP()
+            MODUSUVP_cord = pd.merge(MODUSUVP_cord, VGVP, on=['ZONEO', 'ZONED'], how='outer')
+            MODUSUVP_cord['FLUX'] = np.where((MODUSUVP_cord['ZONEO'] <= cNbZone + cNbZspec + cNbZext)&
+                                             (MODUSUVP_cord['ZONED'] <= cNbZone + cNbZspec + cNbZext), MODUSUVP_cord['FLUX_x'],
+                                            MODUSUVP_cord['FLUX_y'])
+            MODUSUVP_cord = MODUSUVP_cord.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
+            MODUSUVP_cord.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+    elif mode == 'TC':
+        if idVGTC == 1:
+            VGTC = read_mat.read_VGTC()
+            ModusTC = pd.merge(ModusTC, VGTC, on=['ZONEO', 'ZONED'], how='outer')
+            ModusTC['FLUX'] = np.where((ModusTC['ZONEO'] <= cNbZone + cNbZspec + cNbZext) &
+                                             (ModusTC['ZONED'] <= cNbZone + cNbZspec + cNbZext),
+                                             ModusTC['FLUX_x'],
+                                             ModusTC['FLUX_y'])
+            ModusTC = ModusTC.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
+            ModusTC.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
 
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
+    pkl.dump(ModusTC, dbfile)
+    dbfile.close()
+
+    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'wb')
+    pkl.dump(MODUSUVP_cord, dbfile)
+    dbfile.close()
+
+
+def finalise(n, H):
+    traitementTC(H, n, H)
+    traitementVP(H, n, H)
+    Vecteurs_SpecVP(H, n)
+    Vecteurs_SpecTC(H, n)
+    AjoutMode_Gare(H, n, 'TC')
+    AjoutMode_Gare(H, n, 'VP')
+
+
+    # III. REPORT DE CALAGE
+def ajout_evol(H, actuel, scen,cale, id, seuilh, seuilb):
+    from Data.traitment_data import read_mat
+    read_mat = read_mat()
+    read_mat.n = n
+    read_mat.per = H
+
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
+    ModusTC = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'rb')
+    MODUSUVP_cord = pkl.load(dbfile)
+    MODUSCaleUVP = read_mat.CALEUVP()
+    MODUSCaleTC = read_mat.CALETC()
+    MODUSCalePL = read_mat.CALEPL_func()
+
+    if id == 2:
+        MODUSactTC = ModusTC.loc[(ModusTC['ZONEO'] <= cNbcalzonage)|(ModusTC['ZONED'] <= cNbcalzonage), 'FLUX']
 
 
     #     # SelRow = (ModusUVPcarre[ZoneCDG - 1, :cNbZone + 1].sum(0) > 0)|(ModusUVPcarre[ZoneOrly - 1, :cNbZone + 1].sum(0) > 0)
@@ -597,98 +705,104 @@ def AjoutMode_Gare(H, n ,mode):
     #     #         np.where((Classe>convvp_modus313['Portee_min'])|(Classe<convvp_modus313['Portee_max']), )
 
 
-# Brouillons
-convvp_modus313['Classe'].sum()
-value = (0,2)
-key = 'Classe1'
-convvp_modus313['Classe'] = np.where(((convvp_modus313['Portee_min'] >= value[0]) & (convvp_modus313['Portee_max'] <= value[1])), key, 0)
-((convvp_modus313['Portee_min']>=value[0]) & (convvp_modus313['Portee_max'] <= value[1])).sum()
-convvp_modus313['Classe'].sum()
+# # Brouillons
+# convvp_modus313['Classe'].sum()
+# value = (0,2)
+# key = 'Classe1'
+# convvp_modus313['Classe'] = np.where(((convvp_modus313['Portee_min'] >= value[0]) & (convvp_modus313['Portee_max'] <= value[1])), key, 0)
+# ((convvp_modus313['Portee_min']>=value[0]) & (convvp_modus313['Portee_max'] <= value[1])).sum()
+# convvp_modus313['Classe'].sum()
+#
+# convvp_modus313[['Portee_min', 'Portee_max']].groupby(by = ['Portee_min', 'Portee_max']).count()
+# ODvide = pd.DataFrame(ODvide)
+# ODvide.to_csv(dir_dataTemp+'ODvide.csv')
+#
+# ModusUVPcarre[ZoneCDG, 1:cNbZone].shape
+# Vect_specdf['ZONEADP'].plot()
+# Vect_specdf['Zone'].plot()
+#
+# CDGEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1290]
+# CDGVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1291]
+# ORLYEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1292]
+# ORLYVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1293]
+#
+#
+# Vect_specdf.groupby(by='ZONEADP').values()
+#
+# ModusTCH_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modustcm2012.sas7bdat')
+# ModusTCH_valid = ModusTCH_valid.to_numpy()
+#
+# diffModusTCH = pd.DataFrame((ModusTCH - ModusTCH_valid)/ModusTCH)
+# diffModusTCH.mean(1).plot()
+# diffModusTCH.sum().sum()
+# pd.DataFrame(ModusTCH_valid)
+# pd.DataFrame(ModusTCH)
+#
+#
+# ModusUVPSOLO_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpsolom2012.sas7bdat')
+# ModusUVPSOLO_valid.columns = range(3)
+# ModusUVPSOLO = pd.DataFrame(ModusUVPSOLO)
+# diffModusUVPSOLO = np.abs(ModusUVPSOLO - ModusUVPSOLO_valid)/ModusUVPSOLO_valid
+# diffModusUVPSOLO[2].mean()
+# diffModusUVPSOLO[2].plot()
+#
+#
+# ModusUVP_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpm2012_tmp.sas7bdat')
+# ModusUVP_valid.columns = range(3)
+# ModusUVP = pd.DataFrame(ModusUVP)
+# diffModusUVP = np.abs(ModusUVP - ModusUVP_valid)/ModusUVP
+# diffModusUVP[2].mean()
+# diffModusUVP[2].plot()
+#
+# TXCONV_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\txconv.sas7bdat')
+# TXCONV_valid.columns = range(22)
+#
+# TXCONV = pd.DataFrame(TXCONV)
+# diffTXCONV = np.abs(TXCONV - TXCONV_valid)/TXCONV_valid
+# diffTXCONV.mean()
+#
+#
+# pd.DataFrame(TXCONV).mean(1).plot()
+#
+# poids = pd.read_csv(Vect_spec[f'Poids_VS{actuel}'].path, sep=Vect_spec[f'Poids_VS{actuel}'].sep)
+#
+# # Kiko - Plotting the impedance functions in Modus.
+#
+# import matplotlib.pyplot as plt
+# from Data.distribution_data import dist_data
+# dist_data_instance = dist_data()
+# dist_data_instance.per = 'PPM'
+# DIST_PAR = dist_data_instance.DIST_PAR_FUNC()
+#
+# vUTM = np.linspace(0, -5, 100)
+# vPAR = DIST_PAR.loc[20, :]
+# y = np.exp(vPAR[2] * vUTM) * (-vUTM) ** vPAR[3]
+# fig = plt.figure()
+# ax = fig.add_subplot(1, 1, 1)
+# ax.spines['left'].set_position('center')
+# ax.spines['bottom'].set_position('zero')
+# ax.spines['right'].set_color('none')
+# ax.spines['top'].set_color('none')
+# ax.xaxis.set_ticks_position('bottom')
+# ax.yaxis.set_ticks_position('left')
+# plt.xlabel('Utility')
+# plt.ylabel('Impedance')
+#
+#
+# # plot the function
+# plt.plot(vUTM,y, 'r')
+#
+# # show the plot
+# plt.show()
+#
+#
+# (UTM[1] < -1).sum()/1661521
+# (UTM[1] < -1).sum()
+# (UTM[1] < -1).sum() - (UTM.loc[(UTM.index)%1289 != 0, 1] < -1).sum()
+# 1661521 - (UTM[1] < -1).sum()
 
-convvp_modus313[['Portee_min', 'Portee_max']].groupby(by = ['Portee_min', 'Portee_max']).count()
-ODvide = pd.DataFrame(ODvide)
-ODvide.to_csv(dir_dataTemp+'ODvide.csv')
-
-ModusUVPcarre[ZoneCDG, 1:cNbZone].shape
-Vect_specdf['ZONEADP'].plot()
-Vect_specdf['Zone'].plot()
-
-CDGEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1290]
-CDGVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1291]
-ORLYEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1292]
-ORLYVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1293]
-
-
-Vect_specdf.groupby(by='ZONEADP').values()
-
-ModusTCH_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modustcm2012.sas7bdat')
-ModusTCH_valid = ModusTCH_valid.to_numpy()
-
-diffModusTCH = pd.DataFrame((ModusTCH - ModusTCH_valid)/ModusTCH)
-diffModusTCH.mean(1).plot()
-diffModusTCH.sum().sum()
-pd.DataFrame(ModusTCH_valid)
-pd.DataFrame(ModusTCH)
-
-
-ModusUVPSOLO_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpsolom2012.sas7bdat')
-ModusUVPSOLO_valid.columns = range(3)
-ModusUVPSOLO = pd.DataFrame(ModusUVPSOLO)
-diffModusUVPSOLO = np.abs(ModusUVPSOLO - ModusUVPSOLO_valid)/ModusUVPSOLO_valid
-diffModusUVPSOLO[2].mean()
-diffModusUVPSOLO[2].plot()
-
-
-ModusUVP_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpm2012_tmp.sas7bdat')
-ModusUVP_valid.columns = range(3)
-ModusUVP = pd.DataFrame(ModusUVP)
-diffModusUVP = np.abs(ModusUVP - ModusUVP_valid)/ModusUVP
-diffModusUVP[2].mean()
-diffModusUVP[2].plot()
-
-TXCONV_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\txconv.sas7bdat')
-TXCONV_valid.columns = range(22)
-
-TXCONV = pd.DataFrame(TXCONV)
-diffTXCONV = np.abs(TXCONV - TXCONV_valid)/TXCONV_valid
-diffTXCONV.mean()
-
-
-pd.DataFrame(TXCONV).mean(1).plot()
-
-poids = pd.read_csv(Vect_spec[f'Poids_VS{actuel}'].path, sep=Vect_spec[f'Poids_VS{actuel}'].sep)
-
-# Kiko - Plotting the impedance functions in Modus.
-
-import matplotlib.pyplot as plt
-from Data.distribution_data import dist_data
-dist_data_instance = dist_data()
-dist_data_instance.per = 'PPM'
-DIST_PAR = dist_data_instance.DIST_PAR_FUNC()
-
-vUTM = np.linspace(0, -5, 100)
-vPAR = DIST_PAR.loc[20, :]
-y = np.exp(vPAR[2] * vUTM) * (-vUTM) ** vPAR[3]
-fig = plt.figure()
-ax = fig.add_subplot(1, 1, 1)
-ax.spines['left'].set_position('center')
-ax.spines['bottom'].set_position('zero')
-ax.spines['right'].set_color('none')
-ax.spines['top'].set_color('none')
-ax.xaxis.set_ticks_position('bottom')
-ax.yaxis.set_ticks_position('left')
-plt.xlabel('Utility')
-plt.ylabel('Impedance')
-
-
-# plot the function
-plt.plot(vUTM,y, 'r')
-
-# show the plot
-plt.show()
-
-
-(UTM[1] < -1).sum()/1661521
-(UTM[1] < -1).sum()
-(UTM[1] < -1).sum() - (UTM.loc[(UTM.index)%1289 != 0, 1] < -1).sum()
-1661521 - (UTM[1] < -1).sum()
+if __name__ == '__main__':
+    # traitementTC('PPM', 'scen', 'PPM')
+    # traitementTC('PPS', 'scen', 'PPS')
+    traitementVP('PPM', 'scen', 'PPM')
+    # traitementVP('PPS', 'scen', 'PPS')

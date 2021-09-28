@@ -168,9 +168,9 @@ def generation(n, per):
     ATT_final = ATT @ Fusion
 
     # Pickling des résultats
-    dbfile = open(f'{dir_dataTemp}gen_results', 'wb')
-    pkl.dump([EM_final, ATT_final], dbfile)
-    dbfile.close()
+    # dbfile = open(f'{dir_dataTemp}gen_results', 'wb')
+    # pkl.dump([EM_final, ATT_final], dbfile)
+    # dbfile.close()
 
     return EM_final, ATT_final
 

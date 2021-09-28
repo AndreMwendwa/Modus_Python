@@ -130,7 +130,8 @@ k0 = 1.77   # seuil de croissance extreme avant prise en compte du taux de crois
 # calage n°2
 cSeuilh = 2 # borne de l'amplification multiplicative de la méthode de report de calage n°1
 cSeuilb = 0.25  # borne de la réduction multiplicative de la méthode de report de calage n°1
-# calzonage = Zone  C'est quoi zone?
+cNbcalzonage = cNbZone  # zonage sur lequel appliqué le report de calage : cNbZone si zone interne IdF,
+# cNbZtot si toutes les zones
 
 
 # 5. Bouclage
@@ -157,13 +158,13 @@ IdmethodeVSTC = 2   # méthode de calcul des VS TC : basée sur le choix modal d
 # b. Numérotation des zones spécifiques
 cZEmpCDG = 1290     # Zone spécifique associée aux emplois de la plateforme de Roissy-CDG
 cZVoyCDG = 1291     # Zone spécifique associée aux voyageurs de la plateforme de Roissy-CDG
-cZEmpOrly = 1292    # Zone spécifique associée aux emplois de la plateforme d'Orly
-cZVoyOrly = 1293    # Zone spécifique associée aux voyageurs de la plateforme d'Orly
+cZEmpORLY = 1292    # Zone spécifique associée aux emplois de la plateforme d'Orly
+cZVoyORLY = 1293    # Zone spécifique associée aux voyageurs de la plateforme d'Orly
 ZoneCDG = [245, 995, 1249]      # Liste des zones CDG
 ZoneOrly = [679, 1078]      # Liste des zones Orly
 ZoneADP = ZoneCDG + ZoneOrly
-ZoneVoyADP = [cZVoyOrly, cZVoyCDG]
-ZoneEmpADP = [cZEmpOrly, cZEmpCDG]
+ZoneVoyADP = [cZVoyORLY, cZVoyCDG]
+ZoneEmpADP = [cZEmpORLY, cZEmpCDG]
 
 # 7. Vecteurs Gares
 idVGTC = 1  # Implémentation ou non des vecteurs voyageurs TC émis et attiré par les gares
@@ -222,11 +223,12 @@ croiscoutVP = (1 + (scen-actuel)*(croiscarb*0.38+croisentr*0.53+croispeag*0.09)/
 
 Donnees_Res = {}    # Un dictionnaire pour contenir les données de réseau (fichiers .ver)
 
-Donnees_Res[f'VersionM{scen}'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
+# Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
+Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_editedb.ver')
 # Version du scénario étudié
-Donnees_Res[f'VersionC{scen}'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
+Donnees_Res[f'Version_PCJ_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
 # Version du scénario étudié
-Donnees_Res[f'VersionS{scen}'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
+Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited.ver')
 # Version du scénario étudié
 
 
@@ -332,13 +334,13 @@ Path_sep_skip = namedtuple('Path_sep', 'path sep skip')  # Un namedtuple de la l
 
 Mat_Calees = {}     # Un dictionnaire des matrices calées
 
-Mat_Calees[f'CALETCM{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'Matrice_TC_PPM_calée_19-11-18.fma'), '\s+', 8)
-Mat_Calees[f'CALETCC{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'TC_PCJ_VG2012.fma'), '\t', 8)
-Mat_Calees[f'CALETCS{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'Matrice_TC_PPS_calée_19-11-18.fma'), '\s+', 8)
+Mat_Calees[f'CALETC_PPM_{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'Matrice_TC_PPM_calée_19-11-18.fma'), '\s+', 8)
+Mat_Calees[f'CALETC_PCJ_{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'TC_PCJ_VG2012.fma'), '\t', 8)
+Mat_Calees[f'CALETC_PPS_{caleTC}'] = Path_sep_skip(os.path.join(dir_dataAct, 'Matrice_TC_PPS_calée_19-11-18.fma'), '\s+', 8)
 
-Mat_Calees[f'CALEUVPM{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, '132_VL_PPM_calée_2012.fma'), '\s+', 8)
-Mat_Calees[f'CALEUVPC{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, 'UVP_PCJ2012_cordons_corriges.fma'), '\s+', 13)
-Mat_Calees[f'CALEUVPS{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, '133_VL_PPS_calée_2012.fma'), '\s+', 8)
+Mat_Calees[f'CALEUVP_PPM_{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, '132_VL_PPM_calée_2012.fma'), '\s+', 8)
+Mat_Calees[f'CALEUVP_PCJ_{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, 'UVP_PCJ2012_cordons_corriges.fma'), '\s+', 13)
+Mat_Calees[f'CALEUVP_PPS_{caleVP}'] = Path_sep_skip(os.path.join(dir_dataAct, '133_VL_PPS_calée_2012.fma'), '\s+', 8)
 
 
 # - b. Matrices PL
@@ -476,28 +478,28 @@ Vect_spec[f'VSTC_ORLY_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2030', '
 Vect_gare = {}  # Un dictionnaire des flux des gares.
 
 # -- horizon actuel
-Vect_gare[f'VGTC_PPM_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPM.txt'), '\t')
-Vect_gare[f'VGTC_PCJ_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PCJ.txt'), '\t')
-Vect_gare[f'VGTC_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPS.txt'), '\t')
+Vect_gare['VGTC_PPM_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPM.txt'), '\t')
+Vect_gare['VGTC_PCJ_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PCJ.txt'), '\t')
+Vect_gare['VGTC_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPS.txt'), '\t')
 
 # -- horizon scénario
 
-Vect_gare[f'VGTC_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPM.txt'), '\t')
-Vect_gare[f'VGTC_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PCJ.txt'), '\t')
-Vect_gare[f'VGTC_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPS.txt'), '\t')
+Vect_gare['VGTC_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPM.txt'), '\t')
+Vect_gare['VGTC_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PCJ.txt'), '\t')
+Vect_gare['VGTC_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPS.txt'), '\t')
 
 
-# - f. vecteurs emission et attraction voyageurs VP des gares
+# - . vecteurs emission et attraction voyageurs VP des gares
 
 # -- horizon actuel
-Vect_gare[f'VGVP_PPM_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPM.txt'), '\t')    # non activé
-Vect_gare[f'VGVP_PCJ_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPM.txt'), '\t')    # non activé
-Vect_gare[f'VGVP_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPS.txt'), '\t')    # non activé
+Vect_gare['VGVP_PPM_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPM.txt'), '\t')    # non activé
+Vect_gare['VGVP_PCJ_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPM.txt'), '\t')    # non activé
+Vect_gare['VGVP_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_VP_PPS.txt'), '\t')    # non activé
 
 # -- horizon scénario
-Vect_gare[f'VGVP_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPM.txt'), '\t')    # non activé
-Vect_gare[f'VGVP_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPM.txt'), '\t')    # non activé
-Vect_gare[f'VGVP_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPS.txt'), '\t')    # non activé
+Vect_gare['VGVP_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPM.txt'), '\t')    # non activé
+Vect_gare['VGVP_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPM.txt'), '\t')    # non activé
+Vect_gare['VGVP_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, 'VG2030_VP_PPS.txt'), '\t')    # non activé
 
 
 

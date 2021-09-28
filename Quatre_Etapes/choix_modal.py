@@ -19,14 +19,17 @@ euVP = db['util_VP']
 euCY = db['util_CY']
 euMD = db['util_MD']
 
-def choix_modal(n, hor):
+def choix_modal(n, hor, itern):
 
-    Modus_motcat = distribution.distribution(n, hor)
+    # Modus_motcat = distribution.distribution(n, hor)
+    dbfile = open(f'{dir_dataTemp}Modus_motcat_{n}_{hor}', 'rb')
+    Modus_motcat = pkl.load(dbfile)
+
     Modus_motcat = Modus_motcat @ Duplication.T
 
     seU = euTC + euVP + euCY + euMD
 
-    itern = 0   # Kiko: Sentinel temporaire, à supprimer
+
 
     if n == 'actuel':
 
@@ -36,7 +39,7 @@ def choix_modal(n, hor):
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
-    elif idBcl < 3 and itern > 1:
+    elif idBcl < 3 or itern == 1:
         BASE = Modus_motcat / seU
         Modus_MD_motcat = BASE * euMD
         Modus_CY_motcat = BASE * euCY
@@ -53,6 +56,7 @@ def choix_modal(n, hor):
         Modus_CY_motcat = BASE * euCY
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
+
 
     return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
 

@@ -3,7 +3,7 @@
 import pandas as pd
 import pickle as pkl
 from Data import util_data, A_CstesModus, CstesStruct
-from Quatre_Etapes.Exec_Modus import *
+from Quatre_Etapes.exec_Modus import *
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
@@ -31,15 +31,18 @@ def utilite(n, hor):
 
     else:
         # bdinter = pd.read_sas(dir_root + '\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
-        bdinter = pd.read_sas(bdinter)
-        bdinter.rename(
-            columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
-                     'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
-                     'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
-                     'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
-            inplace=True)
-        for i in range(1, 19):
-            bdinter.drop(columns=f'CO{i}', inplace=True)
+        # bdinter = pd.read_sas(bdinter)
+
+        # bdinter.rename(
+        #     columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
+        #              'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
+        #              'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
+        #              'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
+        #     inplace=True)
+        dbfile = open(f'{dir_dataTemp}bdinter', 'rb')
+        bdinter = pkl.load(dbfile)
+        # for i in range(1, 19):
+        #     bdinter.drop(columns=f'CO{i}', inplace=True)
 
         OD = bdinter.copy()
 
@@ -151,7 +154,7 @@ def utilite(n, hor):
 
     # Kiko -> Get these to work, since the individual functions are currently working.
     util_TC = transformationBC(util_data.var_TC(OD, att))
-    util_VP = transformationBC(util_data.var_VP(OD, att))
+    util_VP = transformationBC(util_data.var_VP(OD, att, n, idcoutvp))
     util_CY = transformationBC(util_data.var_CY(OD, att))
     util_MD = transformationBC(util_data.var_MD(OD, att))
 

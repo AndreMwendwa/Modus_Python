@@ -89,12 +89,14 @@ def var_TC(OD, att):
     return OD_input2
 
 # Crée les variables utilisés dans le calcul utilitaire pour les VP
-def var_VP(OD, att):
+def var_VP(OD, att, n, idcoutvp):
     OD_input = OD.copy()
     OD_input['INTVP'] = 1
     OD_input[['TR_PPM', 'TR_PCJ', 'TR_PPS', 'TATT_PPM', 'TATT_PCJ', 'TATT_PPS', 'TTC_PPM', 'TTC_PCJ', 'TTC_PPS', 'TMD',
         'TCY', 'CTTKKM', 'CAPVELIB', 'INTTC', 'INTCY']] = 0
     OD_input['CTVP'] = 1.3 * OD_input['DVOL'] * CVPkm
+    if n == 'scen' and idcoutvp == 1:
+        OD_input['CTVP'] *= croiscoutVP
     OD_input2 = OD_input[att]
     return OD_input2
 

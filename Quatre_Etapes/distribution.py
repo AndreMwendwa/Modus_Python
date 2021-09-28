@@ -5,6 +5,7 @@ from Data import util_data, A_CstesModus, CstesStruct
 from Quatre_Etapes import generation
 from Quatre_Etapes import utility
 from Data.distribution_data import dist_data
+import pickle as pkl
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
@@ -88,6 +89,10 @@ def distribution(n, hor):
 
                 Modus_motcat[:, id] = distrib(vEM, vATT, vUTM, vPAR).reshape((cNbZone ** 2, ))
     dist_calc(Modus_motcat)
+
+    dbfile = open(f'{dir_dataTemp}Modus_motcat_{n}_{hor}', 'wb')
+    pkl.dump(Modus_motcat, dbfile)
+    dbfile.close()
     return Modus_motcat
 
 # # Modus_motcat = distribution('actuel', 'PPM')

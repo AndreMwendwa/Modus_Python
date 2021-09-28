@@ -2,7 +2,7 @@ import pandas as pd
 from dataclasses import dataclass
 from Data.A_CstesModus import *
 from Data.fonctions_gen import *
-from Quatre_Etapes import Exec_Modus
+from Quatre_Etapes import exec_Modus
 
 
 
@@ -51,7 +51,7 @@ class read_mat:
                 CALEPL['FLUX'].fillna(0, inplace=True)
                 CALEPL['FLUX'] = CALEPL['FLUX'] * (1 + CroisPIB/100) ** (scen - actuel)
                 # Kiko - Waiting for SAS licence to run %ecriredavisum to see what it does.
-                ecriredavisum(CALEPL, Exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL
             elif idPL == 2:
                 CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_J_actuel'].path,
@@ -81,7 +81,7 @@ class read_mat:
                 # EvolPL_per = pd.merge(CALEPL_per, CALEPL_per_scen, on=['ZONEO', 'ZONED'])
                 EvolPL_per = np.where(CALEPL_per['FLUX'] != 0, CALEPL_per_scen['FLUX'] / CALEPL_per['FLUX'], 1)
                 CALEPL_per['FLUX'] *= EvolPL_per
-                ecriredavisum(CALEPL, Exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL_per
             elif idPL == 3:
                 CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_{self.per}_scen'].path,
@@ -90,12 +90,12 @@ class read_mat:
                                      encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
                 CALEPL = complete(CALEPL, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
                 CALEPL['FLUX'].fillna(0, inplace=True)
-                ecriredavisum(CALEPL, Exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL
             #   4-a. Lecture et mise en forme des vecteurs spécifiques
     def vect_spec(self):
-        VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = readVS(self.per, self.n, cZEmpCDG, cZEmpOrly,
-                                                                      cZVoyCDG, cZVoyOrly)
+        VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = readVS(self.per, self.n, cZEmpCDG, cZEmpORLY,
+                                                                      cZVoyCDG, cZVoyORLY)
         PoidsVS = pd.read_csv(Vect_spec[f'Poids_VS_{self.n}'].path, sep=Vect_spec[f'Poids_VS_{self.n}'].sep)
         PoidsVS.rename(columns={'Em_HPS': 'Em_PPS', 'Em_HPC': 'Em_PCJ', 'Em_HPM': 'Em_PPM',
                                               'Att_HPS': 'Att_PPS', 'Att_HPC': 'Att_PCJ', 'Att_HPM': 'Att_PPM'},
@@ -113,13 +113,36 @@ class read_mat:
         VSTCORLY.rename(columns={'flux': 'FLUX'}, inplace=True)
         return VSTCCDG, VSTCORLY
 
+#     5. Dans le cas scénario avec report de calage, lecture des matrices calées en vue du report de calage
+    def CALEUVP(self):
+        CALEUVP = pd.read_csv(Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].path,
+                              sep=Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].sep,
+                              skiprows=Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].skip,
+                              encoding='Latin-1')
+        CALEUVP.columns = ['ZONEO', 'ZONED', 'FLUX']
+        CALEUVP = complete(CALEUVP, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
+        CALEUVP.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+        return CALEUVP
+
+    def CALETC(self):
+        CALETC = pd.read_csv(Mat_Calees[f'CALETC_{self.per}_{caleVP}'].path,
+                              sep=Mat_Calees[f'CALETC_{self.per}_{caleVP}'].sep,
+                              skiprows=Mat_Calees[f'CALETC_{self.per}_{caleVP}'].skip,
+                              encoding='Latin-1')
+        CALETC.columns = ['ZONEO', 'ZONED', 'FLUX']
+        CALETC = complete(CALETC, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
+        CALETC.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+        return CALETC
+
 #     6. Lecture des vecteurs voyageurs émis et attirés par les gares TC
     def read_VGTC(self):
-        VGTC = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].path)
+        VGTC = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].sep)
+        VGTC.rename(columns={'Flux':'FLUX'}, inplace=True)
         return VGTC
 
     def read_VGVP(self):
-        VGVP = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].path)
+        VGVP = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].sep)
+        VGVP.rename(columns={'Flux': 'FLUX'}, inplace=True)
         return VGVP
 
 
