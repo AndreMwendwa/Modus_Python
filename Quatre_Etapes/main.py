@@ -4,6 +4,7 @@ from Quatre_Etapes import generation, utility, distribution, choix_modal, boucla
 from Traitement import traitement
 import pickle as pkl
 from Traitement.gui3 import *
+import time
 
 def GUI():
     from Quatre_Etapes import choix_modal
@@ -69,6 +70,11 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
             choix_modal.choix_modal('scen', 'PPS', itern)
     else:
         itern = 1
+        done_affect = 0
+        dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'wb')
+        pkl.dump(done_affect, dbfile)
+        dbfile.close()  # done_affect est un sentinel qu'on va utiliser pour s'assurer que multiprocessing (biblithéque utilisé pour
+        # lancer les deux instances de Visum simultanément) ne créet pas les 'child process' à l'infini.
         if PPM == 1:
             distribution.distribution('scen', 'PPM')
             choix_modal.choix_modal('scen', 'PPM', itern)
@@ -85,6 +91,12 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
             traitement.traitementVP('PPS', 'scen', 'PPS')
             # AFFECT_iter_PPS = bouclage.mat_iter('PPS', cParMatBcl)
         bouclage.boucle(cParMatBcl, 1)
+        while done_affect < PPM + PCJ + PPS:
+            dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
+            done_affect = pkl.load(dbfile)
+            print(done_affect)
+            time.sleep(60)      # Tant que la fonction d'affectation de VISUM défini dans Quatre_Etapes.affect n'a pas fini
+            # de tourner, on s'arrête ici et on regarde tous les 60 secs pour voir s'il a terminé ou non.
         RMSE_PPM, RMSE_PCJ, RMSE_PPS = 0, 0, 0
         if PPM == 1:
             RMSE_PPM = bouclage.RMSE('PPM', 1)
@@ -95,6 +107,9 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
 
         while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern <= MaxIter:
             itern += 1
+            done_affect = 0
+            dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'wb')
+            pkl.dump(done_affect, dbfile)
             if idBcl == 1:
                 if PPM == 1:
                     distribution.distribution('scen', 'PPM')
@@ -108,7 +123,12 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
                     distribution.distribution('scen', 'PPS')
                     choix_modal.choix_modal('scen', 'PPS', itern)
                     traitement.traitementVP('PPS', 'scen', 'PPS')
+
                 bouclage.boucle(cParMatBcl, itern)
+                while done_affect < PPM + PCJ + PPS:
+                    dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
+                    done_affect = pkl.load(dbfile)
+                    time.sleep(60)
                 if PPM == 1:
                     RMSE_PPM = bouclage.RMSE('PPM', itern)
                 if PCJ == 1:
@@ -130,6 +150,11 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
                     choix_modal.choix_modal('scen', 'PPS', itern)
                     traitement.traitementVP('PPS', 'scen', 'PPS')
                 bouclage.boucle(cParMatBcl, itern)
+                while done_affect < PPM + PCJ + PPS:
+                    dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
+                    done_affect = pkl.load(dbfile)
+                    print(done_affect)
+                    time.sleep(60)
                 if PPM == 1:
                     RMSE_PPM = bouclage.RMSE('PPM', itern)
                 if PCJ == 1:
