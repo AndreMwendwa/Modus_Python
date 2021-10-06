@@ -359,7 +359,8 @@ Mat_Calees[f'CALEPL_PPS_actuel'] = Path_sep_skip(os.path.join(dir_dataAct, '122_
 
 # -- horizon scénario
 
-Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_PL_INTERNE_2017.fma'), '\s+', 13)
+# Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_PL_INTERNE_2017.fma'), '\s+', 13)
+Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataAct, 'PL_JOUR_2009_FRETURB.fma'), '\s+', 8)
 # Matrice PL FretUrb journalière scénario
 Mat_Calees[f'CALEPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '121_Mat_PL_PPM_t-flow.fma'), '\s+', 13)
 # Matrice PL scénario PPM
@@ -384,21 +385,24 @@ Mat_Calees[f'CORDPL_PPS_actuel'] = Path_sep_skip(os.path.join(dir_dataAct, '1910
 
 # -- horizon scénario
 
-Mat_Calees[f'CORDVPM{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPM_2017.fma'),
-                                               '\t', 8)
+# Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPM_2017.fma'),
+#                                                '\t', 8)
+Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPM.fma'), '\s+', 13)
 # Cordon VP scénario PPM en veh/h
-Mat_Calees[f'CORDVPC{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_VP_HC_2030.fma'), '\t', 8)
+Mat_Calees[f'CORDVP_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_VP_HC_2030.fma'), '\t', 8)
 # Cordon VP scénario PCJ en veh/h
-Mat_Calees[f'CORDVPS{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPS_2017.fma'),
-                                             '\t', 8)
+# Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPS_2017.fma'),
+#                                              '\t', 8)
+Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPS.fma'), '\s+', 13)
+
 # Cordon VP scénario PPS en veh/h
 
-Mat_Calees[f'CORDPLM{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPM_2017.fma'),
+Mat_Calees[f'CORDPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPM_2017.fma'),
                                              '\t', 8)
 # Cordon PL scénario PPM en veh/h
-Mat_Calees[f'CORDPLC{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_PL_HC_2030.fma'), '\t', 8)
+Mat_Calees[f'CORDPL_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_PL_HC_2030.fma'), '\t', 8)
 # Cordon PL scénario PCJ en veh/h
-Mat_Calees[f'CORDPLS{scen}'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPS_2017.fma'),
+Mat_Calees[f'CORDPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPS_2017.fma'),
                                              '\t', 8)
 # Cordon PL scénario PPS en veh/h
 
@@ -442,11 +446,14 @@ Vect_spec[f'VSTC_ORLY_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, '160721_
 
 # -- horizon scénario
 
-Vect_spec[f'VS_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', '140117_VectSpec2020_hpm.txt'), '\t')
+Vect_spec[f'VS_PPM_scen'] = Path_sep(os.path.join(dir_dataAct, '140117_VectSpec2010_hpm.txt'), '\t')
+# Vect_spec[f'VS_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', '140117_VectSpec2020_hpm.txt'), '\t')
 Vect_spec[f'VS_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, '191023_VectSpec2030_hc.txt'), '\t')
-Vect_spec[f'VS_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', '140117_VectSpec2020_hps.txt'), '\t')
+# Vect_spec[f'VS_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', '140117_VectSpec2020_hps.txt'), '\t')
+Vect_spec[f'VS_PPS_scen'] = Path_sep(os.path.join(dir_dataAct, '140117_VectSpec2010_hps.txt'), '\t')
 
-Vect_spec[f'Poids_VS_scen'] = Path_sep(os.path.join(dir_dataScen, '2025', '210216_Poids_2025.txt'), '\t')
+# Vect_spec[f'Poids_VS_scen'] = Path_sep(os.path.join(dir_dataScen, '2025', '210216_Poids_2025.txt'), '\t')
+Vect_spec[f'Poids_VS_scen'] = Path_sep(os.path.join(dir_dataAct, '191008_Poids_2010.txt'), '\t')
 
 EmpCDGscen = 92.7   # Nombre de milliers d'emplois sur la plateforme CDG en scénario
 # 2012=85.0 ; 2018=92.7 ; 2024=107.3 ; 2028sansT4=110.8 ; 2028avecT4=128.3 ; 2037sansT4=112.9 ; 2037avecT4=165.0
@@ -484,9 +491,12 @@ Vect_gare['VGTC_PPS_actuel'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPS
 
 # -- horizon scénario
 
-Vect_gare['VGTC_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPM.txt'), '\t')
-Vect_gare['VGTC_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PCJ.txt'), '\t')
-Vect_gare['VGTC_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPS.txt'), '\t')
+# Vect_gare['VGTC_PPM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPM.txt'), '\t')
+# Vect_gare['VGTC_PCJ_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PCJ.txt'), '\t')
+# Vect_gare['VGTC_PPS_scen'] = Path_sep(os.path.join(dir_dataScen, '2019', 'VG2017_TC_PPS.txt'), '\t')
+Vect_gare['VGTC_PPM_scen'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPM.txt'), '\t')
+Vect_gare['VGTC_PCJ_scen'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PCJ.txt'), '\t')
+Vect_gare['VGTC_PPS_scen'] = Path_sep(os.path.join(dir_dataAct, 'VG2012_TC_PPS.txt'), '\t')
 
 
 # - . vecteurs emission et attraction voyageurs VP des gares

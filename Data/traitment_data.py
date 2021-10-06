@@ -67,13 +67,13 @@ class read_mat:
                 # EvolPL = pd.merge(CALEPL, CALEPL_scen, on=['ZONEO', 'ZONED'])
                 EvolPL = np.where(CALEPL['FLUX'] != 0, CALEPL_scen['FLUX']/CALEPL['FLUX'], 1)
                 # Kiko - I think only one of these two calcs should be applied, but which one !!??
-                CALEPL_per = pd.read_csv(Mat_Calees[f'CALEPL_{per}_actuel'].path,
-                                     sep=Mat_Calees[f'CALEPL_{per}_actuel'].sep,
-                                     skiprows=Mat_Calees[f'CALEPL_{per}_actuel'].skip,
+                CALEPL_per = pd.read_csv(Mat_Calees[f'CALEPL_{self.per}_actuel'].path,
+                                     sep=Mat_Calees[f'CALEPL_{self.per}_actuel'].sep,
+                                     skiprows=Mat_Calees[f'CALEPL_{self.per}_actuel'].skip,
                                      encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
-                CALEPL_per_scen = pd.read_csv(Mat_Calees[f'CALEPL_{per}_scen'].path,
-                                         sep=Mat_Calees[f'CALEPL_{per}_scen'].sep,
-                                         skiprows=Mat_Calees[f'CALEPL_{per}_scen'].skip,
+                CALEPL_per_scen = pd.read_csv(Mat_Calees[f'CALEPL_{self.per}_scen'].path,
+                                         sep=Mat_Calees[f'CALEPL_{self.per}_scen'].sep,
+                                         skiprows=Mat_Calees[f'CALEPL_{self.per}_scen'].skip,
                                          encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
                 CALEPL_per = complete(CALEPL_per, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
                 CALEPL_per = complete(CALEPL_per, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
@@ -107,10 +107,10 @@ class read_mat:
     def VSTC(self):
         VSTCCDG = pd.read_csv(Vect_spec[f'VSTC_CDG_{self.per}_{self.n}'].path,
                               sep=Vect_spec[f'VSTC_CDG_{self.per}_{self.n}'].sep)
-        VSTCCDG.rename(columns={'flux': 'FLUX'}, inplace=True)
+        VSTCCDG.rename(columns={'flux': 'FLUX', 'Flux': 'FLUX'}, inplace=True)
         VSTCORLY = pd.read_csv(Vect_spec[f'VSTC_ORLY_{self.per}_{self.n}'].path,
                               sep=Vect_spec[f'VSTC_ORLY_{self.per}_{self.n}'].sep)
-        VSTCORLY.rename(columns={'flux': 'FLUX'}, inplace=True)
+        VSTCORLY.rename(columns={'flux': 'FLUX', 'Flux': 'FLUX'}, inplace=True)
         return VSTCCDG, VSTCORLY
 
 #     5. Dans le cas scénario avec report de calage, lecture des matrices calées en vue du report de calage

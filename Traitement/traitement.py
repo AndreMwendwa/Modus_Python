@@ -1,22 +1,23 @@
 import numpy as np
-import pandas as pd
-from Data import A_CstesModus, CstesStruct
-from Data.A_CstesModus import *
+
 from Data.fonctions_gen import *
 import pickle as pkl
 from pathlib import Path
 
+from Data.fonctions_gen import ODvide_func
 
 
-
-def ODvide_func(n):
-    ODvide = np.ones((n**2, 2))
-    for i in range(n):
-        for j in range(n):
-            k = (i) * n + j
-            ODvide[k, 0] = i + 1
-            ODvide[k, 1] = j + 1
-    return ODvide
+# Liste des fichiers intérmediaires crées ici et la où ils sont utilisés (important si tu compte modifier quoi que ce soit
+# dans Modus_Python:
+# 1. bdinter - BDD interzonale créé dans prepare data, modifié dans bouclage
+# 2. Modus_TC_motcat - résultat de choix modal selon variable H et n.
+# 3. ModusTCcarre - résultat du traitementTC, le résultat de 2 ci-dessous divisé par 4/6 (format matrice de cNbZone * cNbZone)
+#     ModusTC_df - le même, mais sous forme de dataframe avec colonnes = ZONEO, ZONED, FLUX
+# 4. Modus_VP_motcat - résultat de choix modal selon variable H et n.
+# 5. ModusUVPcarre - résultat de traitementVP, le résultat de 4 ci-dessous divisé par 4/6
+#     ModusUVP_df - le même, mais sous forme de dataframe avec colonnes = ZONEO, ZONED, FLUX
+# 6. ModusTC - résultat du rajoute des VS et des vecteurs gares pour les TC.
+# 7. MODUSUVP_cord - résultat du rajoute des VS et des vecteurs gares pour les UVP.
 
 # Cette fonction crée à la fois les classes de portée pour le dessin des cartes et pour l'attribution des taux de
 # conducteurs et d'autosolismes. Les résultats sont ensuite picklés.
@@ -29,8 +30,8 @@ def classe_gen():
     bdinter.loc[(bdinter['DVOL'] > classe2) & (bdinter['DVOL'] < classe3), 'Classe_carte'] = 'Classe3'
     bdinter.loc[(bdinter['DVOL'] > classe3) & (bdinter['DVOL'] < classe4), 'Classe_carte'] = 'Classe4'
     bdinter.loc[(bdinter['DVOL'] > classe4) & (bdinter['DVOL'] < classe5), 'Classe_carte'] = 'Classe5'
-    bdinter.loc[(bdinter['DVOL'] > classe5) & (bdinter['DVOL'] < classe6), 'Classe_carte'] = 'Classe5'
-    bdinter.loc[(bdinter['DVOL'] > classe6) & (bdinter['DVOL'] < classe7), 'Classe_carte'] = 'Classe6'
+    bdinter.loc[(bdinter['DVOL'] > classe5) & (bdinter['DVOL'] < classe6), 'Classe_carte'] = 'Classe6'
+    bdinter.loc[(bdinter['DVOL'] > classe6) & (bdinter['DVOL'] < classe7), 'Classe_carte'] = 'Classe7'
     bdinter.loc[bdinter['DVOL'] > classe7, 'Classe_carte'] = 'Classe8'
 
     bdinter['Classe_convvp'] = 0
@@ -48,7 +49,9 @@ def classe_gen():
 
 def traitementTC(H, n, hor):
     # Kiko - temporary source of the files that will be used for this step;
-    ModusTC_motcat = pd.read_sas(dir_root + '\\M3_Chaine\Modus_Python\Other_files\Confirmation distribution\\motcattc.sas7bdat')
+    # ModusTC_motcat = pd.read_sas(dir_root + '\\M3_Chaine\Modus_Python\Other_files\Confirmation distribution\\motcattc.sas7bdat')
+    dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'rb')
+    ModusTC_motcat = pkl.load(dbfile)
 
     if H == 'PPM' or H == 'PPS':
         ModusTC_motcatH = ModusTC_motcat / 4
@@ -57,14 +60,23 @@ def traitementTC(H, n, hor):
 
     ModusTC_motcatH_Parmod = ModusTC_motcatH.sum(1)
 
-    ModusTCH = ModusTC_motcatH.sum(1).to_numpy().reshape((cNbZone, cNbZone))
+    ModusTCcarre = ModusTC_motcatH.sum(1).to_numpy().reshape((cNbZone, cNbZone))
 
-    # Pickling ModusTCH parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
-    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
-    pkl.dump(ModusTCH, dbfile)
+    # Pickling ModusTCcarre parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
+    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_{n}', 'wb')
+    pkl.dump(ModusTCcarre, dbfile)
     dbfile.close()
 
-    return ModusTCH, ModusTC_motcatH_Parmod
+    #  Créant la dataframe de format ZONEO, ZONED, FLUX
+    ModusTC_df = ModusTC_motcatH.sum(1)
+    ODvide = pd.DataFrame(ODvide_func(cNbZone))
+    ModusTC_df = pd.concat([ODvide, ModusTC_df], axis=1)
+    ModusTC_df.columns = ['ZONEO', 'ZONED', 'FLUX']
+    dbfile = open(f'{dir_dataTemp}ModusTC_df{H}_{n}', 'wb')
+    pkl.dump(ModusTC_df, dbfile)
+    dbfile.close()
+
+    return ModusTCcarre, ModusTC_motcatH_Parmod
 
 def traitementVP(H, n, hor):
     def prepconvvp(H):
@@ -82,17 +94,6 @@ def traitementVP(H, n, hor):
         Part_conducteur = convvp_modus313['Part_conducteur'].to_numpy()
         Part_autosoliste = convvp_modus313['Part_autosoliste'].to_numpy()
 
-        # Kiko - Une fonction pour faire le calcul plus rapidement, mais ne marche pas pour l'instant
-        # @jit(nopython=True)
-        # def tx_conv_fonc():
-        #     TXCONV = np.zeros((cNbZone ** 2, cNbMotifC))
-        #     for i in range(cNbZone ** 2):
-        #         for j in range(cNbMotifC):
-        #             TXCONV[i, j] = Part_conducteur[(motif_classe_part[1] == j + 1)&
-        #                                                (motif_classe_part[0] == Classe[i])]
-        #     return TXCONV
-        #
-        # TXCONV = tx_conv_fonc()
 
 
         # Kiko - Correcte mais trop lent.
@@ -114,34 +115,8 @@ def traitementVP(H, n, hor):
 
         return TXCONV, TXSOLO
 
-        # TXCONV = np.zeros((cNbZone ** 2, cNbMotifC))
-        # for i in range(cNbZone ** 2):
-        #     for j in range(cNbMotifC):
-        #         TXCONV[i, j] = convvp_modus313.loc[(motif_classe_part['MOTIF_C'] == j + 1)&
-        #                                            (motif_classe_part['Classe'] == Classe.loc[i]), 'Part_conducteur']
-        #     TXCONV[:, i + 1] = colonne
-
-        # convvp = convvp_modus313[['Part_conducteur', 'Part_autosoliste', 'MOTIF_C', 'Classe']].groupby(by=['Classe', 'MOTIF_C']).sum()
-        # convvp = convvp.unstack()
-
-        # Kiko - consider using a dictionary for the TXCONV
-        # TXCONV1 = np.zeros((cNbZone**2, cNbMotifC))
-        # TXCONV2 = np.zeros((cNbZone**2, cNbMotifC))
-        # TXCONV3 = np.zeros((cNbZone**2, cNbMotifC))
-        # CONVOSOLO = np.zeros((cNbZone ** 2, cNbMotifC))
-        # for j in range(1, cNbMotifC+1):
-        #     TXCONV1[:, j-1] = convvp_modus313.loc[(convvp_modus313['Classe'] == 'Classe1')&(convvp_modus313['MOTIF_C'] == j), 'Part_conducteur']
-        #     TXCONV2[:, j-1] = convvp_modus313.loc[(convvp_modus313['Classe'] == 'Classe2')&(convvp_modus313['MOTIF_C'] == j), 'Part_conducteur']
-        #     TXCONV3[:, j-1] = convvp_modus313.loc[(convvp_modus313['Classe'] == 'Classe3')&(convvp_modus313['MOTIF_C'] == j), 'Part_conducteur']
-        #     CONVOSOLO[:, j-1] = convvp_modus313.loc[(convvp_modus313['Classe'] == 'Classe3')&(convvp_modus313['MOTIF_C'] == j), 'Part_autosoliste']
-        # TXCONV1 = np.concatenate([TXCONV1, TXCONV1], axis=1)
-        # TXCONV2 = np.concatenate([TXCONV2, TXCONV2], axis=1)
-        # TXCONV3 = np.concatenate([TXCONV3, TXCONV3], axis=1)
-        # TXSOLO = np.concatenate([CONVOSOLO, CONVOSOLO], axis=1)
-        # return TXCONV1, TXCONV2, TXCONV3, TXSOLO
-        # Kiko - temporary source of the files that will be used for this step;
-    ModusVP_motcat = pd.read_sas(
-        dir_root + '\\M3_Chaine\Modus_Python\Other_files\Confirmation distribution\\motcatvp.sas7bdat')
+    dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'rb')
+    ModusVP_motcat = pkl.load(dbfile)
 
     if H == 'PPM' or H == 'PPS':
         ModusVP_motcatH = ModusVP_motcat / 4
@@ -157,28 +132,28 @@ def traitementVP(H, n, hor):
     ModusVP_motcatH_Parmod = ModusVP_motcatH.sum(1)
 
     ModusUVP_motcatH = ModusVP_motcatH * TXCONV
-    ModusUVP = ModusUVP_motcatH.sum(1)
+    ModusUVP_df = ModusUVP_motcatH.sum(1)
     ModusUVPSOLO = (ModusUVP_motcatH * TXSOLO).sum(1)
-    ModusUVPSOLO = np.where(ModusUVP > 0, ModusUVPSOLO/ModusUVP, ModusUVPSOLO)
+    ModusUVPSOLO = np.where(ModusUVP_df > 0, ModusUVPSOLO/ModusUVP_df, ModusUVPSOLO)
     ModusUVPSOLO = ModusUVPSOLO.reshape(cNbZone**2, 1)
 
     ODvide = ODvide_func(cNbZone)
 
     ModusUVPSOLO = np.concatenate([ODvide, ModusUVPSOLO], axis=1)
-    ModusUVPcarre = ModusUVP.to_numpy().reshape(cNbZone, cNbZone)
+    ModusUVPcarre = ModusUVP_df.to_numpy().reshape(cNbZone, cNbZone)
 
     # Pickling ModusUVPcarre parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
     dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_{n}', 'wb')
     pkl.dump(ModusUVPcarre, dbfile)
     dbfile.close()
 
-    ModusUVP = np.concatenate([ODvide, ModusUVP.to_numpy().reshape(cNbZone**2, 1)], axis=1)
-    ModusUVP = pd.DataFrame(ModusUVP, columns=['ZONEO', 'ZONED', 'FLUX'])
-    dbfile = open(f'{dir_dataTemp}ModusUVP', 'wb')
-    pkl.dump(ModusUVP, dbfile)
+    ModusUVP_df = np.concatenate([ODvide, ModusUVP_df.to_numpy().reshape(cNbZone**2, 1)], axis=1)
+    ModusUVP_df = pd.DataFrame(ModusUVP_df, columns=['ZONEO', 'ZONED', 'FLUX'])
+    dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_{n}', 'wb')
+    pkl.dump(ModusUVP_df, dbfile)
     dbfile.close()
 
-    return ModusUVP, ModusUVPcarre, ModusUVPSOLO
+    return ModusUVP_df, ModusUVPcarre, ModusUVPSOLO
 
 def retranche_VS(n, H, M):
     M_sans_VS = M.copy()
@@ -199,16 +174,16 @@ def retranche_VS(n, H, M):
         if i in ZoneOrly:
             cibleATT = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
             cibleEM = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
-            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Att_{H}'] * cibleATT)) / SelAtt[
                 'FLUX'].sum().sum()
-            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Em_{H}'] * cibleEM)) / SelEm[
                 'FLUX'].sum().sum()
         else:
             cibleATT = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
             cibleEM = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
-            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Att_{H}'] * cibleATT)) / SelAtt[
                 'FLUX'].sum().sum()
-            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Em_{H}'] * cibleEM)) / SelEm[
                 'FLUX'].sum().sum()
         M_sans_VS[M_sans_VS['ZONED'] == i] = SelAtt
         M_sans_VS[M_sans_VS['ZONEO'] == i] = SelEm
@@ -232,18 +207,18 @@ def retranche_VS_cordon(n, H, M_sans_VS):
                 ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
             cibleEM = VS_Emp_ORLY.loc[
                 ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
-            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Att_{H}'] * cibleATT)) / SelAtt[
                 'FLUX'].sum().sum()
-            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Em_{H}'] * cibleEM)) / SelEm[
                 'FLUX'].sum().sum()
         else:
             cibleATT = VS_Emp_CDG.loc[
                 ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
             cibleEM = VS_Emp_CDG.loc[
                 ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
-            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
+            SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Att_{H}'] * cibleATT)) / SelAtt[
                 'FLUX'].sum().sum()
-            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
+            SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, f'Em_{H}'] * cibleEM)) / SelEm[
                 'FLUX'].sum().sum()
         M_sans_VS_cordon[M_sans_VS_cordon['ZONED'] == i] = SelAtt
         M_sans_VS_cordon[M_sans_VS_cordon['ZONEO'] == i] = SelEm
@@ -268,7 +243,7 @@ def Vecteurs_SpecVP(H, n):
     if IdVsVp == 1:
         ModusUVP_sans_VS_cordon = retranche_VS_cordon(n, H, ModusUVP)
         MODUSUVP_cord = pd.merge(MODUSUVP_cord, ModusUVP_sans_VS_cordon, on=['ZONEO', 'ZONED'], how='outer')
-        MODUSUVP_cord['FLUX'] = np.where((MODUSUVP_cord['ZONEO'] <= cNbZone)|(MODUSUVP_cord['ZONED'] <= cNbZone),
+        MODUSUVP_cord['FLUX'] = np.where((MODUSUVP_cord['ZONEO'] <= cNbZone) & (MODUSUVP_cord['ZONED'] <= cNbZone),
                                          MODUSUVP_cord['FLUX_y'], MODUSUVP_cord['FLUX_x']
                                          )
         MODUSUVP_cord = MODUSUVP_cord.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
@@ -280,117 +255,8 @@ def Vecteurs_SpecVP(H, n):
     return MODUSUVP_cord
 
 
-
-
-
-# # This was broken up into separate functions
-# def Vecteurs_SpecVP(H, n):
-#
-#     # CORDVP = pd.read_csv(Mat_Calees[f'CORDVP_{H}_{n}'].path, sep=Mat_Calees[f'CORDVP_{H}_{n}'].sep,
-#     #                      skiprows=Mat_Calees[f'CORDVP_{H}_{n}'].skip, encoding='Latin1', names=['ZONEO', 'ZONED', 'FLUX'])
-#     from Data.traitment_data import read_mat
-#     read_mat = read_mat()
-#     read_mat.n = n
-#     read_mat.per = H
-#     PoidsVS, VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = read_mat.vect_spec()
-#
-#     CORDVP = read_mat.CORDVP_func()
-#
-#     PoidsVS.index = PoidsVS['ZONE']
-#     # Kiko - 16/09/21 taux conversion déplacements - UVP ont changé, alors ne peut pas utiliser mes calculs précedents
-# #     dbfile = open(f'{dir_dataTemp}ModusUVP', 'rb')
-# #     ModusUVP = pkl.load(dbfile)
-#     ModusUVP = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\'
-# 								   'Modus_Python\\Copie de work\\modusuvpm2012_tmp2.sas7bdat')
-#     ModusUVP.rename(columns={'ZoneO':'ZONEO', 'ZoneD':'ZONED'}, inplace=True)
-#     # ModusUVP_tmp = pd.concat([ModusUVP, CORDVP], ignore_index=True)
-#     #
-#     # MODUSUVP_cord = complete(ModusUVP_tmp, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
-#     #
-#     # MODUSUVP_cord = MODUSUVP_cord['FLUX'].to_numpy().reshape((cNbZone + cNbZspec + cNbZext, cNbZone + cNbZspec + cNbZext))
-#
-#
-#     ModusUVP_sans_VS = ModusUVP.copy()
-#
-#
-#     for i in ZoneADP:
-#         SelAtt = ModusUVP_sans_VS[ModusUVP_sans_VS['ZONED'] == i].copy()
-#         SelEm = ModusUVP_sans_VS[ModusUVP_sans_VS['ZONEO'] == i].copy()
-#         if i in ZoneOrly:
-#             cibleATT = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
-#             cibleEM = VS_Emp_ORLY.loc[~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
-#             SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt['FLUX'].sum().sum()
-#             SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm['FLUX'].sum().sum()
-#         else:
-#             cibleATT = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Att'].sum()
-#             cibleEM = VS_Emp_CDG.loc[~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)), 'Flux_Em'].sum()
-#             SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
-#                 'FLUX'].sum().sum()
-#             SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
-#                 'FLUX'].sum().sum()
-#         ModusUVP_sans_VS[ModusUVP_sans_VS['ZONED'] == i] = SelAtt
-#         ModusUVP_sans_VS[ModusUVP_sans_VS['ZONEO'] == i] = SelEm
-#
-#     ModusUVP_sans_VS_cordon = ModusUVP_sans_VS.copy()
-#
-#         for i in ZoneADP:
-#             SelAtt = ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONED'] == i].copy()
-#             SelEm = ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONEO'] == i].copy()
-#             if i in ZoneOrly:
-#                 cibleATT = VS_Emp_ORLY.loc[
-#                     ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
-#                 cibleEM = VS_Emp_ORLY.loc[
-#                     ~(VS_Emp_ORLY['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
-#                 SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
-#                     'FLUX'].sum().sum()
-#                 SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
-#                     'FLUX'].sum().sum()
-#             else:
-#                 cibleATT = VS_Emp_CDG.loc[
-#                     ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Att'].sum()
-#                 cibleEM = VS_Emp_CDG.loc[
-#                     ~(VS_Emp_CDG['Zone'].isin(ZoneEmpADP)) & (VS_Emp_ORLY['Zone'] <= cNbZone + cNbZspec), 'Flux_Em'].sum()
-#                 SelAtt['FLUX'] *= (SelAtt['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Att_PPM'] * cibleATT)) / SelAtt[
-#                     'FLUX'].sum().sum()
-#                 SelEm['FLUX'] *= (SelEm['FLUX'].sum().sum() - (PoidsVS.loc[i, 'Em_PPM'] * cibleEM)) / SelEm[
-#                     'FLUX'].sum().sum()
-#             ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONED'] == i] = SelAtt
-#             ModusUVP_sans_VS_cordon[ModusUVP_sans_VS_cordon['ZONEO'] == i] = SelEm
-#
-#     ModusUVP = pd.merge(ModusUVP_sans_VS_cordon, VS, on=['ZONEO', 'ZONED'], how='outer')
-#     ModusUVP['FLUX'] = np.where(~(ModusUVP['ZONEO'].isin(ZoneADP))|~(ModusUVP['ZONED'].isin(ZoneADP)), ModusUVP['FLUX_x'],
-#                                                ModusUVP['FLUX_y']
-#     ModusUVP = ModusUVP.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
-#     dbfile = open(f'{dir_dataTemp}ModusUVP', 'wb')
-#     pkl.dump(ModusUVP, dbfile)
-#     dbfile.close()
-
-
-    # Change code to make sure its output isn't negative.
-
-    # Poids = pd.read_csv(Vect_spec[f'Poids_VS_{n}'].path, sep=Vect_spec[f'Poids_VS_{n}'].sep)
-    # Poids.rename(columns={'Em_HPS':'Em_PPS', 'Em_HPM':'Em_PPM', 'Em_HPC':'Em_PCJ',
-    #                       'Att_HPS': 'Att_PPS', 'Att_HPM': 'Att_PPM', 'Att_HPC': 'Em_PCJ',
-    #                       }, inplace=True)
-    # Poids_H = Poids[['ZONE', f'Em_{H}', f'Att_{H}']]
-
-
-    # def retranche_VS(M,VS1,VS2,Zones1,Zones2,Zemp1,Zemp2,Poids):
-    #     nr = M.shape[0]
-    #     nz_CDG = len(ZoneCDG)
-    #     nz_ORLY = len(ZoneOrly)
-    #     Poids = np.zeros((max(nz_CDG, nz_ORLY), 2))
-    #
-    #
-    #
-    # if IdVsVp == 1:
-    #     M_ssCordon = ModusUVP
-
-
-
-
     # II. IMPLEMENTATION DES VECTEURS SPECIFIQUES (ET CORDON POUR LE CAS VP)
-def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
+def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCcarre):
     global ADP_res
     ADP_tuple = namedtuple('ADP_tuple', 'EMP VOY')
     # Un namedtuple pour stocker les résultats ADP
@@ -412,14 +278,14 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
     if IdmethodeVSTC == 1:
 
         if ADP == 'CDG':
-            SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone + 1].sum(0) > 0)
-            SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG_list].sum(1) > 0)
+            SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone].sum(0) > 0)
+            SelCol = (ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1) > 0)
 
             RVpRow[0, SelRow] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneCDG_list, :cNbZone].sum(0)
             RVpCol[SelCol, 0] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1)
 
-            VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
-            VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            VSTcEmp[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
+            VSTcEmp[:cNbZone, 1] = ModusTCcarre[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
 
             # Même calcul, mais pour les voyageurs.
             RVpRow[0, SelRow] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneCDG_list,
@@ -427,40 +293,40 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
             RVpCol[SelCol, 0] = VS_Voy_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
                                                                                          ZoneCDG_list].sum(1)
 
-            VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
-            VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            VSTcVoy[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneCDG_list].sum(1) * RVpRow[0, :]
+            VSTcVoy[:cNbZone, 1] = ModusTCcarre[ZoneCDG_list, :cNbZone].sum(0) * RVpCol[:, 0].T
             if ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() > 0:
                 VSTcEmp[cZEmpCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() * \
-                                            VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em'] / ModusTCH[ZoneCDG_list, ZoneCDG_list].sum()
+                                           VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em'] / ModusTCcarre[ZoneCDG_list, ZoneCDG_list].sum()
                 VSTcVoy[cZVoyCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() * \
-                                            VS_Voy_CDG.loc[cZVoyCDG - 1, 'Flux_Em'] / ModusTCH[ZoneCDG_list, ZoneCDG_list].sum()
+                                           VS_Voy_CDG.loc[cZVoyCDG - 1, 'Flux_Em'] / ModusTCcarre[ZoneCDG_list, ZoneCDG_list].sum()
         else:
-            SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone + 1].sum(0) > 0)
-            SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneOrly_list].sum(1) > 0)
+            SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone].sum(0) > 0)
+            SelCol = (ModusUVPcarre[:cNbZone, ZoneOrly_list].sum(1) > 0)
 
             RVpRow[0, SelRow] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly_list,
                                                                                           :cNbZone].sum(0)
             RVpCol[SelCol, 0] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
                                                                                          ZoneOrly_list].sum(1)
-            VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
-            VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            VSTcEmp[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+            VSTcEmp[:cNbZone, 1] = ModusTCcarre[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
 
             RVpRow[0, SelRow] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly_list,
                                                                                           :cNbZone].sum(0)
             RVpCol[SelCol, 0] = VS_Voy_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
                                                                                          ZoneOrly_list].sum(1)
-            VSTcVoy[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
-            VSTcVoy[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+            VSTcVoy[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+            VSTcVoy[:cNbZone, 1] = ModusTCcarre[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
             if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
                 VSTcEmp[cZEmpORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
-                                            VS_Emp_ORLY.loc[cZEmpORLY - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+                                            VS_Emp_ORLY.loc[cZEmpORLY - 1, 'Flux_Em'] / ModusTCcarre[ZoneOrly_list, ZoneOrly_list].sum()
                 VSTcVoy[cZVoyORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() * \
-                                            VS_Voy_ORLY.loc[cZVoyORLY - 1, 'Flux_Em'] / ModusTCH[ZoneOrly_list, ZoneOrly_list].sum()
+                                            VS_Voy_ORLY.loc[cZVoyORLY - 1, 'Flux_Em'] / ModusTCcarre[ZoneOrly_list, ZoneOrly_list].sum()
 
     else:
             if ADP == 'CDG':
-                SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone + 1].sum(0) > 0)
-                SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG_list].sum(1) > 0)
+                SelRow = (ModusUVPcarre[ZoneCDG_list, :cNbZone].sum(0) > 0)
+                SelCol = (ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1) > 0)
 
                 RVpRow[0, SelRow] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] - ModusUVPcarre[ZoneCDG_list,:cNbZone].sum(0)[SelRow]
 
@@ -468,14 +334,14 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
                 RVpCol[SelCol, 0] = VS_Emp_CDG.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] - ModusUVPcarre[:cNbZone, ZoneCDG_list].sum(1)[SelCol]
 
 
-                VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG_list].sum(1) + RVpRow[0, :]
-                VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG_list, :cNbZone].sum(0) + RVpCol[:, 0].T
+                VSTcEmp[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneCDG_list].sum(1) + RVpRow[0, :]
+                VSTcEmp[:cNbZone, 1] = ModusTCcarre[ZoneCDG_list, :cNbZone].sum(0) + RVpCol[:, 0].T
 
 
                 if ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() > 0:
-                    VSTcEmp[cZEmpCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() + ModusTCH[
+                    VSTcEmp[cZEmpCDG - 1, 1] = ModusUVPcarre[ZoneCDG_list, ZoneCDG_list].sum() + ModusTCcarre[
                                                     ZoneCDG_list, ZoneCDG_list].sum() - \
-                                                VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em']
+                                               VS_Emp_CDG.loc[cZEmpCDG - 1, 'Flux_Em']
 
                 VSTcVoy = np.zeros((cNbZone + cNbZspec, 2))
                 VSTcVoyATT = VSTCCDG.loc[VSTCCDG['ZONED'] == cZVoyCDG]
@@ -484,20 +350,20 @@ def Calcul_VSTC(ADP, H, n, ModusUVPcarre, ModusTCH):
                 VSTcVoyEM.reset_index(inplace=True)
                 VSTcVoy[:cNbZone, :] = pd.concat([VSTcVoyATT['FLUX'], VSTcVoyEM['FLUX']], axis=1).to_numpy()
             else:
-                SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone + 1].sum(0) > 0)
-                SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneOrly_list].sum(1) > 0)
+                SelRow = (ModusUVPcarre[ZoneOrly_list, :cNbZone].sum(0) > 0)
+                SelCol = (ModusUVPcarre[:cNbZone, ZoneOrly_list].sum(1) > 0)
 
                 RVpRow[0, SelRow] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelRow, 'Flux_Att'] / ModusUVPcarre[
                                                                                                ZoneOrly_list,
                                                                                                :cNbZone].sum(0)
                 RVpCol[SelCol, 0] = VS_Emp_ORLY.loc[:cNbZone - 1, :].loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone,
                                                                                               ZoneOrly_list].sum(1)
-                VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
-                VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
+                VSTcEmp[:cNbZone, 0] = ModusTCcarre[:cNbZone, ZoneOrly_list].sum(1) * RVpRow[0, :]
+                VSTcEmp[:cNbZone, 1] = ModusTCcarre[ZoneOrly_list, :cNbZone].sum(0) * RVpCol[:, 0].T
 
                 
                 if ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() > 0:
-                    VSTcEmp[cZEmpORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCH[
+                    VSTcEmp[cZEmpORLY - 1, 1] = ModusUVPcarre[ZoneOrly_list, ZoneOrly_list].sum() + ModusTCcarre[
                                                     ZoneOrly_list, ZoneOrly_list].sum() - \
                                                 VS_Emp_ORLY.loc[cZEmpORLY - 1, 'Flux_Em']
                 VSTcVoy = np.zeros((cNbZone + cNbZspec, 2))
@@ -515,25 +381,26 @@ ADP_res = {}  # Dictionnaire pour sauvegarder les résultats des calculs ADP
 def Vecteurs_SpecTC (H, n):
     dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_{n}', 'rb')
     ModusUVPcarre = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
-    ModusTCH = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_{n}', 'rb')
+    ModusTCcarre = pkl.load(dbfile)
+
 
     # * 2-b. Calcul des vecteurs spécifiques TC */
     # /* 2-b-i. Utilisation de la macro VSTC pour le calcul des VS correspondant à chacun des aéroports */
-    Calcul_VSTC('CDG', H, n, ModusUVPcarre, ModusTCH)
-    Calcul_VSTC('ORLY', H, n, ModusUVPcarre, ModusTCH)
+    Calcul_VSTC('CDG', H, n, ModusUVPcarre, ModusTCcarre)
+    Calcul_VSTC('ORLY', H, n, ModusUVPcarre, ModusTCcarre)
 
     # 2-c. Soustraction des VS de la matrice */
     # 			/*--- On soustrait les VS de la matrice de travail
     ODvide = pd.DataFrame(ODvide_func(cNbZone))
-    ModusTCH = pd.DataFrame(ModusTCH.reshape(cNbZone ** 2))
-    ModusTCH = pd.concat([ODvide, ModusTCH], axis=1)
-    ModusTCH.columns = ['ZONEO', 'ZONED', 'FLUX']
-    ModusTCH = retranche_VS(n, H, ModusTCH)
-    ModusTCH = ModusTCH['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
+    ModusTCcarre = pd.DataFrame(ModusTCcarre.reshape(cNbZone ** 2))
+    ModusTCcarre = pd.concat([ODvide, ModusTCcarre], axis=1)
+    ModusTCcarre.columns = ['ZONEO', 'ZONED', 'FLUX']
+    ModusTCcarre = retranche_VS(n, H, ModusTCcarre)
+    ModusTCcarre = ModusTCcarre['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
     # --- On crée la matrice finale en ajoutant les VS TC
     ModusTC = np.zeros((cNbZone + cNbZspec, cNbZone + cNbZspec))
-    ModusTC[:cNbZone, :cNbZone] = ModusTCH
+    ModusTC[:cNbZone, :cNbZone] = ModusTCcarre
     ModusTC[cZEmpCDG - 1, :] = ADP_res['CDG'].EMP[:, 1]
     ModusTC[:, cZEmpCDG - 1] = ADP_res['CDG'].EMP[:, 0]
     ModusTC[cZEmpORLY - 1, :] = ADP_res['ORLY'].EMP[:, 1]
@@ -597,212 +464,251 @@ def AjoutMode_Gare(H, n, mode):
     dbfile.close()
 
 
-def finalise(n, H):
-    traitementTC(H, n, H)
-    traitementVP(H, n, H)
-    Vecteurs_SpecVP(H, n)
-    Vecteurs_SpecTC(H, n)
-    AjoutMode_Gare(H, n, 'TC')
-    AjoutMode_Gare(H, n, 'VP')
+def finalise(n):
+    if PPM == 1:
+        traitementTC('PPM', n, 'PPM')
+        traitementVP('PPM', n, 'PPM')
+        Vecteurs_SpecVP('PPM', n)
+        Vecteurs_SpecTC('PPM', n)
+        if idVGTC == 1:
+            AjoutMode_Gare('PPM', n, 'TC')
+        if idVGVP == 1:
+            AjoutMode_Gare('PPM', n, 'VP')
+    
+    if PCJ == 1:
+        traitementTC('PCJ', n, 'PCJ')
+        traitementVP('PCJ', n, 'PCJ')
+        Vecteurs_SpecVP('PCJ', n)
+        Vecteurs_SpecTC('PCJ', n)
+        if idVGTC == 1:
+            AjoutMode_Gare('PCJ', n, 'TC')
+        if idVGVP == 1:
+            AjoutMode_Gare('PCJ', n, 'VP')
+    
+    if PPS == 1:
+        traitementTC('PPS', n, 'PPS')
+        traitementVP('PPS', n, 'PPS')
+        Vecteurs_SpecVP('PPS', n)
+        Vecteurs_SpecTC('PPS', n)
+        if idVGTC == 1:
+            AjoutMode_Gare('PPS', n, 'TC')
+        if idVGVP == 1:
+            AjoutMode_Gare('PPS', n, 'VP')
 
 
     # III. REPORT DE CALAGE
-def ajout_evol(H, actuel, scen,cale, id, seuilh, seuilb):
+def ajout_evol(type, H, id, seuilh, seuilb):
     from Data.traitment_data import read_mat
     read_mat = read_mat()
-    read_mat.n = n
+    read_mat.n = 'actuel'
     read_mat.per = H
 
-    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
-    ModusTC = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'rb')
-    MODUSUVP_cord = pkl.load(dbfile)
-    MODUSCaleUVP = read_mat.CALEUVP()
-    MODUSCaleTC = read_mat.CALETC()
-    MODUSCalePL = read_mat.CALEPL_func()
+    # Fichiers sans VS
+    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_actuel', 'rb')
+    MODUSTC_actuel = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_actuel', 'rb')
+    MODUSUVP_actuel = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_scen', 'rb')
+    MODUSTC_scen = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_scen', 'rb')
+    MODUSUVP_scen = pkl.load(dbfile)
 
-    if id == 2:
-        MODUSactTC = ModusTC.loc[(ModusTC['ZONEO'] <= cNbcalzonage)|(ModusTC['ZONED'] <= cNbcalzonage), 'FLUX']
+    # Fichiers avec VS et cordon
+    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_scen', 'rb')
+    MODUSUVP_cord_scen = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_scen', 'rb')
+    ModusTC_VS_scen = pkl.load(dbfile)
+
+    # Réduction aux nombres de zones qu'on va considérer
+    ModusTC_VS_scen = ModusTC_VS_scen.loc[(ModusTC_VS_scen['ZONEO'] <= cNbZone + cNbZspec)
+                                          & (ModusTC_VS_scen['ZONED'] <= cNbZone + cNbZspec), 'FLUX']
+    ModusTC_VS_scen = ModusTC_VS_scen.to_numpy().reshape(cNbZone + cNbZspec, cNbZone + cNbZspec)
+
+    MODUSUVP_cord_scen = MODUSUVP_cord_scen.loc[:, 'FLUX'].to_numpy().reshape((cNbZtot, cNbZtot))
+
+    MODUSCaleUVP_actuel = read_mat.CALEUVP()
+    MODUSCaleTC_actuel = read_mat.CALETC()
+
+    # - a. Définition des paramètres du report de calage: CALE(actuel) = K.MODUS(actuel) + D
+    # -- cas où on effectue le report de calage avec analyse des évolutions
+    if type == 'VP':
+        if id == 2:
+            MODUSUVP_actuel = pd.Series(MODUSUVP_actuel[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
+            MODUSUVP_scen = pd.Series(MODUSUVP_scen[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
+
+            MODUSCaleUVP_actuel = MODUSCaleUVP_actuel.loc[
+                (MODUSCaleUVP_actuel['ZONEO'] <= cNbcalzonage) & (MODUSCaleUVP_actuel['ZONED'] <= cNbcalzonage), 'FLUX']
+            MODUSCaleUVP_actuel.reset_index(inplace=True, drop=True)
+            # MODUSCalePL = MODUSCalePL.loc[
+            #     (MODUSCalePL['ZONEO'] <= cNbcalzonage) & (MODUSCalePL['ZONED'] <= cNbcalzonage), 'FLUX']
+            # MODUSCalePL.reset_index(inplace=True, drop=True)
+
+    #         -- calcul du taux de croissance moyen entre les matrices MODUS
+            TCM_UVP = MODUSUVP_scen.sum() / MODUSUVP_actuel.sum()
+
+            C3_UVP = MODUSUVP_scen - TCM_UVP * k0 * MODUSUVP_actuel
+
+            POS1_UVP = MODUSUVP_actuel == 0
+
+            POS2_UVP = C3_UVP < 0
+
+            POS3_UVP = C3_UVP >= 0
+
+            CALEscen_UVP = pd.Series(np.zeros((cNbcalzonage ** 2)))
+            CALEscen_UVP[POS1_UVP] = MODUSUVP_scen.loc[POS1_UVP] + MODUSUVP_actuel.loc[POS1_UVP]
+            CALEscen_UVP[POS2_UVP] = MODUSUVP_scen.loc[POS2_UVP] * MODUSCaleUVP_actuel.loc[POS2_UVP] / MODUSUVP_actuel
+            CALEscen_UVP[POS3_UVP] = MODUSUVP_scen.loc[POS3_UVP] + TCM_UVP * k0 * (
+                        MODUSCaleUVP_actuel[POS3_UVP] - MODUSUVP_actuel[POS3_UVP])
+
+            CALEscen_UVP = CALEscen_UVP.to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+
+            MODUSCaleUVP_scen = np.zeros((cNbZtot, cNbZtot))
+            MODUSCaleUVP_scen[:cNbcalzonage, :cNbcalzonage] = CALEscen_UVP
+            MODUSCaleUVP_scen[cNbcalzonage:cNbZtot, :] = MODUSUVP_cord_scen[cNbcalzonage:cNbZtot, :]
+            MODUSCaleUVP_scen[:, cNbcalzonage:cNbZtot] = MODUSUVP_cord_scen[:, cNbcalzonage:cNbZtot]
+
+        elif id == 1:
+            # -- cas où on effectue le report de calage sans analyse des évolutions
+            MODUSUVP_actuel = pd.Series(MODUSUVP_actuel[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
+
+            MODUSCaleUVP_actuel = MODUSCaleUVP_actuel.loc[
+                (MODUSCaleUVP_actuel['ZONEO'] <= cNbcalzonage) & (MODUSCaleUVP_actuel['ZONED'] <= cNbcalzonage), 'FLUX']
+            MODUSCaleUVP_actuel.reset_index(inplace=True, drop=True)
+
+            # -- paramètre K de "dilatation" de la matrice MODUS
+            R1_UVP = np.ones(cNbcalzonage ** 2)
+            POS_UVP = MODUSUVP_actuel >= 0.001
+
+            R1_UVP[POS_UVP] = MODUSCaleUVP_actuel[POS_UVP] / MODUSUVP_actuel[POS_UVP]
+            K_UVP = np.minimum(R1_UVP, seuilh)  # on contraint la dilatation à être inférieure ou
+            # égale à la valeur de "cSeuilh"
+            K_UVP = np.maximum(K_UVP, seuilb)  # on contraint la dilatation à être supérieure ou
+            # égale à la valeur de "cSeuilb"
+
+            #   -- paramètre D d'ajout des flux manquants,
+            #   On prend le maximum de D_TC et 0 pour garantir que D ne fait qu'ajouter des flux, sans en retirer
+            D_UVP = np.maximum(MODUSCaleUVP_actuel - K_UVP * MODUSUVP_actuel, 0)
+
+            #   -- ajustement pour recréer à la bonne dimension et conserver les flux intrazonaux : diag(K) = 1 et diag(D) = 0
+            K_UVP = K_UVP.reshape((cNbcalzonage, cNbcalzonage))
+
+            D_UVP = D_UVP.to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+
+            if cNbcalzonage == cNbZone:
+                K_UVP = np.concatenate([K_UVP, np.ones((cNbZone, cNbZtot - cNbZone))], axis=1)
+                K_UVP = np.concatenate([K_UVP, np.ones((cNbZtot - cNbZone, cNbZtot))], axis=0)
+
+                D_UVP = np.concatenate([D_UVP, np.zeros((cNbZone, cNbZtot - cNbZone))], axis=1)
+                D_UVP = np.concatenate([D_UVP, np.zeros((cNbZtot - cNbZone, cNbZtot))], axis=0)
+
+        else:  # * -- cas où on n'effectue pas le report de calage *
+            K_UVP = np.ones((cNbZtot, cNbZtot))
+            D_UVP = np.zeros((cNbZtot, cNbZtot))
+        #   - b. Report de calage : CALE(scen) = K.MODUS(scen) + D
+        if id < 2:
+            MODUSCaleUVP_scen = K_UVP * MODUSUVP_cord_scen + D_UVP
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'wb')
+        pkl.dump(MODUSCaleUVP_scen, dbfile)
+        dbfile.close()
 
 
-    #     # SelRow = (ModusUVPcarre[ZoneCDG - 1, :cNbZone + 1].sum(0) > 0)|(ModusUVPcarre[ZoneOrly - 1, :cNbZone + 1].sum(0) > 0)
-    #     # SelCol = (ModusUVPcarre[:cNbZone + 1, ZoneCDG - 1].sum(1) > 0) | (ModusUVPcarre[:cNbZone + 1, ZoneOrly].sum(1) > 0)
-    #
-    #     # Vect_specdf = pd.read_csv(Vect_spec[f'VS_{H}{actuel}'].path, sep=Vect_spec[f'VS_{H}{actuel}'].sep)
-    #     # # Vect_specdf = Vect_specdf[Vect_specdf['Zone'] <= cNbZone]
-    #     # CDGEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1290) & (Vect_specdf['Zone'] <= cNbZone)]
-    #     # CDGVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1291) & (Vect_specdf['Zone'] <= cNbZone)]
-    #     # ORLYEMP = Vect_specdf[(Vect_specdf['ZONEADP'] == 1292) & (Vect_specdf['Zone'] <= cNbZone)]
-    #     # ORLYVOY = Vect_specdf[(Vect_specdf['ZONEADP'] == 1293) & (Vect_specdf['Zone'] <= cNbZone)]
-    #
-    #     # Kiko - what to do about the length of that array VSEmp?
-    #     # if max(len(SelCol), len(SelRow)) > 0:
-    #     #     RVpRowCDG[0, SelRow] = CDGEMP.loc[SelRow, 'Flux_Att']/ModusUVPcarre[ZoneCDG, :cNbZone].sum(0)
-    #     #     RVpColCDG[SelCol, 0] = CDGEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneCDG].sum(1)
-    #     #
-    #     #     RVpRowORLY[0, SelRow] = ORLYEMP.loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneOrly, :cNbZone].sum(0)
-    #     #     RVpColORLY[SelCol, 0] = ORLYEMP.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneOrly].sum(1)
-    #     #     # RVpRow[0, SelRow] = Vect_specdf.loc[SelRow, 'Flux_Att'] / ModusUVPcarre[ZoneADP, :cNbZone].sum(0)
-    #     #     # RVpCol[SelCol, 0] = Vect_specdf.loc[SelCol, 'Flux_Em'] / ModusUVPcarre[:cNbZone, ZoneADP].sum(1)
-    #     #
-    #     # VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG].sum(1) * RVpRow[0, :]
-    #     # VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG, :cNbZone].sum(0) * RVpCol[:, 0].T
-    #     # Pickling ModusTCH, ModusUVPcarre  parce qu'il est utilisé ailleurs que dans la fonction principal où traitementTC est appelé
-    #
-    #
-    #
-    #     VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneCDG].sum(1) * RVpRowCDG[0, :]
-    #     VSTcEmp[:cNbZone, 0] += ModusTCH[:cNbZone, ZoneOrly].sum(1) * RVpRowORLY[0, :]
-    #
-    #     VSTcEmp[:cNbZone, 1] = ModusTCH[ZoneCDG, :cNbZone].sum(0) * RVpColCDG[:, 0].T
-    #     VSTcEmp[:cNbZone, 1] += ModusTCH[ZoneOrly, :cNbZone].sum(0) * RVpColORLY[:, 0].T
-    #     # VSTcEmp[:cNbZone, 0] = ModusTCH[:cNbZone, ZoneADP].sum(1) * RVpRow[0, :]
-    #
-    #     if ModusUVPcarre[ZoneADP, ZoneADP].sum() > 0:
-    #         VSTcEmp[ZoneEmpADP, 0] = ModusTCH[ZoneADP, ZoneADP].sum() * \
-    #                                  Vect_specdf.loc[(Vect_specdf['Zone'].isin(ZoneEmpADP)) &
-    #                                                  (Vect_specdf['Zone'] == Vect_specdf['ZONEADP']),
-    #                                                  'Flux_Att']/ModusUVPcarre[ZoneADP, ZoneADP].sum()
-    #         VSTcEmp[ZoneEmpADP, 1] = VSTcEmp[ZoneEmpADP, 0]
-    #
-    #
-    #     # Kiko - J'ai sauté directement aux calculs de VSTcVoy
-    #     RVpRowCDG, RVpRowORLY = np.zeros((1, cNbZone)), np.zeros(
-    #         (1, cNbZone))  # rapport calulés OD par OD pour chaque ligne
-    #     RVpColCDG, RVpColORLY = np.zeros((cNbZone, 1)), np.zeros(
-    #         (cNbZone, 1))  # rapport calulés OD par OD pour chaque colonne
-    #
-    #     # VSVoy_CDG = pd.read_csv(Vect_spec[f'VSTC_CDG_{H}{actuel}'].path, sep=Vect_spec[f'VSTC_CDG_{H}{actuel}'].sep)
-    #     # VSVoy_ORLY = pd.read_csv(Vect_spec[f'VSTC_ORLY_{H}{actuel}'].path, sep=Vect_spec[f'VSTC_ORLY_{H}{actuel}'].sep)
-    #
-    #     if max(len(SelCol), len(SelRow)) > 0:
-    #         RVpRowCDG[0, SelRow] = CDGVOY.loc[SelRow, 'Flux_Att']/ModusUVPcarre[1291, :cNbZone]
-    #
-    # ModusTCH = ModusTC_motcatH.sum(1).to_numpy().reshape((cNbZone, cNbZone))
-    #
-    #
-    #     # TXCONV1 = np.zeros((cNbZone**2, cNbMotifC))
-    #     # TXCONV2 = TXCONV1.copy()
-    #     # TXCONV3 = TXCONV1.copy()
-    #     # for i in range(cNbZone**2):
-    #     #     for j in range(1, cNbMotifC+1):
-    #     #         TXCONV1[i, j] = convvp_modus313.loc[(['Classe'] == 'Classe1'), ('Part_conducteur', j)]
-    #     #         TXCONV2[i, j] = convvp_modus313.loc[(['Classe'] == 'Classe2'), ('Part_conducteur', j)]
-    #     #         TXCONV3[i, j] = convvp_modus313.loc['Classe3', ('Part_conducteur', j)]
-    #
-    #
-    #     # convvp = pd.pivot_table(convvp_modus313, values=['Part_conducteur', 'Part_autosoliste'], index=['Classe', 'Periode'], columns=['MOTIF_C', 'Part_conducteur', 'Part_autosoliste'])
-    #     # convvp = convvp.T
-    #     # convvp.to_csv(dir_dataTemp + 'convvp.csv')
-    #     # convvp = pd.crosstab(convvp_modus313['Classe'], rownames = convvp_modus313['Classe'],
-    #     #                      colnames=convvp_modus313['Part_conducteur', 'Part_autosoliste'],
-    #     #                      )
-    #     #
-    #     #
-    #     #
-    #     # for motif in range(1, cNbMotifC + 1):
-    #     #     for Classe in range(cNbClasse):
-    #     #         np.where((Classe>convvp_modus313['Portee_min'])|(Classe<convvp_modus313['Portee_max']), )
+    elif type == 'TC':
+        if id == 2:
+            MODUSTC_actuel = pd.Series(MODUSTC_actuel[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
+            MODUSTC_scen = pd.Series(MODUSTC_scen[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
 
+            MODUSCaleTC_actuel = MODUSCaleTC_actuel.loc[
+                (MODUSCaleTC_actuel['ZONEO'] <= cNbcalzonage) & (MODUSCaleTC_actuel['ZONED'] <= cNbcalzonage), 'FLUX']
+            MODUSCaleTC_actuel.reset_index(inplace=True, drop=True)
+            # MODUSCalePL = MODUSCalePL.loc[
+            #     (MODUSCalePL['ZONEO'] <= cNbcalzonage) & (MODUSCalePL['ZONED'] <= cNbcalzonage), 'FLUX']
+            # MODUSCalePL.reset_index(inplace=True, drop=True)
 
-# # Brouillons
-# convvp_modus313['Classe'].sum()
-# value = (0,2)
-# key = 'Classe1'
-# convvp_modus313['Classe'] = np.where(((convvp_modus313['Portee_min'] >= value[0]) & (convvp_modus313['Portee_max'] <= value[1])), key, 0)
-# ((convvp_modus313['Portee_min']>=value[0]) & (convvp_modus313['Portee_max'] <= value[1])).sum()
-# convvp_modus313['Classe'].sum()
-#
-# convvp_modus313[['Portee_min', 'Portee_max']].groupby(by = ['Portee_min', 'Portee_max']).count()
-# ODvide = pd.DataFrame(ODvide)
-# ODvide.to_csv(dir_dataTemp+'ODvide.csv')
-#
-# ModusUVPcarre[ZoneCDG, 1:cNbZone].shape
-# Vect_specdf['ZONEADP'].plot()
-# Vect_specdf['Zone'].plot()
-#
-# CDGEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1290]
-# CDGVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1291]
-# ORLYEMP = Vect_specdf[Vect_specdf['ZONEADP'] == 1292]
-# ORLYVOY = Vect_specdf[Vect_specdf['ZONEADP'] == 1293]
-#
-#
-# Vect_specdf.groupby(by='ZONEADP').values()
-#
-# ModusTCH_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modustcm2012.sas7bdat')
-# ModusTCH_valid = ModusTCH_valid.to_numpy()
-#
-# diffModusTCH = pd.DataFrame((ModusTCH - ModusTCH_valid)/ModusTCH)
-# diffModusTCH.mean(1).plot()
-# diffModusTCH.sum().sum()
-# pd.DataFrame(ModusTCH_valid)
-# pd.DataFrame(ModusTCH)
-#
-#
-# ModusUVPSOLO_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpsolom2012.sas7bdat')
-# ModusUVPSOLO_valid.columns = range(3)
-# ModusUVPSOLO = pd.DataFrame(ModusUVPSOLO)
-# diffModusUVPSOLO = np.abs(ModusUVPSOLO - ModusUVPSOLO_valid)/ModusUVPSOLO_valid
-# diffModusUVPSOLO[2].mean()
-# diffModusUVPSOLO[2].plot()
-#
-#
-# ModusUVP_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\modusuvpm2012_tmp.sas7bdat')
-# ModusUVP_valid.columns = range(3)
-# ModusUVP = pd.DataFrame(ModusUVP)
-# diffModusUVP = np.abs(ModusUVP - ModusUVP_valid)/ModusUVP
-# diffModusUVP[2].mean()
-# diffModusUVP[2].plot()
-#
-# TXCONV_valid = pd.read_sas(f'{dir_dataTemp}\\Confirmation distribution\\txconv.sas7bdat')
-# TXCONV_valid.columns = range(22)
-#
-# TXCONV = pd.DataFrame(TXCONV)
-# diffTXCONV = np.abs(TXCONV - TXCONV_valid)/TXCONV_valid
-# diffTXCONV.mean()
-#
-#
-# pd.DataFrame(TXCONV).mean(1).plot()
-#
-# poids = pd.read_csv(Vect_spec[f'Poids_VS{actuel}'].path, sep=Vect_spec[f'Poids_VS{actuel}'].sep)
-#
-# # Kiko - Plotting the impedance functions in Modus.
-#
-# import matplotlib.pyplot as plt
-# from Data.distribution_data import dist_data
-# dist_data_instance = dist_data()
-# dist_data_instance.per = 'PPM'
-# DIST_PAR = dist_data_instance.DIST_PAR_FUNC()
-#
-# vUTM = np.linspace(0, -5, 100)
-# vPAR = DIST_PAR.loc[20, :]
-# y = np.exp(vPAR[2] * vUTM) * (-vUTM) ** vPAR[3]
-# fig = plt.figure()
-# ax = fig.add_subplot(1, 1, 1)
-# ax.spines['left'].set_position('center')
-# ax.spines['bottom'].set_position('zero')
-# ax.spines['right'].set_color('none')
-# ax.spines['top'].set_color('none')
-# ax.xaxis.set_ticks_position('bottom')
-# ax.yaxis.set_ticks_position('left')
-# plt.xlabel('Utility')
-# plt.ylabel('Impedance')
-#
-#
-# # plot the function
-# plt.plot(vUTM,y, 'r')
-#
-# # show the plot
-# plt.show()
-#
-#
-# (UTM[1] < -1).sum()/1661521
-# (UTM[1] < -1).sum()
-# (UTM[1] < -1).sum() - (UTM.loc[(UTM.index)%1289 != 0, 1] < -1).sum()
-# 1661521 - (UTM[1] < -1).sum()
+            #         -- calcul du taux de croissance moyen entre les matrices MODUS
+            TCM_TC = MODUSTC_scen.sum() / MODUSTC_actuel.sum()
+
+            C3_TC = MODUSTC_scen - TCM_TC * k0 * MODUSTC_actuel
+
+            POS1_TC = MODUSTC_actuel == 0
+
+            POS2_TC = C3_TC < 0
+
+            POS3_TC = C3_TC >= 0
+
+            CALEscen_TC = pd.Series(np.zeros((cNbcalzonage ** 2)))
+            CALEscen_TC[POS1_TC] = MODUSTC_scen.loc[POS1_TC] + MODUSTC_actuel.loc[POS1_TC]
+            CALEscen_TC[POS2_TC] = MODUSTC_scen.loc[POS2_TC] * MODUSCaleTC_actuel.loc[POS2_TC] / MODUSTC_actuel
+            CALEscen_TC[POS3_TC] = MODUSTC_scen.loc[POS3_TC] + TCM_TC * k0 * (
+                    MODUSCaleTC_actuel[POS3_TC] - MODUSTC_actuel[POS3_TC])
+
+            CALEscen_TC = CALEscen_TC.to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+
+            MODUSCaleTC_scen = np.zeros((cNbZone + cNbZspec, cNbZone + cNbZspec))
+            MODUSCaleTC_scen[:cNbcalzonage, :cNbcalzonage] = CALEscen_TC
+            MODUSCaleTC_scen[cNbcalzonage:cNbZone + cNbZspec, :] = ModusTC_VS_scen[cNbcalzonage:cNbZone + cNbZspec, :]
+            MODUSCaleTC_scen[:, cNbcalzonage:cNbZone + cNbZspec] = ModusTC_VS_scen[:, cNbcalzonage:cNbZone + cNbZspec]
+
+        elif id == 1:
+            # -- cas où on effectue le report de calage sans analyse des évolutions
+            MODUSTC_actuel = pd.Series(MODUSTC_actuel[:cNbcalzonage, :cNbcalzonage].reshape(cNbcalzonage ** 2))
+
+            MODUSCaleTC_actuel = MODUSCaleTC_actuel.loc[
+                (MODUSCaleTC_actuel['ZONEO'] <= cNbcalzonage) & (MODUSCaleTC_actuel['ZONED'] <= cNbcalzonage), 'FLUX']
+            MODUSCaleTC_actuel.reset_index(inplace=True, drop=True)
+
+            # -- paramètre K de "dilatation" de la matrice MODUS
+            R1_TC = np.ones(cNbcalzonage ** 2)
+            POS_TC = MODUSTC_actuel >= 0.001
+
+            R1_TC[POS_TC] = MODUSCaleTC_actuel[POS_TC]/MODUSTC_actuel[POS_TC]
+            K_TC = np.minimum(R1_TC, seuilh)
+            # égale à la valeur de "cSeuilh"
+            K_TC = np.maximum(K_TC, seuilb)
+            # égale à la valeur de "cSeuilb"
+
+            #   -- paramètre D d'ajout des flux manquants,
+            #   On prend le maximum de D_TC et 0 pour garantir que D ne fait qu'ajouter des flux, sans en retirer
+            D_TC = np.maximum(MODUSCaleTC_actuel - K_TC * MODUSTC_actuel, 0)
+
+            #   -- ajustement pour recréer à la bonne dimension et conserver les flux intrazonaux : diag(K) = 1 et diag(D) = 0
+            K_TC = K_TC.reshape((cNbcalzonage, cNbcalzonage))
+
+            D_TC = D_TC.to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+
+            if cNbcalzonage == cNbZone:
+                K_TC = np.concatenate([K_TC, np.ones((cNbZone, cNbZspec))], axis=1)
+                K_TC = np.concatenate([K_TC, np.ones((cNbZspec, cNbZone + cNbZspec))], axis=0)
+
+                D_TC = np.concatenate([D_TC, np.zeros((cNbZone, cNbZspec))], axis=1)
+                D_TC = np.concatenate([D_TC, np.zeros((cNbZspec, cNbZone + cNbZspec))], axis=0)
+
+        else:    # * -- cas où on n'effectue pas le report de calage *
+            K_TC = np.ones((cNbZone + cNbZspec, cNbZone + cNbZspec))
+            D_TC = np.zeros((cNbZone + cNbZspec, cNbZone + cNbZspec))
+
+        #   - b. Report de calage : CALE(scen) = K.MODUS(scen) + D
+        if id < 2:
+            MODUSCaleTC_scen = K_TC * ModusTC_VS_scen + D_TC
+        dbfile = open(f'{dir_dataTemp}MODUSCaleTC_{H}_scen', 'wb')
+        pkl.dump(MODUSCaleTC_scen, dbfile)
+        dbfile.close()
+
+def report_calage(idTC, idVP):
+    if PPM == 1:
+        ajout_evol('TC', 'PPM', idTC, cSeuilh, cSeuilb)
+        ajout_evol('VP', 'PPM', idVP, cSeuilh, cSeuilb)
+    if PCJ == 1:
+        ajout_evol('TC', 'PCJ', idTC, cSeuilh, cSeuilb)
+        ajout_evol('VP', 'PCJ', idVP, cSeuilh, cSeuilb)
+    if PPS == 1:
+        ajout_evol('TC', 'PPS', idTC, cSeuilh, cSeuilb)
+        ajout_evol('VP', 'PPS', idVP, cSeuilh, cSeuilb)
 
 if __name__ == '__main__':
     # traitementTC('PPM', 'scen', 'PPM')
     # traitementTC('PPS', 'scen', 'PPS')
-    traitementVP('PPM', 'scen', 'PPM')
+    finalise('actuel')
+    finalise('scen')
+    from Data.A_CstesModus import idTC, idVP
+    report_calage(idTC, idVP)
     # traitementVP('PPS', 'scen', 'PPS')

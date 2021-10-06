@@ -1,6 +1,7 @@
 import os
 from datetime import date
 
+import numpy
 import numpy as np
 import pandas as pd
 
@@ -158,3 +159,11 @@ def readVS(per, n, ZoneEmpCDG, ZoneEmpOrly, ZoneVoyCDG, ZoneVoyOrly):
 # Brouillons
 
 # VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = readVS('PPM', 'actuel', cZEmpCDG, cZEmpOrly, cZVoyCDG, cZVoyOrly)
+def ODvide_func(n):
+    ODvide = np.ones((n**2, 2))
+    for i in range(n):
+        for j in range(n):
+            k = (i) * n + j
+            ODvide[k, 0] = i + 1
+            ODvide[k, 1] = j + 1
+    return ODvide

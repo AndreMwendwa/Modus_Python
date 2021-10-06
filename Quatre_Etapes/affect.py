@@ -29,12 +29,19 @@ def affect(ver, matVP, Iter, H):
     # pkl.dump(mat1, dbfile)
     # dbfile.close()
 
-    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_scen_prec', 'wb')
+    dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen_prec', 'wb')
     pkl.dump(matVP, dbfile)
     dbfile.close()
 
     myvisum.SaveVersion(os.path.join(exec_Modus.dir_iter, f'Vers{H}_scen_iter{Iter}.ver'))
     myvisum = None
+
+    dbfile = open(f'{dir_dataTemp}done_affect{Iter}', 'rb')
+    done_affect = pkl.load(dbfile)
+    done_affect += 1
+    dbfile = open(f'{dir_dataTemp}done_affect{Iter}', 'wb')
+    pkl.dump(done_affect, dbfile)
+    dbfile.close()
     return mat1
 
 # # # This is to test the route assignment code above.

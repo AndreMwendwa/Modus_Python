@@ -6,7 +6,8 @@ from Quatre_Etapes import affect
 import multiprocessing
 import os
 import pickle as pkl
-from Traitement.traitement import ODvide_func
+from Data.fonctions_gen import ODvide_func
+
 
 # I. PRÉPARATION ET ANALYSE DES MATRICES VP
 
@@ -14,7 +15,7 @@ from Traitement.traitement import ODvide_func
 def mat_iter(H, par, itern):
 
     # dbfile = open(f'{dir_dataTemp}MODUSUVPCale', 'rb')
-    dbfile = open(f'{dir_dataTemp}MODUSUVPcarre_{H}_scen', 'rb')
+    dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
     MODUSUVPCale = pkl.load(dbfile)
 
     # - a. Cas particulier de la 1ère itération
@@ -30,10 +31,10 @@ def mat_iter(H, par, itern):
     else:
         # - b. Cas générique
         # -- matrice d'affectation de l'itération précédente
-        dbfile = open(f'{dir_dataTemp}MODUSUVPcarre_{H}_scen_prec', 'rb')
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen_prec', 'rb')
         AFFECT_prec = pkl.load(dbfile)
 
-        dbfile = open(f'{dir_dataTemp}MODUSUVPcarre_{H}_scen', 'rb')
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
         AFFECT_iter = pkl.load(dbfile)
         # AFFECT_iter = AFFECT_prec.copy()
         # AFFECT_iter = pd.merge(AFFECT_iter, MODUSUVPCale, on=['ZONEO', 'ZONED'])
@@ -97,15 +98,14 @@ def analyse_iter(itern):
 
 def RMSE(H, itern):
     if itern == 1:
-        MODUSUVP_scen_prec = np.zeros((cNbZone, cNbZone)),
+        MODUSUVP_scen_prec = np.zeros((cNbZtot, cNbZtot)),
     else:
-        dbfile = open(f'{dir_dataTemp}MODUSUVPcarre_{H}_scen_prec', 'rb')
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen_prec', 'rb')
         MODUSUVP_scen_prec = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}MODUSUVPcarre_{H}_scen', 'rb')
+    dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
     MODUSUVP = pkl.load(dbfile)
 
-    MODUSUVP = MODUSUVP[:cNbZone, :cNbZone]   # Kiko - temporaire jusqu'à ce que je résoud le problème avec les VS
-    print(np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum()))  # Kiko ligne temporaire
+    print(f'RMSE_{H} =',  np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum()))  # Kiko ligne temporaire
     return np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum())
 
 # III. REALISATION D'UNE BOUCLE
@@ -134,7 +134,7 @@ def boucle(par1, itern):
     if PPM == 1:
 
         mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
-                                                                                     mat_iter('PPM', par1, itern), 1, 'PPM'))
+                                                                                     mat_iter('PPM', par1, itern), itern, 'PPM'))
         mat1_M.start()
         # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PPM_scen', 'wb')
         # pkl.dump(Result['PPM'], dbfile)
@@ -147,7 +147,7 @@ def boucle(par1, itern):
     if PCJ == 1:
 
         mat1_C = multiprocessing.Process(name='mat1PCJ', target=affect.affect, args=(Donnees_Res[f'Version_PCJ_scen'],
-                                                                                     mat_iter('PCJ', par1, itern), 1, 'PCJ'))
+                                                                                     mat_iter('PCJ', par1, itern), itern, 'PCJ'))
         mat1_C.start()
         # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PCJ_scen', 'wb')
         # pkl.dump(Result['PCJ'], dbfile)

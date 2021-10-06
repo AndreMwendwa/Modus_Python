@@ -6,11 +6,12 @@ import pickle as pkl
 from Traitement.gui3 import *
 import time
 
-def GUI():
-    from Quatre_Etapes import choix_modal
+def run_GUI():
     modus_mode, bdinter, gen_results, dist_results, choix_results = None, None, None, None, None
 
     submit = GUI()
+    print(submit)
+
 
     if submit['-Bdinter_res-']:
         modus_mode = 1
@@ -48,6 +49,7 @@ def demande(n, itern):
     if PPS == 1:
         distribution.distribution(n, 'PPS')
         choix_modal.choix_modal(n, 'PPS', itern)
+    traitement.finalise(n)
 
 def croissancecoutvp(bdinter):
     if idcoutvp == 1:
@@ -56,7 +58,7 @@ def croissancecoutvp(bdinter):
         bdinter_scen['CTVP'] *= croiscoutVP
 
 
-def bouclage_func(idBcl, MaxIter, idTC, idVP):
+def bouclage_func(idBcl, MaxIter):
     if idBcl == 0:
         itern = 1
         if PPM == 1:
@@ -68,6 +70,8 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
         if PPS == 1:
             distribution.distribution('scen', 'PPS')
             choix_modal.choix_modal('scen', 'PPS', itern)
+        traitement.finalise('scen')
+        traitement.report_calage(idTC, idVP)
     else:
         itern = 1
         done_affect = 0
@@ -78,18 +82,17 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
         if PPM == 1:
             distribution.distribution('scen', 'PPM')
             choix_modal.choix_modal('scen', 'PPM', itern)
-            traitement.traitementVP('PPM', 'scen', 'PPM')
             # AFFECT_iter_PPM = bouclage.mat_iter('PPM', cParMatBcl)
         if PCJ == 1:
             distribution.distribution('scen', 'PCJ')
             choix_modal.choix_modal('scen', 'PCJ', itern)
-            traitement.traitementVP('PCJ', 'scen', 'PCJ')
             # AFFECT_iter_PCJ = bouclage.mat_iter('PCJ', cParMatBcl)
         if PPS == 1:
             distribution.distribution('scen', 'PPS')
             choix_modal.choix_modal('scen', 'PPS', itern)
-            traitement.traitementVP('PPS', 'scen', 'PPS')
             # AFFECT_iter_PPS = bouclage.mat_iter('PPS', cParMatBcl)
+        traitement.finalise('scen')
+        traitement.report_calage(idTC, idVP)
         bouclage.boucle(cParMatBcl, 1)
         while done_affect < PPM + PCJ + PPS:
             dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
@@ -114,16 +117,16 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
                 if PPM == 1:
                     distribution.distribution('scen', 'PPM')
                     choix_modal.choix_modal('scen', 'PPM', itern)
-                    traitement.traitementVP('PPM', 'scen', 'PPM')
+
                 if PCJ == 1:
                     distribution.distribution('scen', 'PCJ')
                     choix_modal.choix_modal('scen', 'PCJ', itern)
-                    traitement.traitementVP('PCJ', 'scen', 'PCJ')
+
                 if PPS == 1:
                     distribution.distribution('scen', 'PPS')
                     choix_modal.choix_modal('scen', 'PPS', itern)
-                    traitement.traitementVP('PPS', 'scen', 'PPS')
-
+                traitement.finalise('scen')
+                traitement.report_calage(idTC, idVP)
                 bouclage.boucle(cParMatBcl, itern)
                 while done_affect < PPM + PCJ + PPS:
                     dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
@@ -140,15 +143,14 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
                 if PPM == 1:
                     utility.utilite('scen', 'PPM')
                     choix_modal.choix_modal('scen', 'PPM', itern)
-                    traitement.traitementVP('PPM', 'scen', 'PPM')
                 if PCJ == 1:
                     utility.utilite('scen', 'PPM')
                     choix_modal.choix_modal('scen', 'PCJ', itern)
-                    traitement.traitementVP('PCJ', 'scen', 'PCJ')
                 if PPS == 1:
                     utility.utilite('scen', 'PPM')
                     choix_modal.choix_modal('scen', 'PPS', itern)
-                    traitement.traitementVP('PPS', 'scen', 'PPS')
+                traitement.finalise('scen')
+                traitement.report_calage(idTC, idVP)
                 bouclage.boucle(cParMatBcl, itern)
                 while done_affect < PPM + PCJ + PPS:
                     dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
@@ -166,5 +168,6 @@ def bouclage_func(idBcl, MaxIter, idTC, idVP):
 if __name__ == '__main__':
     # demande('scen', 1)
     # demande('actuel', 0)
-    bouclage_func(1, cNbBcl, None, None)
-
+    # demande('actuel', 0)
+    # bouclage_func(1, cNbBcl)
+    run_GUI()

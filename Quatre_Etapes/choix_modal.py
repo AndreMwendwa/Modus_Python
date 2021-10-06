@@ -39,6 +39,19 @@ def choix_modal(n, hor, itern):
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
+        dbfile = open(f'{dir_dataTemp}Modus_MD_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_MD_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_CY_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_CY_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_VP_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_TC_motcat, dbfile)
+        dbfile.close()
+
     elif idBcl < 3 or itern == 1:
         BASE = Modus_motcat / seU
         Modus_MD_motcat = BASE * euMD
@@ -46,19 +59,56 @@ def choix_modal(n, hor, itern):
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
+        dbfile = open(f'{dir_dataTemp}Modus_MD_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_MD_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_CY_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_CY_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_VP_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_TC_motcat, dbfile)
+        dbfile.close()
+
     elif idBcl == 3 and itern > 1:
+        dbfile = open(f'{dir_dataTemp}Modus_MD_motcat_{n}_{hor}', 'rb')
+        Modus_MD_motcat = pkl.load(dbfile)
+        dbfile = open(f'{dir_dataTemp}Modus_CY_motcat_{n}_{hor}', 'rb')
+        Modus_CY_motcat = pkl.load(dbfile)
+
         BASE = (Modus_motcat - Modus_MD_motcat - Modus_CY_motcat)/seU
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
+        dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_VP_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_TC_motcat, dbfile)
+        dbfile.close()
+
     elif idBcl == 4 and itern > 1:
+        dbfile = open(f'{dir_dataTemp}Modus_MD_motcat_{n}_{hor}', 'rb')
+        Modus_MD_motcat = pkl.load(dbfile)
+
         BASE = (Modus_motcat - Modus_MD_motcat) / seU
         Modus_CY_motcat = BASE * euCY
         Modus_VP_motcat = BASE * euVP
         Modus_TC_motcat = BASE * euTC
 
+        dbfile = open(f'{dir_dataTemp}Modus_CY_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_CY_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_VP_motcat, dbfile)
+        dbfile.close()
+        dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
+        pkl.dump(Modus_TC_motcat, dbfile)
+        dbfile.close()
 
-    return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
+    # return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
 
 
 
