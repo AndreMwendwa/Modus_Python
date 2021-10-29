@@ -4,6 +4,7 @@ import pandas as pd
 import pickle as pkl
 from Data import util_data, A_CstesModus, CstesStruct
 from Quatre_Etapes.exec_Modus import *
+from pathlib import Path
 
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
@@ -12,8 +13,8 @@ reload(A_CstesModus)
 reload(CstesStruct)
 from Data.A_CstesModus import *
 
-dbfile = open(f'{dir_dataTemp}params_user', 'rb')
-params_user = pkl.load(dbfile)
+# dbfile = open(f'{dir_dataTemp}params_user', 'rb')
+# params_user = pkl.load(dbfile)
 
 lambda_COUT = 0.16
 lambda_TVP = 1.36
@@ -26,7 +27,7 @@ lambda_TCY = 0.67
 
 
 def utilite(n, hor):
-    if params_user['modus_mode'] == 1:
+    if not Path(f'{dir_dataTemp}bdinter_{n}').is_file():
         OD = util_data.OD(n)
 
     else:
@@ -39,12 +40,8 @@ def utilite(n, hor):
         #              'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
         #              'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
         #     inplace=True)
-        dbfile = open(f'{dir_dataTemp}bdinter', 'rb')
-        bdinter = pkl.load(dbfile)
-        # for i in range(1, 19):
-        #     bdinter.drop(columns=f'CO{i}', inplace=True)
-
-        OD = bdinter.copy()
+        dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
+        OD = pkl.load(dbfile)
 
 
 

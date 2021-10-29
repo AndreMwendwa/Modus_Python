@@ -5,7 +5,7 @@ Transcription en python: Mwendwa Kiko.
 Date: 30 septembre 2021
 '''
 
-# Modules de Python nécessaires à ce projet.
+# Modules de Python nécessaires à ce projet².
 from collections import namedtuple
 from collections import defaultdict
 import numpy as np
@@ -33,6 +33,9 @@ classe4 = 3.5 #   seuil max de la classe 4 en km
 classe5 = 6.0 #   seuil max de la classe 5 en km
 classe6 = 9.0 #   seuil max de la classe 6 en km
 classe7 = 15.0 #   seuil max de la classe 7 en km
+tous_classes = [f'<{classe1}km', f'{classe1} - \n {classe2}km', f'{classe2} - \n {classe3}km',
+                f'{classe3} - \n {classe4}km', f'{classe4} - \n {classe5}km', f'{classe5} - \n {classe6}km',
+                f'{classe6} - \n {classe7}km', f'>{classe7}km']
 
 # Les classes de portée pour l'attribution de taux d'autosolisme dans le fichier traitement.
 classe_convvp1 = 2.0
@@ -130,7 +133,7 @@ k0 = 1.77   # seuil de croissance extreme avant prise en compte du taux de crois
 # calage n°2
 cSeuilh = 2 # borne de l'amplification multiplicative de la méthode de report de calage n°1
 cSeuilb = 0.25  # borne de la réduction multiplicative de la méthode de report de calage n°1
-cNbcalzonage = cNbZone  # zonage sur lequel appliqué le report de calage : cNbZone si zone interne IdF,
+cNbcalzonage = cNbZone + cNbZspec  # zonage sur lequel appliqué le report de calage : cNbZone si zone interne IdF,
 # cNbZtot si toutes les zones
 
 
@@ -141,14 +144,14 @@ cConv_M = 50    # critère de convergence du bouclage en HPM (ex : 100 pour le b
 cConv_C = 50    # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_S = 50    # critère de convergence du bouclage en HPS (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cNbBcl = 10     # nombre maximum d'itérations lors du bouclage - doit être >1
-cParTpsBcl = 0.5  # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
-cParMatBcl = 0.5    # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
+cParTpsBcl = 0.667  # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
+cParMatBcl = 0.667    # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
 
 # 6. Vecteurs Spécifiques
 # a. identifiant d'éxécution de l'implémentation des vecteurs spécifiques
-IdVsVp = 1      # identifiant d'implémentation (=1) ou pas (=0) des vecteurs spécifiques VP
-IdVsTc = 1      # identifiant d'implémentation (=1) ou pas (=0) des vecteurs spécifiques TC
-IdcorADP = 1    # identifiant d'implémentation (=1) ou pas (=0) des corrections de volume UVP sur base des études
+idVSVP = 0      # identifiant d'implémentation (=1) ou pas (=0) des vecteurs spécifiques VP
+idVSTC = 0      # identifiant d'implémentation (=1) ou pas (=0) des vecteurs spécifiques TC
+idcorADP = 1    # identifiant d'implémentation (=1) ou pas (=0) des corrections de volume UVP sur base des études
 # d'impact d'ADP sur T4
 
 
@@ -183,7 +186,7 @@ dir_dataRef = CstesStruct.dir_dataRef
 
 
 # 9. Télétravail
-idTTV = 0   # 1 = activation du module télétravail en scénario, 0 sinon
+idTTV = 1   # 1 = activation du module télétravail en scénario, 0 sinon
 jourTTV = 0.3    # part moyenne du temps de travail réalisée en télétravail (nb jour télétravaillé / nb jour travaillé)
 partTTV = 0.75   # part des emplois télétravaillables occupées par des télétravailleurs
 tauxTTVHQ = 0.85     # part des emplois HQ télétravaillables : 0.85 selon DADDT 2020
@@ -198,6 +201,16 @@ varJTTVaut = 1.00   # ratio de mobilité autres un jour télétravaillé : 0.43 
 varJLTHaut = 1.00  # ratio de mobilité autres un jour en lieu de travail habituel :
 # 1.16 selon ADEME 2020, 1.00 si inactif
 tauxTTVAQ = Path_sep(os.path.join(dir_dataScen, 'tauxTTVAQ.txt'), '\t')
+
+# 9b. Télétravail_distribution
+# Module introduit pour prendre en compte le télétravail au niveau de la distribution.
+idTTVdist = 0
+ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
+EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
+HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
+AQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi AQ-professionnel
+ACTaut = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif actifs-autres
+
 
 
 #  Kiko do I import tauxTTVAQ here or in the file where it's used.
@@ -224,11 +237,11 @@ croiscoutVP = (1 + (scen-actuel)*(croiscarb*0.38+croisentr*0.53+croispeag*0.09)/
 Donnees_Res = {}    # Un dictionnaire pour contenir les données de réseau (fichiers .ver)
 
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
-Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_editedb.ver')
+Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
 # Version du scénario étudié
 Donnees_Res[f'Version_PCJ_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
 # Version du scénario étudié
-Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited.ver')
+Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
 # Version du scénario étudié
 
 
@@ -288,22 +301,26 @@ Donnees_Interz['carte_o_actuel'] = Path_sep(os.path.join(dir_dataRef, '06JAN2020
 Donnees_Interz['couttc_actuel'] = Path_sep(os.path.join(dir_dataRef, '06JAN2020_CoutTC_ABO_TK_2012.txt'), '\t')
 
 # - b. horizon scenario
-Donnees_Interz['tps_TC_M_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                                          '20201216_GTS_prospecti_v4_SC2019_HPM.txt'), '\t')
+Donnees_Interz['tps_TC_M_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                          '210331_Test75_HPM_2030avecGPE_L17sansT4.txt'), '\t')
 # temps TC scénario (tendanciel si bouclage sur CM) utilisé pour la distribution en PPM
-# Kiko - Il manque ce ichier.
-Donnees_Interz['tps_TC_C_scen'] = Path_sep(os.path.join(dir_dataScen,
-                                       'GTS_20170111_a_v7_9_coe2tiers_v2_importG_a20190424HC1016_TTC.txt'), '\t')
+# Kiko - Remplacement temporaire
+# Donnees_Interz['tps_TC_C_scen'] = Path_sep(os.path.join(dir_dataScen,
+#                                        'GTS_20170111_a_v7_9_coe2tiers_v2_importG_a20190424HC1016_TTC.txt'), '\t')
+Donnees_Interz['tps_TC_C_scen'] = Path_sep(os.path.join(dir_dataAct, '20191219_TTC2012_HC_reseau2012v14.txt'), '\t')
+
 # temps TC scénario (tendanciel si bouclage sur CM) utilisé pour la distribution en PCJ
-Donnees_Interz['tps_TC_S_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                        '20201216_GTS_prospecti_v4_SC2019_HPS.txt'), '\t')
+Donnees_Interz['tps_TC_S_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                        '210331_Test75_HPS_2030avecGPE_L17sansT4.txt'), '\t')
 # temps TC scénario (tendanciel si bouclage sur CM) utilisé pour la distribution en PPS
-Donnees_Interz['tps_TC_MBclCM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                                                '20201216_GTS_prospecti_v4_SC2019_HPM.txt'), '\t')
+Donnees_Interz['tps_TC_MBclCM_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                                '210331_Test75_HPM_2030avecGPE_L17sansT4.txt'), '\t')
 # temps TC scénario étudié utilisé pour le bouclage sur le choix modal, à partir de la distribution obtenue à partir
+Donnees_Interz['tps_TC_CBclCM_scen'] = Path_sep(os.path.join(dir_dataScen,
+                                    'GTFS_20170111_aff_v7_9_coeff2tiers_v2_importG_aff20190424HC1016_TTC.txt'), '\t')
 # du temps TC scénario tendanciel en PPM
-Donnees_Interz['tps_TC_SBclCM_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                                               '20201216_GTS_prospecti_v4_SC2019_HPS.txt') , '\t')
+Donnees_Interz['tps_TC_SBclCM_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                               '210331_Test75_HPS_2030avecGPE_L17sansT4.txt') , '\t')
 # temps TC scénario étudié utilisé pour le bouclage sur le choix modal, à partir de la distribution obtenue à partir
 # du temps TC scénario tendanciel en PPS
 Donnees_Interz['tps_VP_M_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPM_2012.txt'), '\t')
@@ -316,12 +333,12 @@ Donnees_Interz['tps_VP_S_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP
 Donnees_Interz['dist_vol_scen'] = Path_sep(os.path.join(dir_dataRef, '090721_DVOL_km.txt'), '\t')
 # distance à vol d'oiseau scénario
 
-Donnees_Interz['carte_o_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                                         '10EB2021_CoutTC2019_MOTI_Distancetotale.txt'), '\t')
+Donnees_Interz['carte_o_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                         '11FEB2021_CoutTC2030_GPErer_MOTIF_Distancetotale.txt'), '\t')
 # coût TC moyen par Moti et OD en scénario
 
-Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2019',
-                                                         '10EB2021_CoutTC_ABO_TK_2019.txt'), '\t')
+Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                         '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
 # coût TC par OD en scénario
 
 
@@ -359,8 +376,8 @@ Mat_Calees[f'CALEPL_PPS_actuel'] = Path_sep_skip(os.path.join(dir_dataAct, '122_
 
 # -- horizon scénario
 
-# Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_PL_INTERNE_2017.fma'), '\s+', 13)
-Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataAct, 'PL_JOUR_2009_FRETURB.fma'), '\s+', 8)
+Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_PL_INTERNE_2030.fma'), '\s+', 13)
+# Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataAct, 'PL_JOUR_2009_FRETURB.fma'), '\s+', 8)
 # Matrice PL FretUrb journalière scénario
 Mat_Calees[f'CALEPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '121_Mat_PL_PPM_t-flow.fma'), '\s+', 13)
 # Matrice PL scénario PPM
@@ -385,24 +402,24 @@ Mat_Calees[f'CORDPL_PPS_actuel'] = Path_sep_skip(os.path.join(dir_dataAct, '1910
 
 # -- horizon scénario
 
-# Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPM_2017.fma'),
-#                                                '\t', 8)
-Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPM.fma'), '\s+', 13)
+Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_VP_HPM_2030.fma'),
+                                               '\t', 8)
+# Mat_Calees[f'CORDVP_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPM.fma'), '\s+', 13)
 # Cordon VP scénario PPM en veh/h
 Mat_Calees[f'CORDVP_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_VP_HC_2030.fma'), '\t', 8)
 # Cordon VP scénario PCJ en veh/h
-# Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_VP_HPS_2017.fma'),
-#                                              '\t', 8)
-Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPS.fma'), '\s+', 13)
+Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_VP_HPS_2030.fma'),
+                                             '\t', 8)
+# Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '191021_cordon_VP_HPS.fma'), '\s+', 13)
 
 # Cordon VP scénario PPS en veh/h
 
-Mat_Calees[f'CORDPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPM_2017.fma'),
+Mat_Calees[f'CORDPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPM_2017.fma'),
                                              '\t', 8)
 # Cordon PL scénario PPM en veh/h
 Mat_Calees[f'CORDPL_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_PL_HC_2030.fma'), '\t', 8)
 # Cordon PL scénario PCJ en veh/h
-Mat_Calees[f'CORDPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2019', '15.02.2021_cordon_PL_HPS_2017.fma'),
+Mat_Calees[f'CORDPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPS_2017.fma'),
                                              '\t', 8)
 # Cordon PL scénario PPS en veh/h
 
@@ -524,41 +541,41 @@ Pop_Emp['scen'] = os.path.join(dir_dataScen, 'bdzone2022.sas7bdat')
 EM_PAR = {}
 
 EM_PAR['PPM'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hpm_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\em_hpm_par.sas7bdat')
 EM_PAR['PCJ'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hc_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\em_hc_par.sas7bdat')
 EM_PAR['PPS'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\em_hps_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\em_hps_par.sas7bdat')
 
 ATT_PAR = {}
 
 ATT_PAR['PPM'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hpm_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\att_hpm_par.sas7bdat')
 ATT_PAR['PCJ'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hc_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\att_hc_par.sas7bdat')
 ATT_PAR['PPS'] = os.path.join(dir_resultCalibrage,
-                                '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\att_hps_par.sas7bdat')
+                                'modus_recalibré_sept_2021\\5_Export\\att_hps_par.sas7bdat')
 
 
 tx_desagr = {}
 
 tx_desagr['EM_PPM'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hpm.txt')
+                                        'modus_recalibré_sept_2021\\5_Export\\tx_desagr_em1_hpm.txt')
                                         ,'\t')
 tx_desagr['EM_PCJ'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                                         '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hc.txt')
+                                                         'modus_recalibré_sept_2021\\5_Export\\tx_desagr_em1_hc.txt')
                                             ,'\t')
 tx_desagr['EM_PPS'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_em1_hps.txt')
+                                                     'modus_recalibré_sept_2021\\5_Export\\tx_desagr_em1_hps.txt')
                                         ,'\t')
 tx_desagr['ATT_PPM'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                        '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hpm.txt')
+                                        'modus_recalibré_sept_2021\\5_Export\\tx_desagr_att1_hpm.txt')
                                         ,'\t')
 tx_desagr['ATT_PCJ'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hc.txt')
+                                                     'modus_recalibré_sept_2021\\5_Export\\tx_desagr_att1_hc.txt')
                                         ,'\t')
 tx_desagr['ATT_PPS'] = Path_sep(os.path.join(dir_resultCalibrage,
-                                                     '200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\5_Export\\tx_desagr_att1_hps.txt')
+                                                     'modus_recalibré_sept_2021\\5_Export\\tx_desagr_att1_hps.txt')
                                         ,'\t')
 
 
@@ -586,21 +603,21 @@ CVPkm = 0.242
 
 CM_PAR_DICT = {}
 
-CM_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+CM_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\cm_parhpm.sas7bdat')
-CM_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+CM_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\cm_parhc.sas7bdat')
-CM_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+CM_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\cm_parhps.sas7bdat')
 
 # PARAMETRES DE LA DISTRIBUTION
 
 DIST_PAR_DICT = {}
-DIST_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+DIST_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\dist_par_hpm.sas7bdat')
-DIST_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+DIST_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\dist_par_hc.sas7bdat')
-DIST_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+DIST_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\dist_par_hps.sas7bdat')
 
 

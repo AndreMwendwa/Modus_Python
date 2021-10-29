@@ -21,8 +21,8 @@ from Data.fonctions_gen import ODvide_func
 
 # Cette fonction crée à la fois les classes de portée pour le dessin des cartes et pour l'attribution des taux de
 # conducteurs et d'autosolismes. Les résultats sont ensuite picklés.
-def classe_gen():
-    dbfile = open(f'{dir_dataTemp}bdinter', 'rb')
+def classe_gen(n):
+    dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
     bdinter = pkl.load(dbfile)
     bdinter['Classe_carte'] = 0
     bdinter.loc[(bdinter['DVOL'] > 0)&(bdinter['DVOL'] < classe1), 'Classe_carte'] = 'Classe1'
@@ -79,8 +79,8 @@ def traitementTC(H, n, hor):
     return ModusTCcarre, ModusTC_motcatH_Parmod
 
 def traitementVP(H, n, hor):
-    def prepconvvp(H):
-        Classe = classe_gen().Classe_convvp.to_numpy()
+    def prepconvvp(H, n):
+        Classe = classe_gen(n).Classe_convvp.to_numpy()
         convvp_modus313 = pd.read_sas(f'{dir_zonage}\\convvp_modus313.sas7bdat')
         convvp_modus313['Periode'].replace({b'M':'PPM', b'C':'PCJ', b'S':'PPS'}, inplace=True)
         convvp_modus313['Classe'] = 0
@@ -124,7 +124,7 @@ def traitementVP(H, n, hor):
         ModusVP_motcatH = ModusVP_motcat / 6
 
     if not Path(f'{dir_dataTemp}TX_CONV_SOLO').is_file():
-        TXCONV, TXSOLO = prepconvvp(H)
+        TXCONV, TXSOLO = prepconvvp(H, n)
     else:
         dbfile = open(f'{dir_dataTemp}TX_CONV_SOLO', 'rb')
         TX_CONV_SOLO = pkl.load(dbfile)
@@ -149,6 +149,7 @@ def traitementVP(H, n, hor):
 
     ModusUVP_df = np.concatenate([ODvide, ModusUVP_df.to_numpy().reshape(cNbZone**2, 1)], axis=1)
     ModusUVP_df = pd.DataFrame(ModusUVP_df, columns=['ZONEO', 'ZONED', 'FLUX'])
+    ModusUVP_df = complete_b(ModusUVP_df, cNbZtot)
     dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_{n}', 'wb')
     pkl.dump(ModusUVP_df, dbfile)
     dbfile.close()
@@ -240,7 +241,7 @@ def Vecteurs_SpecVP(H, n):
 
     MODUSUVP_cord = complete(ModusUVP_tmp, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
 
-    if IdVsVp == 1:
+    if idVSVP == 1:
         ModusUVP_sans_VS_cordon = retranche_VS_cordon(n, H, ModusUVP)
         MODUSUVP_cord = pd.merge(MODUSUVP_cord, ModusUVP_sans_VS_cordon, on=['ZONEO', 'ZONED'], how='outer')
         MODUSUVP_cord['FLUX'] = np.where((MODUSUVP_cord['ZONEO'] <= cNbZone) & (MODUSUVP_cord['ZONED'] <= cNbZone),
@@ -430,20 +431,30 @@ def AjoutMode_Gare(H, n, mode):
     read_mat.n = n
     read_mat.per = H
 
-    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'rb')
+    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_{n}', 'rb')
     ModusTC = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'rb')
-    MODUSUVP_cord = pkl.load(dbfile)
+    ModusTC = pd.DataFrame(ModusTC.reshape(cNbZone ** 2))
+    ODvide = pd.DataFrame(ODvide_func(cNbZone))
+    ModusTC = pd.concat([ODvide, ModusTC], axis=1)
+    ModusTC.columns = ['ZONEO', 'ZONED', 'FLUX']
+
+    dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_{n}', 'rb')
+    ModusUVP = pkl.load(dbfile)
 
     if mode == 'VP':
         if idVGVP == 1:
             VGVP = read_mat.read_VGVP()
-            MODUSUVP_cord = pd.merge(MODUSUVP_cord, VGVP, on=['ZONEO', 'ZONED'], how='outer')
-            MODUSUVP_cord['FLUX'] = np.where((MODUSUVP_cord['ZONEO'] <= cNbZone + cNbZspec + cNbZext)&
-                                             (MODUSUVP_cord['ZONED'] <= cNbZone + cNbZspec + cNbZext), MODUSUVP_cord['FLUX_x'],
-                                            MODUSUVP_cord['FLUX_y'])
-            MODUSUVP_cord = MODUSUVP_cord.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
-            MODUSUVP_cord.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+            ModusUVP = pd.merge(ModusUVP, VGVP, on=['ZONEO', 'ZONED'], how='outer')
+            ModusUVP['FLUX'] = np.where((ModusUVP['ZONEO'] <= cNbZone + cNbZspec + cNbZext)&
+                                             (ModusUVP['ZONED'] <= cNbZone + cNbZspec + cNbZext), ModusUVP['FLUX_x'],
+                                            ModusUVP['FLUX_y'])
+            ModusUVP = ModusUVP.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
+            ModusUVP.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+
+            dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_{n}', 'wb')
+            pkl.dump(ModusUVP, dbfile)
+            dbfile.close()
+
     elif mode == 'TC':
         if idVGTC == 1:
             VGTC = read_mat.read_VGTC()
@@ -454,22 +465,21 @@ def AjoutMode_Gare(H, n, mode):
                                              ModusTC['FLUX_y'])
             ModusTC = ModusTC.loc[:, ('ZONEO', 'ZONED', 'FLUX')]
             ModusTC.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
+            ModusTC = complete_b(ModusTC, cNbZtot + 9)   # Le +9 est pour ajouter les 9 zones de plus à cNbZtot
 
-    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
-    pkl.dump(ModusTC, dbfile)
-    dbfile.close()
+            dbfile = open(f'{dir_dataTemp}ModusTC_{H}_{n}', 'wb')
+            pkl.dump(ModusTC, dbfile)
+            dbfile.close()
 
-    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_{n}', 'wb')
-    pkl.dump(MODUSUVP_cord, dbfile)
-    dbfile.close()
+
 
 
 def finalise(n):
     if PPM == 1:
         traitementTC('PPM', n, 'PPM')
         traitementVP('PPM', n, 'PPM')
-        Vecteurs_SpecVP('PPM', n)
-        Vecteurs_SpecTC('PPM', n)
+        # Vecteurs_SpecVP('PPM', n)
+        # Vecteurs_SpecTC('PPM', n)
         if idVGTC == 1:
             AjoutMode_Gare('PPM', n, 'TC')
         if idVGVP == 1:
@@ -478,8 +488,8 @@ def finalise(n):
     if PCJ == 1:
         traitementTC('PCJ', n, 'PCJ')
         traitementVP('PCJ', n, 'PCJ')
-        Vecteurs_SpecVP('PCJ', n)
-        Vecteurs_SpecTC('PCJ', n)
+        # Vecteurs_SpecVP('PCJ', n)
+        # Vecteurs_SpecTC('PCJ', n)
         if idVGTC == 1:
             AjoutMode_Gare('PCJ', n, 'TC')
         if idVGVP == 1:
@@ -488,8 +498,8 @@ def finalise(n):
     if PPS == 1:
         traitementTC('PPS', n, 'PPS')
         traitementVP('PPS', n, 'PPS')
-        Vecteurs_SpecVP('PPS', n)
-        Vecteurs_SpecTC('PPS', n)
+        # Vecteurs_SpecVP('PPS', n)
+        # Vecteurs_SpecTC('PPS', n)
         if idVGTC == 1:
             AjoutMode_Gare('PPS', n, 'TC')
         if idVGVP == 1:
@@ -503,18 +513,28 @@ def ajout_evol(type, H, id, seuilh, seuilb):
     read_mat.n = 'actuel'
     read_mat.per = H
 
-    # Fichiers sans VS
-    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_actuel', 'rb')
+    # Fichiers avec VS
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_actuel', 'rb')
     MODUSTC_actuel = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_actuel', 'rb')
+    MODUSTC_actuel = MODUSTC_actuel.loc[(MODUSTC_actuel['ZONEO'] <= cNbcalzonage)&
+                    (MODUSTC_actuel['ZONED'] <= cNbcalzonage), 'FLUX'].to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+    dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_actuel', 'rb')
     MODUSUVP_actuel = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_scen', 'rb')
+    MODUSUVP_actuel = MODUSUVP_actuel.loc[(MODUSUVP_actuel['ZONEO'] <= cNbcalzonage) &
+                    (MODUSUVP_actuel['ZONED'] <= cNbcalzonage), 'FLUX'].to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+    dbfile = open(f'{dir_dataTemp}ModusTC_{H}_scen', 'rb')
     MODUSTC_scen = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}ModusUVPcarre_{H}_scen', 'rb')
+    MODUSTC_scen = MODUSTC_scen.loc[(MODUSTC_scen['ZONEO'] <= cNbcalzonage)&
+                    (MODUSTC_scen['ZONED'] <= cNbcalzonage), 'FLUX'].to_numpy().reshape((cNbcalzonage, cNbcalzonage))
+    dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_scen', 'rb')
     MODUSUVP_scen = pkl.load(dbfile)
+    MODUSUVP_scen = MODUSUVP_scen.loc[(MODUSUVP_scen['ZONEO'] <= cNbcalzonage) &
+                    (MODUSUVP_scen['ZONED'] <= cNbcalzonage), 'FLUX'].to_numpy().reshape((cNbcalzonage, cNbcalzonage))
 
     # Fichiers avec VS et cordon
-    dbfile = open(f'{dir_dataTemp}MODUSUVP_cord_{H}_scen', 'rb')
+    # Depuis qu'on a mis à arrêter d'appliquer la méthode de la DRIEAT, on fait juste une copie des fichiers crées
+    # ci-dessous
+    dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_scen', 'rb')
     MODUSUVP_cord_scen = pkl.load(dbfile)
     dbfile = open(f'{dir_dataTemp}ModusTC_{H}_scen', 'rb')
     ModusTC_VS_scen = pkl.load(dbfile)
@@ -594,12 +614,11 @@ def ajout_evol(type, H, id, seuilh, seuilb):
 
             D_UVP = D_UVP.to_numpy().reshape((cNbcalzonage, cNbcalzonage))
 
-            if cNbcalzonage == cNbZone:
-                K_UVP = np.concatenate([K_UVP, np.ones((cNbZone, cNbZtot - cNbZone))], axis=1)
-                K_UVP = np.concatenate([K_UVP, np.ones((cNbZtot - cNbZone, cNbZtot))], axis=0)
+            K_UVP = np.concatenate([K_UVP, np.ones((cNbcalzonage, cNbZtot - cNbcalzonage))], axis=1)
+            K_UVP = np.concatenate([K_UVP, np.ones((cNbZtot - cNbcalzonage, cNbZtot))], axis=0)
 
-                D_UVP = np.concatenate([D_UVP, np.zeros((cNbZone, cNbZtot - cNbZone))], axis=1)
-                D_UVP = np.concatenate([D_UVP, np.zeros((cNbZtot - cNbZone, cNbZtot))], axis=0)
+            D_UVP = np.concatenate([D_UVP, np.zeros((cNbcalzonage, cNbZtot - cNbcalzonage))], axis=1)
+            D_UVP = np.concatenate([D_UVP, np.zeros((cNbZtot - cNbcalzonage, cNbZtot))], axis=0)
 
         else:  # * -- cas où on n'effectue pas le report de calage *
             K_UVP = np.ones((cNbZtot, cNbZtot))
@@ -611,6 +630,13 @@ def ajout_evol(type, H, id, seuilh, seuilb):
         pkl.dump(MODUSCaleUVP_scen, dbfile)
         dbfile.close()
 
+        #  Résultats du calage sous forme d'un DataFrame pour le traitement.
+        MODUSCaleUVP_df = pd.concat([pd.DataFrame(ODvide_func(cNbZone)),
+                                     pd.DataFrame(MODUSCaleUVP_scen[:cNbZone, :cNbZone].reshape(cNbZone ** 2))], axis=1)
+        MODUSCaleUVP_df.columns = ['ZONEO', 'ZONED', 'FLUX']
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_df_{H}_scen', 'wb')
+        pkl.dump(MODUSCaleUVP_df, dbfile)
+        dbfile.close()
 
     elif type == 'TC':
         if id == 2:
@@ -691,6 +717,14 @@ def ajout_evol(type, H, id, seuilh, seuilb):
             MODUSCaleTC_scen = K_TC * ModusTC_VS_scen + D_TC
         dbfile = open(f'{dir_dataTemp}MODUSCaleTC_{H}_scen', 'wb')
         pkl.dump(MODUSCaleTC_scen, dbfile)
+        dbfile.close()
+        
+        #  Reécris les résultats de calage sous forme d'un DataFrame de pandas
+        MODUSCaleTC_df = pd.concat([pd.DataFrame(ODvide_func(cNbZone)),
+                                    pd.DataFrame(MODUSCaleTC_scen[:cNbZone, :cNbZone].reshape(cNbZone ** 2))], axis=1)
+        MODUSCaleTC_df.columns = ['ZONEO', 'ZONED', 'FLUX']
+        dbfile = open(f'{dir_dataTemp}MODUSCaleTC_df_{H}_scen', 'wb')
+        pkl.dump(MODUSCaleTC_df, dbfile)
         dbfile.close()
 
 def report_calage(idTC, idVP):

@@ -331,7 +331,11 @@ def OD(n):
     OD.loc[OD['ZONEO'] == OD['ZONED'], list_cols_TTC] = TTCINTRA
     del OD['ZONEO']
     OD.reset_index(inplace=True)
-    dbfile = open(f'{dir_dataTemp}bdinter', 'wb')
+    dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'wb')
     pkl.dump(OD, dbfile)
     dbfile.close()
     return OD
+
+if __name__ == '__main__':
+    # OD('actuel')
+    OD('scen')

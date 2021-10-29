@@ -15,17 +15,23 @@ from Data.fonctions_gen import ODvide_func
 def mat_iter(H, par, itern):
 
     # dbfile = open(f'{dir_dataTemp}MODUSUVPCale', 'rb')
-    dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
-    MODUSUVPCale = pkl.load(dbfile)
+
 
     # - a. Cas particulier de la 1ère itération
     if itern == 1:
-        # -- matrice d'affectation de l'itération précédente : nulle pour la 1ère itération
-        AFFECT_prec = MODUSUVPCale.copy()
-        AFFECT_prec = 0
+        # # -- matrice d'affectation de l'itération précédente : nulle pour la 1ère itération
+        # AFFECT_prec = MODUSUVPCale.copy()
+        # AFFECT_prec = 0
+        from Data.traitment_data import read_mat
+        read_mat = read_mat()
+        read_mat.n = 'actuel'
+        read_mat.per = H
+        MODUSUVPCale_prec = read_mat.CALEUVP()
+        AFFECT_prec = MODUSUVPCale_prec['FLUX'].to_numpy().reshape((cNbZtot, cNbZtot))
 
         # -- matrice d'affectation de l'itération actuelle : matrice du report de calage
-        AFFECT_iter = MODUSUVPCale.copy()
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
+        AFFECT_iter = pkl.load(dbfile)
 
 
     else:
@@ -42,7 +48,7 @@ def mat_iter(H, par, itern):
         # 		- la matrice calculée par report de calage à l'itération n
         # 		- la matrice d'affectation de l'itérations n-1 :
         # 		Maff(n) = par * Maff(n-1) + (1-par)* Mcalc(n)
-    AFFECT_iter = par * AFFECT_iter + (1 - par) * AFFECT_prec
+        AFFECT_iter = par * AFFECT_iter + (1 - par) * AFFECT_prec
     return AFFECT_iter
     # c. Ecriture de la matrice VP sous format fma
     # ecriredavisum(AFFECT_iter, Exec_Modus.dir_iter, f'UVP_{H}_scen_iter{iter}', 'VP', 0, 24)
@@ -98,15 +104,21 @@ def analyse_iter(itern):
 
 def RMSE(H, itern):
     if itern == 1:
-        MODUSUVP_scen_prec = np.zeros((cNbZtot, cNbZtot)),
+        # MODUSUVP_scen_prec = np.zeros((cNbZtot, cNbZtot)),
+        from Data.traitment_data import read_mat
+        read_mat = read_mat()
+        read_mat.n = 'actuel'
+        read_mat.per = H
+        MODUSUVPCale_prec = read_mat.CALEUVP()
+        MODUSUVP_scen_prec = MODUSUVPCale_prec['FLUX'].to_numpy().reshape((cNbZtot, cNbZtot))
     else:
         dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen_prec', 'rb')
         MODUSUVP_scen_prec = pkl.load(dbfile)
     dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
     MODUSUVP = pkl.load(dbfile)
 
-    print(f'RMSE_{H} =',  np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum()))  # Kiko ligne temporaire
-    return np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum())
+    print(f'RMSE_{H} =',  np.sqrt(((MODUSUVP - MODUSUVP_scen_prec)**2).sum()))  # Kiko ligne temporaire
+    return np.sqrt(((MODUSUVP - MODUSUVP_scen_prec)**2).sum())
 
 # III. REALISATION D'UNE BOUCLE
 
@@ -118,17 +130,6 @@ def boucle(par1, itern):
     except OSError:
         pass
 
-    #     2. Calcul et analyse des matrices de l'itération
-    # Trois 'if'  puisque tous les trois variables peuvent être simultanément egale à 1
-    # # Peut-être pas nécessaire avec Visum helpers.
-    # if PPM == 1:
-    #     mat_iter('PPM', 'scen', par1)
-    # if PCJ == 1:
-    #     mat_iter('PPM', 'scen', par1)
-    # if PPS == 1:
-    #     mat_iter('PPM', 'scen', par1)
-    # analyse_iter(Iter)
-
     # 3. Exécution de la boucle
     Result = {}
     if PPM == 1:
@@ -136,41 +137,20 @@ def boucle(par1, itern):
         mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
                                                                                      mat_iter('PPM', par1, itern), itern, 'PPM'))
         mat1_M.start()
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PPM_scen', 'wb')
-        # pkl.dump(Result['PPM'], dbfile)
-        # dbfile.close()
-
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PPM_scen_prec', 'wb')
-        # pkl.dump(MODUSUVP, dbfile)
-        # dbfile.close()
 
     if PCJ == 1:
 
         mat1_C = multiprocessing.Process(name='mat1PCJ', target=affect.affect, args=(Donnees_Res[f'Version_PCJ_scen'],
                                                                                      mat_iter('PCJ', par1, itern), itern, 'PCJ'))
         mat1_C.start()
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PCJ_scen', 'wb')
-        # pkl.dump(Result['PCJ'], dbfile)
-        # dbfile.close()
-
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PCJ_scen_prec', 'wb')
-        # pkl.dump(MODUSUVP, dbfile)
-        # dbfile.close()
     if PPS == 1:
 
         mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(Donnees_Res[f'Version_PPS_scen'],
                                                                                      mat_iter('PPS', par1, itern), itern, 'PPS'))
         mat1_S.start()
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PPS_scen', 'wb')
-        # pkl.dump(Result['PPS'], dbfile)
-        # dbfile.close()
 
-        # dbfile = open(f'{dir_dataTemp}ModusUVPcarre_PCJ_scen_prec', 'wb')
-        # pkl.dump(MODUSUVP, dbfile)
-        # dbfile.close()
-
-def data_update(par2):
-    dbfile = open(f'{dir_dataTemp}bdinter', 'rb')
+def data_update(par2, n):
+    dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
     bdinter = pkl.load(dbfile)
 
     if PPM == 1:
@@ -201,7 +181,7 @@ def data_update(par2):
         TVP_PPS.reset_index(inplace=True)
         bdinter['TVPS'] = np.where(bdinter['ZONEO'] != bdinter['ZONED'], (par2 * TVP_PPS['TVPS'] + (1 - par2) * bdinter['TVPS']), bdinter['TVPS'])
 
-    dbfile = open(f'{dir_dataTemp}bdinter', 'wb')
+    dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'wb')
     pkl.dump(bdinter, dbfile)
     dbfile.close()
 
@@ -209,4 +189,4 @@ def data_update(par2):
 
 if __name__ == '__main__':
     itern = 1
-    data_update(0.5)
+    data_update(0.5, 'actuel')

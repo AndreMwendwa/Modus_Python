@@ -5,6 +5,7 @@ from Traitement import traitement
 import pickle as pkl
 from Traitement.gui3 import *
 import time
+from Traitement.indicateurs import indicateurs_func, print_typo
 
 def run_GUI():
     modus_mode, bdinter, gen_results, dist_results, choix_results = None, None, None, None, None
@@ -107,7 +108,7 @@ def bouclage_func(idBcl, MaxIter):
             RMSE_PCJ = bouclage.RMSE('PCJ', 1)
         if PPS == 1:
             RMSE_PPS = bouclage.RMSE('PPS', 1)
-
+        bouclage.data_update(cParTpsBcl, 'scen')
         while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern <= MaxIter:
             itern += 1
             done_affect = 0
@@ -138,7 +139,7 @@ def bouclage_func(idBcl, MaxIter):
                     RMSE_PCJ = bouclage.RMSE('PCJ', itern)
                 if PPS == 1:
                     RMSE_PPS = bouclage.RMSE('PPS', itern)
-                bouclage.data_update(cParTpsBcl)
+                bouclage.data_update(cParTpsBcl, 'scen')
             elif idBcl == 2 or idBcl == 3:
                 if PPM == 1:
                     utility.utilite('scen', 'PPM')
@@ -163,11 +164,12 @@ def bouclage_func(idBcl, MaxIter):
                     RMSE_PCJ = bouclage.RMSE('PCJ', itern)
                 if PPS == 1:
                     RMSE_PPS = bouclage.RMSE('PPS', itern)
-                bouclage.data_update(cParTpsBcl)
+                bouclage.data_update(cParTpsBcl, 'scen')
 
 if __name__ == '__main__':
     # demande('scen', 1)
-    # demande('actuel', 0)
-    # demande('actuel', 0)
-    # bouclage_func(1, cNbBcl)
-    run_GUI()
+    demande('actuel', 0)
+    bouclage_func(1, cNbBcl)
+    indicateurs_func()
+    print_typo()
+    # run_GUI()

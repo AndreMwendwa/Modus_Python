@@ -14,8 +14,6 @@ reload(A_CstesModus)
 reload(CstesStruct)
 from Data.A_CstesModus import *
 
-dbfile = open(f'{dir_dataTemp}params_user', 'rb')
-params_user = pkl.load(dbfile)
 
 def distribution(n, hor):
     dist_data_instance = dist_data()

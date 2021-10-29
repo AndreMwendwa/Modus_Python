@@ -60,6 +60,13 @@ def complete(tblin, cNbZone,cDebZSpec,cNbZSpec,cDebZext,cNbZext,size):
     tblout.fillna(0, inplace=True)
     return tblout
 
+def complete_b(tblin, cNbZone):
+    ODVide = pd.DataFrame(ODvide_func(cNbZone), columns=['ZONEO', 'ZONED'])
+    tblout = pd.merge(ODVide, tblin, on=['ZONEO', 'ZONED'], how='outer')
+    tblout.fillna(0, inplace=True)
+    return tblout
+
+
 
 def ecriredavisum(base, dir, nom, type, hor1, hor2):
     # base: matrice sous format SAS en 3 colonnes O D FLUX
@@ -100,7 +107,7 @@ def readVS(per, n, ZoneEmpCDG, ZoneEmpOrly, ZoneVoyCDG, ZoneVoyOrly):
     VS.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
     VS.drop_duplicates(subset=['ZONEO', 'ZONED'], inplace=True)
 
-    if IdcorADP == 1:
+    if idcorADP == 1:
         VStot[['corCDG_Em', 'corCDG_Att']] = 0
         if per == 'PPM':
             VStot.loc[VStot['Nom'] == 'CDG', 'corCDG_Em'] = (6100 * 0.97 / (92.7 + 70.8) * (EmpCDGactuel + PaxCDGactuel)) \

@@ -9,18 +9,18 @@ from Quatre_Etapes import distribution
 from importlib import reload
 from Data.A_CstesModus import *
 
-dbfile = open(f'{dir_dataTemp}params_user', 'rb')
-params_user = pkl.load(dbfile)
-dbfile = open(f'{dir_dataTemp}UTIL_DB', 'rb')
-db = pkl.load(dbfile)
+# dbfile = open(f'{dir_dataTemp}params_user', 'rb')
+# params_user = pkl.load(dbfile)
 
-euTC = db['util_TC']
-euVP = db['util_VP']
-euCY = db['util_CY']
-euMD = db['util_MD']
 
 def choix_modal(n, hor, itern):
+    dbfile = open(f'{dir_dataTemp}UTIL_DB', 'rb')
+    db = pkl.load(dbfile)
 
+    euTC = db['util_TC']
+    euVP = db['util_VP']
+    euCY = db['util_CY']
+    euMD = db['util_MD']
     # Modus_motcat = distribution.distribution(n, hor)
     dbfile = open(f'{dir_dataTemp}Modus_motcat_{n}_{hor}', 'rb')
     Modus_motcat = pkl.load(dbfile)

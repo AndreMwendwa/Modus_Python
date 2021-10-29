@@ -13,8 +13,7 @@ from Data.A_CstesModus import *
 from Data.teletravail import teletravail
 import pickle as pkl
 
-dbfile = open(f'{dir_dataTemp}params_user', 'rb')
-params_user = pkl.load(dbfile)
+
 # ------------
 # I. GENERATION
 # ------------
@@ -27,17 +26,16 @@ def generation(n, per):
 
     # 0. Lecture des données de base
     # - a. Lecture des OS utilisées pour la génération
-
-    if idTTV == 0:
-        Pop_Emp = generation.Pop_Emp()
-
-    else:
-        Pop_Emp_temp = pd.read_csv(
-            'D:\\TraDD ENPC 2020-21\\Stage\\MODUSv3.1.3\\Donnees\\Input\\2_Scenario\\210212_OS2025h.txt', sep = '\t')
-        Pop_Emp = pd.DataFrame()
-        for VAR in list(VARGEN):
-            Pop_Emp[VAR] = Pop_Emp_temp[VAR]
-        Pop_Emp.index = range(1, cNbZone + 1)
+    Pop_Emp = generation.Pop_Emp()
+    # if idTTV == 0:
+    #     Pop_Emp = generation.Pop_Emp()
+    #
+    # else:
+    #     Pop_Emp_temp = pd.read_csv(f'{dir_dataScen}\\210212_OS2025h.txt', sep = '\t')
+    #     Pop_Emp = pd.DataFrame()
+    #     for VAR in list(VARGEN):
+    #         Pop_Emp[VAR] = Pop_Emp_temp[VAR]
+    #     Pop_Emp.index = range(1, cNbZone + 1)
 
     # - b. Lecture des paramètres de génération
 
@@ -67,8 +65,8 @@ def generation(n, per):
 
     # - c. Calcul des effets des hypothèses de télétravail sur les émissions et attractions équilibrées
 
-    if idTTV == 1:
-        TTV = teletravail(n)
+    if idTTV == 1 and n == 'scen':
+        TTV = teletravail('scen')
         if per == 'PPM':
             EM_base.iloc[:, 0] = EM_base.iloc[:, 0] * TTV.iloc[:, 3]
             EM_base.iloc[:, 4] = EM_base.iloc[:, 4] * TTV.iloc[:, 0]
@@ -175,7 +173,10 @@ def generation(n, per):
 
     return EM_final, ATT_final
 
-
-
+if __name__ == '__main__':
+    generation('actuel', 'PPM')
+    generation('scen', 'PPM')
+    generation('actuel', 'PPS')
+    generation('scen', 'PPS')
 
 

@@ -3,13 +3,13 @@ import numpy as np
 from Data.A_CstesModus import *
 from Data.CstesStruct import *
 
-def teletravail(per):   # Kiko - Il me semble que scen et n parlent finalement de la même chose. À confirmer.
+def teletravail(n):   # Kiko - Il me semble que scen et n parlent finalement de la même chose. À confirmer.
 
     TTVAQ = pd.read_csv(tauxTTVAQ.path, sep=tauxTTVAQ.sep)
     Modus_BD_zone = pd.DataFrame()      # Crées un dataframe vide pour aider à mettre les colonnes dans le bon ordre.
-    if per == 'actuel':
+    if n == 'actuel':
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
-    elif per == 'scen':
+    elif n == 'scen':
         Modus_BD_zone_Temp = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
     # Kiko - There's a problem here. You've confused per and hor I think.
 
