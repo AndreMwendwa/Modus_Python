@@ -1,17 +1,19 @@
-import numpy as np
-import pandas as pd
+import Quatre_Etapes.main
 from Data.fonctions_gen import *
-from Quatre_Etapes import exec_Modus
 from Quatre_Etapes import affect
 import multiprocessing
 import os
 import pickle as pkl
 from Data.fonctions_gen import ODvide_func
+from dossiers_simul import *
 
 
 # I. PRÉPARATION ET ANALYSE DES MATRICES VP
 
 # 1. Calcul des matrices d'affectation de l'itération
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
+
+
 def mat_iter(H, par, itern):
 
     # dbfile = open(f'{dir_dataTemp}MODUSUVPCale', 'rb')
@@ -122,31 +124,27 @@ def RMSE(H, itern):
 
 # III. REALISATION D'UNE BOUCLE
 
-def boucle(par1, itern):
+def boucle(par1, itern, dir_itern):
     #     1. Création du dossier de l'itération
     #     Ce try block existe au cas où les dossiers ont déjà été créés pour une raison ou une autre.
-    try:
-        os.mkdir(exec_Modus.dir_iter)
-    except OSError:
-        pass
 
     # 3. Exécution de la boucle
     Result = {}
     if PPM == 1:
 
         mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
-                                                                                     mat_iter('PPM', par1, itern), itern, 'PPM'))
+                                                                                     mat_iter('PPM', par1, itern), itern, 'PPM', dir_itern))
         mat1_M.start()
 
     if PCJ == 1:
 
         mat1_C = multiprocessing.Process(name='mat1PCJ', target=affect.affect, args=(Donnees_Res[f'Version_PCJ_scen'],
-                                                                                     mat_iter('PCJ', par1, itern), itern, 'PCJ'))
+                                                                                     mat_iter('PCJ', par1, itern), itern, 'PCJ', dir_itern))
         mat1_C.start()
     if PPS == 1:
 
         mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(Donnees_Res[f'Version_PPS_scen'],
-                                                                                     mat_iter('PPS', par1, itern), itern, 'PPS'))
+                                                                                     mat_iter('PPS', par1, itern), itern, 'PPS', dir_itern))
         mat1_S.start()
 
 def data_update(par2, n):

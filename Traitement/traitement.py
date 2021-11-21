@@ -1,5 +1,3 @@
-import numpy as np
-
 from Data.fonctions_gen import *
 import pickle as pkl
 from pathlib import Path
@@ -21,6 +19,9 @@ from Data.fonctions_gen import ODvide_func
 
 # Cette fonction crée à la fois les classes de portée pour le dessin des cartes et pour l'attribution des taux de
 # conducteurs et d'autosolismes. Les résultats sont ensuite picklés.
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
+
+
 def classe_gen(n):
     dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
     bdinter = pkl.load(dbfile)

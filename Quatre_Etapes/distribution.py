@@ -1,23 +1,14 @@
-import numpy as np
-import pandas as pd
-from collections import defaultdict
-from Data import util_data, A_CstesModus, CstesStruct
+from Data import A_CstesModus, CstesStruct
 from Quatre_Etapes import generation
 from Quatre_Etapes import utility
 from Data.distribution_data import dist_data
-import pickle as pkl
-
-# Cette partie assure l'importation des constants,
-# et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
-from importlib import reload
-reload(A_CstesModus)
-reload(CstesStruct)
 from Data.A_CstesModus import *
-
+from Quatre_Etapes.dossiers_simul import *
 
 def distribution(n, hor):
     dist_data_instance = dist_data()
     dist_data_instance.per = hor
+    dist_data_instance.n = n
 
     DIST_PAR = dist_data_instance.DIST_PAR_FUNC().to_numpy()
 
@@ -93,27 +84,9 @@ def distribution(n, hor):
     dbfile.close()
     return Modus_motcat
 
-# # Modus_motcat = distribution('actuel', 'PPM')
-# import pandas as pd
-# Modus_motcat = pd.DataFrame(Modus_motcat)
-# # import numpy as np
-# Motcat_valid = pd.read_sas('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
-#                            '\\Other_files\\modus_motcat_2012_hpm.sas7bdat')
-# motcat60 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcat60.sas7bdat')
-# motcatseU0 = pd.read_sas(dir_root+'\\M3_Chaine\\Modus_Python\\Other_files\\Confirmation distribution\\motcatseU0.sas7bdat')
-# #
-# Motcat_valid = motcat60
-# Motcat_valid = motcatseU0
-# #
-# Motcat_valid.columns = range(28)
-# DIFF = np.abs(Modus_motcat - Motcat_valid)/Motcat_valid
-# # DIFF = np.abs(Modus_motcat - Motcat_valid)
-# #
-# DIFF.sum().sum()
-# #
-# # diffsas = np.abs(Motcat_valid - motcat60)
-# # diffsas.sum().sum()
-
-
+if __name__ == '__main__':
+    # distribution('scen', 'PPM')
+    distribution('scen', 'PPS')
+    # distribution('actuel', 'PPM')
 
 

@@ -1,18 +1,15 @@
 import win32com.client as win32
 import Data.VisumPy.helpers2 as helpers
-from Data import CstesStruct
-from Data.CstesStruct import *
 from Data.A_CstesModus import *
 import multiprocessing
-import numpy as np
-from collections import defaultdict
-from Quatre_Etapes import exec_Modus
 import os
 import pickle as pkl
+from dossiers_simul import *
+
+from Quatre_Etapes.dossiers_simul import *
 
 
-
-def affect(ver, matVP, Iter, H):
+def affect(ver, matVP, Iter, H, dir_itern):
     myvisum = win32.Dispatch("Visum.Visum")
     myvisum.LoadVersion(ver)
     helpers.SetODMatrix(myvisum, 'V', matVP)
@@ -33,7 +30,7 @@ def affect(ver, matVP, Iter, H):
     pkl.dump(matVP, dbfile)
     dbfile.close()
 
-    myvisum.SaveVersion(os.path.join(exec_Modus.dir_iter, f'Vers{H}_scen_iter{Iter}.ver'))
+    myvisum.SaveVersion(os.path.join(dir_itern, f'Vers{H}_scen_iter{Iter}.ver'))
     myvisum = None
 
     dbfile = open(f'{dir_dataTemp}done_affect{Iter}', 'rb')

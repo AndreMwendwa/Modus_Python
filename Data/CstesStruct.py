@@ -10,6 +10,7 @@ import os
 
 # 1. Répertoires et versions des logiciels
 # !!! ATTENTION : si la version de Davisum n'est pas la 11, il faut modifier le programme Wait2.exe
+
 vers_Visum=16
 dir_7zip = os.path.join('C:\\', 'Program Files', '7-Zip')
 
@@ -23,8 +24,9 @@ dir_macros = os.path.join(dir_data, 'Macros')   # répertoire de stockage des fo
 dir_dataRef = os.path.join(dir_data, 'Input', '0_Reference')    # répertoire de stockage des données actuelles
 dir_dataAct = os.path.join(dir_data, 'Input', '1_Actuel')   # répertoire de stockage des données actuelles
 dir_dataScen = os.path.join(dir_data, 'Input', '2_Scenario')    # répertoire de stockage des données en mode scenario
-dir_dataTemp = dir_root + '\\M3_Chaine\\Modus_Python\\Other_files\\without TTV_tribut_recalibré\\'   # Pour garder les
-# résultats intérmediaire
+
+
+
 
 # 3. Répertoires du calibrage
 dir_calibrage = os.path.join(dir_root, 'M3_Calibrage')  # répertoire de calibrage

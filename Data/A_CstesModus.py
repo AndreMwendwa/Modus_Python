@@ -74,7 +74,6 @@ cNbNiv = cNbDpt     # nombre d'éléments dans le niveau géographique de l'EGT 
 
 # CARACTÉRISTIQUES DU CALIBRAGE
 # 0. Variables diverses
-cNbClasse = 8   # nombre de classes de portée
 Classe1 = 0.75  # seuil max de la classe 1 en km
 Classe2 = 1.25  # seuil max de la classe 2 en km
 Classe3 = 2.0   # seuil max de la classe 3 en km
@@ -99,10 +98,10 @@ cNbZext = 34    # nombre de zones du cordon
 cNbZspec = 4    # nombre de zones spécifiques externes
 cNbZtot = cNbZone + cNbZspec + cNbZext      # nombre total de zones affectation VP
 # Kiko cNbZtot = %eval(&cNbZone+&cNbZspec+&cNbZext) Problème: version originelle, mais c'est quoi cNbZone?
-
+cNbZintsp = cNbZone + cNbZspec
 # 1. Horizons considérés
 actuel = 2012   # année de la situation de calage du modèle
-scen = 2022     # année de la situation de scénario > actuel
+scen = 2030     # année de la situation de scénario > actuel
 caleVP = 2012
 caleTC = 2012
 
@@ -186,8 +185,9 @@ dir_dataRef = CstesStruct.dir_dataRef
 
 
 # 9. Télétravail
+fact_reducn = 0.75   # A appliquer à la génération ainsi qu'à la distribution.
 idTTV = 1   # 1 = activation du module télétravail en scénario, 0 sinon
-jourTTV = 0.3    # part moyenne du temps de travail réalisée en télétravail (nb jour télétravaillé / nb jour travaillé)
+jourTTV = 0.3 * fact_reducn    # part moyenne du temps de travail réalisée en télétravail (nb jour télétravaillé / nb jour travaillé)
 partTTV = 0.75   # part des emplois télétravaillables occupées par des télétravailleurs
 tauxTTVHQ = 0.85     # part des emplois HQ télétravaillables : 0.85 selon DADDT 2020
 tauxTTVAQact = 0.228    # part des actifs AQ occupant un emploi télétravaillable : 0.228 selon DADDT 2020
@@ -195,23 +195,32 @@ tauxTTVAQemp = 0.228     # part des emplois AQ télétravaillables : 0.228 selon
 varJTTVpro = 0.07       # ratio de mobilité professionnelle un jour télétravaillé : 0.07 selon ADEME 2020
 varJLTHpro = 1.00       # ratio de mobilité professionnelle un jour en lieu de travail habituel : 1.00 selon ADEME 2020
 varJTTVacc = 1.00      # ratio de mobilité accompagnement un jour télétravaillé : 0.55 selon ADEME 2020, 1.00 si inactif
-varJLTHacc = 1.00      # ratio de mobilité accompagnement un jour en lieu de travail habituel : 1.13 selon ADEME 2020,
+varJLTHacc = 1.3/3 * (jourTTV * fact_reducn) + 1      # ratio de mobilité accompagnement un jour en lieu de travail habituel : 1.13 selon ADEME 2020,
 # 1.00 si inactif
 varJTTVaut = 1.00   # ratio de mobilité autres un jour télétravaillé : 0.43 selon ADEME 2020, 1.00 si inactif
-varJLTHaut = 1.00  # ratio de mobilité autres un jour en lieu de travail habituel :
+varJLTHaut = 1.6/3 * (jourTTV * fact_reducn) + 1  # ratio de mobilité autres un jour en lieu de travail habituel :
 # 1.16 selon ADEME 2020, 1.00 si inactif
 tauxTTVAQ = Path_sep(os.path.join(dir_dataScen, 'tauxTTVAQ.txt'), '\t')
 
 # 9b. Télétravail_distribution
 # Module introduit pour prendre en compte le télétravail au niveau de la distribution.
-idTTVdist = 0
-ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
-EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
-HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
-AQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi AQ-professionnel
-ACTaut = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif actifs-autres
+idTTVdist = 1
+# ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
+# EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
+# HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
+# AQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi AQ-professionnel
+# ACTaut = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif actifs-autres
 
+aPPM = -0.33
+aPPS = -0.285
+# pctTTVscen = 1  #  Pour calibrer les alphas seulement
+pctTTVscen = (partTTV * tauxTTVHQ * 0.289 + partTTV * tauxTTVAQemp * 0.711) * jourTTV * fact_reducn  # Pourcentage des HQ, AQ 0.289,
+# 0.711 obtenus à partir
+# du fichier des P + E en faisant EMHQ/ETOT et EMAQ/ETOT
+pctTTVactuel = 0
 
+factPPM = (1 + aPPM * (pctTTVscen - pctTTVactuel))
+factPPS = (1 + aPPS * (pctTTVscen - pctTTVactuel))
 
 #  Kiko do I import tauxTTVAQ here or in the file where it's used.
 
@@ -223,7 +232,7 @@ capvelib = 1
 
 # 11. Croissance du coût d'usage de la voiture
 
-idcoutvp = 1    # 1 = activation de l'augmentation du coût vp, 0 sinon
+idcoutvp = 0    # 1 = activation de l'augmentation du coût vp, 0 sinon
 croiscarb = 2   # pourcentage de croissance annuelle du coût des carburants en € constant = 2%/an entre 2015 et 2030
 croisentr = 1   # pourcentage de croissance annuelle du coût d'entretien des VP en € constant = 1%/an entre 2015 et 2030
 croispeag = 0   # pourcentage de croissance annuelle du coût des péages des VP en € constant
@@ -237,11 +246,15 @@ croiscoutVP = (1 + (scen-actuel)*(croiscarb*0.38+croisentr*0.53+croispeag*0.09)/
 Donnees_Res = {}    # Un dictionnaire pour contenir les données de réseau (fichiers .ver)
 
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
-Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
+# Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
+Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_edited.ver')
+
 # Version du scénario étudié
 Donnees_Res[f'Version_PCJ_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
 # Version du scénario étudié
-Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
+# Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
+Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited.ver')
+
 # Version du scénario étudié
 
 
@@ -615,6 +628,8 @@ CM_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_
 DIST_PAR_DICT = {}
 DIST_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\dist_par_hpm.sas7bdat')
+# DIST_PAR_DICT['PPM'] = os.path.join(dir_calibrage, '2_Resultats\\200116_HP85-NewTVP-NewTTC-NewCTTKKM-ssFmucombinee\\'
+#                                                  '5_Export\\dist_par_hpm.sas7bdat')
 DIST_PAR_DICT['PCJ'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'
                                                  '5_Export\\dist_par_hc.sas7bdat')
 DIST_PAR_DICT['PPS'] = os.path.join(dir_calibrage, '2_Resultats\\modus_recalibré_sept_2021\\'

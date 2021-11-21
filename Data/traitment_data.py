@@ -1,8 +1,10 @@
 import pandas as pd
 from dataclasses import dataclass
+
+import Quatre_Etapes.main
 from Data.A_CstesModus import *
 from Data.fonctions_gen import *
-from Quatre_Etapes import exec_Modus
+from Quatre_Etapes import dossiers_simul
 
 
 
@@ -51,7 +53,7 @@ class read_mat:
                 CALEPL['FLUX'].fillna(0, inplace=True)
                 CALEPL['FLUX'] = CALEPL['FLUX'] * (1 + CroisPIB/100) ** (scen - actuel)
                 # Kiko - Waiting for SAS licence to run %ecriredavisum to see what it does.
-                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, Quatre_Etapes.main.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL
             elif idPL == 2:
                 CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_J_actuel'].path,
@@ -81,7 +83,7 @@ class read_mat:
                 # EvolPL_per = pd.merge(CALEPL_per, CALEPL_per_scen, on=['ZONEO', 'ZONED'])
                 EvolPL_per = np.where(CALEPL_per['FLUX'] != 0, CALEPL_per_scen['FLUX'] / CALEPL_per['FLUX'], 1)
                 CALEPL_per['FLUX'] *= EvolPL_per
-                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, Quatre_Etapes.main.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL_per
             elif idPL == 3:
                 CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_{self.per}_scen'].path,
@@ -90,7 +92,7 @@ class read_mat:
                                      encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
                 CALEPL = complete(CALEPL, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
                 CALEPL['FLUX'].fillna(0, inplace=True)
-                ecriredavisum(CALEPL, exec_Modus.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
+                ecriredavisum(CALEPL, Quatre_Etapes.main.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL
             #   4-a. Lecture et mise en forme des vecteurs spécifiques
     def vect_spec(self):

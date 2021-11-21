@@ -1,16 +1,10 @@
-import numpy as np
-import pandas as pd
-import pickle as pkl
-from Data import util_data, A_CstesModus, CstesStruct
-from Quatre_Etapes import distribution
-
 # Cette partie assure l'importation des constants,
 # et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
-from importlib import reload
 from Data.A_CstesModus import *
 
 # dbfile = open(f'{dir_dataTemp}params_user', 'rb')
 # params_user = pkl.load(dbfile)
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
 
 
 def choix_modal(n, hor, itern):
@@ -110,6 +104,8 @@ def choix_modal(n, hor, itern):
 
     # return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
 
+if __name__ == '__main__':
+    choix_modal('actuel', 'PPS', 1)
 
 
 

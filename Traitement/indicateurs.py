@@ -8,6 +8,9 @@ import pickle as pkl
 
 
 # 1. Préparation des tables d'analyse des matrices MODUS
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
+
+
 def treat_modus(n, hor):
     dbfile = open(f'{dir_dataTemp}Classe', 'rb')
     Classe = pkl.load(dbfile)
@@ -154,7 +157,7 @@ def treat_modus(n, hor):
     pkl.dump(portee, dbfile)
     dbfile.close()
 
-    def EMATT_Zone(n):
+    def EMATT_Zone(n, hor):
         from Data.traitment_data import read_mat
         read_mat = read_mat()
         read_mat.n = 'actuel'
@@ -163,45 +166,45 @@ def treat_modus(n, hor):
         if idVP > 0:
             if n == 'actuel':
                 UVP_df = read_mat.CALEUVP()
-                UVP_df = UVP_df[(UVP_df['ZONEO'] <= cNbZone) & (UVP_df['ZONED'] <= cNbZone)]
-                UVP_df = UVP_df['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
+                UVP_df = UVP_df[(UVP_df['ZONEO'] <= cNbZintsp) & (UVP_df['ZONED'] <= cNbZintsp)]
+                UVP_df = UVP_df['FLUX'].to_numpy().reshape((cNbZintsp, cNbZintsp))
             else:
                 dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{hor}_scen', 'rb')
                 UVP_df = pkl.load(dbfile)
-                UVP_df = UVP_df[:cNbZone, :cNbZone]
+                UVP_df = UVP_df[:cNbZintsp, :cNbZintsp]
         else:
             dbfile = open(f'{dir_dataTemp}ModusUVP_df{hor}_scen', 'rb')
             UVP_df = pkl.load(dbfile)
-            UVP_df = UVP_df[(UVP_df['ZONEO'] <= cNbZone) & (UVP_df['ZONED'] <= cNbZone)]
-            UVP_df = UVP_df['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
-        UVP_df2 = pd.DataFrame(UVP_df.reshape(cNbZone ** 2))
+            UVP_df = UVP_df[(UVP_df['ZONEO'] <= cNbZintsp) & (UVP_df['ZONED'] <= cNbZintsp)]
+            UVP_df = UVP_df['FLUX'].to_numpy().reshape((cNbZintsp, cNbZintsp))
+        UVP_df2 = pd.DataFrame(UVP_df.reshape(cNbZintsp ** 2))
         # RES = pd.merge(RES, UVP_df, left_on=['ZONEO', 'ZONED'], right_on=['ZONEO', 'ZONED'])
         # RES.rename(columns={'FLUX': 'FLUXVP'}, inplace=True)
 
         if idTC > 0:
             if n == 'actuel':
                 TC_df = read_mat.CALETC()
-                TC_df = TC_df[(TC_df['ZONEO'] <= cNbZone) & (TC_df['ZONED'] <= cNbZone)]
-                TC_df = TC_df['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
+                TC_df = TC_df[(TC_df['ZONEO'] <= cNbZintsp) & (TC_df['ZONED'] <= cNbZintsp)]
+                TC_df = TC_df['FLUX'].to_numpy().reshape((cNbZintsp, cNbZintsp))
             else:
                 dbfile = open(f'{dir_dataTemp}MODUSCaleTC_{hor}_scen', 'rb')
                 TC_df = pkl.load(dbfile)
-                TC_df = TC_df[:cNbZone, :cNbZone]
+                TC_df = TC_df[:cNbZintsp, :cNbZintsp]
         else:
             dbfile = open(f'{dir_dataTemp}ModusTC_df{hor}_scen', 'rb')
             TC_df = pkl.load(dbfile)
-            TC_df = TC_df[(TC_df['ZONEO'] <= cNbZone) & (TC_df['ZONED'] <= cNbZone)]
-            TC_df = TC_df['FLUX'].to_numpy().reshape((cNbZone, cNbZone))
+            TC_df = TC_df[(TC_df['ZONEO'] <= cNbZintsp) & (TC_df['ZONED'] <= cNbZintsp)]
+            TC_df = TC_df['FLUX'].to_numpy().reshape((cNbZintsp, cNbZintsp))
 
-        TC_df2 = pd.DataFrame(TC_df.reshape(cNbZone ** 2))
-        EmAtt = pd.DataFrame(range(cNbZone))
+        TC_df2 = pd.DataFrame(TC_df.reshape(cNbZintsp ** 2))
+        EmAtt = pd.DataFrame(range(cNbZintsp))
 
         EmAtt = pd.DataFrame(TC_df.sum(0))
         EmAtt = pd.concat([EmAtt, pd.Series(TC_df.sum(1)), pd.Series(UVP_df.sum(0)), pd.Series(UVP_df.sum(1))], axis=1)
         EmAtt.columns = ['ATTTC', 'EMTC', 'ATTVP', 'EMVP']
-
+        EmAtt = EmAtt[['EMTC', 'EMVP', 'ATTTC', 'ATTVP']]
         # Pickling de EmAtt
-        dbfile = open(f'{dir_dataTemp}EmAtt_{n}', 'wb')
+        dbfile = open(f'{dir_dataTemp}EmAtt_{n}_{hor}', 'wb')
         pkl.dump(EmAtt, dbfile)
         dbfile.close()
 
@@ -209,7 +212,7 @@ def treat_modus(n, hor):
         # RES = pd.concat([RES, UVP_df2, TC_df2], axis=1)
         # RES.rename(columns={0: 'FLUXVP', 1: 'FLUXTC'}, inplace=True)
 
-    EMATT_Zone(n)
+    EMATT_Zone(n, hor)
 
     dbfile = open(f'{dir_dataTemp}RES_{n}_{hor}', 'wb')
     pkl.dump(RES, dbfile)
@@ -305,12 +308,7 @@ def indic_modus(n, hor):
 
 
 
-def MOT_CL_EMATT_EVOL(hor):
-    dbfile = open(f'{dir_dataTemp}EmAtt_actuel', 'rb')
-    EmAtt_actuel = pkl.load(dbfile)
-    dbfile = open(f'{dir_dataTemp}EmAtt_scen', 'rb')
-    EmAtt_scen = pkl.load(dbfile)
-
+def MOT_CL_EVOL(hor):
     dbfile = open(f'{dir_dataTemp}RES_actuel_{hor}', 'rb')
     RES_actuel = pkl.load(dbfile)
     dbfile = open(f'{dir_dataTemp}RES_scen_{hor}', 'rb')
@@ -330,23 +328,38 @@ def MOT_CL_EMATT_EVOL(hor):
     mask = EVOL['evolTC'] != 0
     EVOL['PctevolTC'] = EVOL[mask].loc[:, 'evolTC'] / RES_actuel[mask].loc[:, 'TC']
 
-    EmAtt_Evol = EmAtt_scen - EmAtt_actuel
-    EmAtt_Evol.columns = ['evolATTTC', 'evolEMTC', 'evolATTVP', 'evolEMVP']
-
-    mask = EmAtt_Evol['evolATTTC'] != 0
-    EmAtt_Evol['Pct_evolATTTC'] = EmAtt_Evol[mask].loc[:, 'evolATTTC'] / EmAtt_actuel[mask].loc[:, 'ATTTC']
-    mask = EmAtt_Evol['evolEMTC'] != 0
-    EmAtt_Evol['Pct_evolEMTC'] = EmAtt_Evol[mask].loc[:, 'evolEMTC'] / EmAtt_actuel[mask].loc[:, 'EMTC']
-    mask = EmAtt_Evol['evolATTVP'] != 0
-    EmAtt_Evol['Pct_evolATTVP'] = EmAtt_Evol[mask].loc[:, 'evolATTVP'] / EmAtt_actuel[mask].loc[:, 'ATTVP']
-    mask = EmAtt_Evol['evolEMVP'] != 0
-    EmAtt_Evol['Pct_evolEMVP'] = EmAtt_Evol[mask].loc[:, 'evolEMVP'] / EmAtt_actuel[mask].loc[:, 'EMVP']
-
-
-
     dbfile = open(f'{dir_dataTemp}EVOL_{hor}', 'wb')
     pkl.dump(EVOL, dbfile)
     dbfile.close()
+
+def EMATT_EVOL(hor):
+    dbfile = open(f'{dir_dataTemp}EmAtt_actuel_{hor}', 'rb')
+    EmAtt_actuel = pkl.load(dbfile)
+    dbfile = open(f'{dir_dataTemp}EmAtt_scen_{hor}', 'rb')
+    EmAtt_scen = pkl.load(dbfile)
+
+    EmAtt_Evol = EmAtt_scen - EmAtt_actuel
+    EmAtt_Evol.columns = ['evolEMTC', 'evolEMVP', 'evolATTTC',  'evolATTVP']
+
+    mask = EmAtt_Evol['evolEMTC'] != 0
+    EmAtt_Evol['Pct_evolEMTC'] = EmAtt_Evol[mask].loc[:, 'evolEMTC'] / EmAtt_actuel[mask].loc[:, 'EMTC']
+    mask = EmAtt_Evol['evolEMVP'] != 0
+    EmAtt_Evol['Pct_evolEMVP'] = EmAtt_Evol[mask].loc[:, 'evolEMVP'] / EmAtt_actuel[mask].loc[:, 'EMVP']
+    mask = EmAtt_Evol['evolATTTC'] != 0
+    EmAtt_Evol['Pct_evolATTTC'] = EmAtt_Evol[mask].loc[:, 'evolATTTC'] / EmAtt_actuel[mask].loc[:, 'ATTTC']
+    mask = EmAtt_Evol['evolATTVP'] != 0
+    EmAtt_Evol['Pct_evolATTVP'] = EmAtt_Evol[mask].loc[:, 'evolATTVP'] / EmAtt_actuel[mask].loc[:, 'ATTVP']
+
+    dbfile = open(f'{dir_dataTemp}EMATT_EVOL_{hor}', 'wb')
+    pkl.dump(EmAtt_Evol, dbfile)
+    dbfile.close()
+
+    EmAtt_actuel.columns = [f'EMTC{hor}{actuel}', f'EMVP{hor}{actuel}', f'ATTTC{hor}{actuel}', f'ATTVP{hor}{actuel}']
+    EmAtt_scen.columns = [f'EMTC{hor}{scen}', f'EMVP{hor}{scen}', f'ATTTC{hor}{scen}', f'ATTVP{hor}{scen}']
+
+    Zone = pd.DataFrame(range(1, cNbZintsp + 1), columns=['ZONE'])
+    Em_Att_Synth = pd.concat([Zone, EmAtt_actuel, EmAtt_scen, EmAtt_Evol], axis=1)
+    Em_Att_Synth.to_excel(f'{dir_dataTemp}EmAtt_{hor}.xlsx')
 
 
 def analyse_modus():
@@ -354,7 +367,8 @@ def analyse_modus():
         #  Préparation des tables
         treat_modus('actuel', 'PPM')
         treat_modus('scen', 'PPM')
-        MOT_CL_EMATT_EVOL('PPM')
+        MOT_CL_EVOL('PPM')
+        EMATT_EVOL('PPM')
 
         #  Sortie des indicaturs
         indic_modus('actuel', 'PPM')
@@ -364,7 +378,8 @@ def analyse_modus():
         #  Préparation des tables
         treat_modus('actuel', 'PCJ')
         treat_modus('scen', 'PCJ')
-        MOT_CL_EMATT_EVOL('PCJ')
+        MOT_CL_EVOL('PCJ')
+        EMATT_EVOL('PCJ')
 
         #  Sortie des indicaturs
         indic_modus('actuel', 'PCJ')
@@ -374,7 +389,8 @@ def analyse_modus():
         #  Préparation des tables
         treat_modus('actuel', 'PPS')
         treat_modus('scen', 'PPS')
-        MOT_CL_EMATT_EVOL('PPS')
+        MOT_CL_EVOL('PPS')
+        EMATT_EVOL('PPS')
 
         #  Sortie des indicaturs
         indic_modus('actuel', 'PPS')
@@ -477,6 +493,8 @@ def indic_affect(hor):
         dbfile = open(f'{dir_dataTemp}base_comp_{hor}', 'wb')
         pkl.dump(base_comp, dbfile)
         dbfile.close()
+
+
 
 #  3. Regroupement: macro d'exécution
 def analyse_affect():
@@ -740,7 +758,7 @@ def print_typo():
         tous_mobs.graph_parts_scen_PPM = graph_parts('PPM', 'scen')
     if PCJ == 1:
         tous_mobs.mob_PCJ = printmob('PCJ', '10h-16h')
-        tous_mobs.port_PCJ = print_portee('PCJ', '6-10h')
+        tous_mobs.port_PCJ = print_portee('PCJ', '10h-16h')
         tous_mobs.part_actuel_PCJ = print_part('actuel', 'PCJ')
         tous_mobs.part_scen_PCJ = print_part('scen', 'PCJ')
         tous_mobs.affect_PCJ = print_affect('PCJ')
@@ -753,7 +771,7 @@ def print_typo():
         tous_mobs.graph_parts_scen_PCJ = graph_parts('PCJ', 'scen')
     if PPS == 1:
         tous_mobs.mob_PPS = printmob('PPS', '16h-20h')
-        tous_mobs.port_PPS = print_portee('PPS', '6-10h')
+        tous_mobs.port_PPS = print_portee('PPS', '16h-20h')
         tous_mobs.part_actuel_PPS = print_part('actuel', 'PPS')
         tous_mobs.part_scen_PPS = print_part('scen', 'PPS')
         tous_mobs.affect_PPS = print_affect('PPS')

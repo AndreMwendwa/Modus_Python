@@ -1,11 +1,9 @@
 import os
 from datetime import date
-
-import numpy
-import numpy as np
 import pandas as pd
 
 from Data.A_CstesModus import *
+from Quatre_Etapes.dossiers_simul import *
 
 # Fonctions copiées du fichier des Macros
 
@@ -174,3 +172,5 @@ def ODvide_func(n):
             ODvide[k, 0] = i + 1
             ODvide[k, 1] = j + 1
     return ODvide
+
+

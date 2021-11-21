@@ -1,16 +1,8 @@
-import pandas as pd
-import numpy as np
-import pickle as pkl
 from dataclasses import dataclass
 from Data import A_CstesModus, CstesStruct
-
-# Cette partie assure l'importation des constants,
-# et que une fois des fichiers avec des constants changés et sauvegardés les changements sont enregistrés
-from importlib import reload
-reload(A_CstesModus)
-reload(CstesStruct)
-from Data.A_CstesModus import *
+from Data.fonctions_gen import *
 from Data.generation_data import generation
+from Quatre_Etapes.dossiers_simul import *
 
 # att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
 #        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
@@ -60,7 +52,9 @@ class calcul_util:
         return pd.read_csv(Donnees_Interz[f'dist_vol_{self.n}'].path, sep=Donnees_Interz[f'dist_vol_{self.n}'].sep)
 
     def CTTC(self):
-        return pd.read_csv(Donnees_Interz[f'couttc_{self.n}'].path, sep=Donnees_Interz[f'couttc_{self.n}'].sep)
+        df = pd.read_csv(Donnees_Interz[f'couttc_{self.n}'].path, sep=Donnees_Interz[f'couttc_{self.n}'].sep)
+        df = complete_b(df, cNbZone)
+        return df
 
     def NBVELIB(self):
         NBVELIB = pd.read_csv(Capa_Velib[self.n].path, sep=Capa_Velib[self.n].sep)

@@ -1,11 +1,11 @@
-from Data.CstesStruct import *
-from Data.A_CstesModus import *
-from Quatre_Etapes import generation, utility, distribution, choix_modal, bouclage
+from Quatre_Etapes import utility, distribution, choix_modal, bouclage
 from Traitement import traitement
-import pickle as pkl
 from Traitement.gui3 import *
 import time
 from Traitement.indicateurs import indicateurs_func, print_typo
+from Quatre_Etapes.dossiers_simul import *
+from Data.fonctions_gen import *
+from dossiers_simul import *
 
 def run_GUI():
     modus_mode, bdinter, gen_results, dist_results, choix_results = None, None, None, None, None
@@ -52,16 +52,15 @@ def demande(n, itern):
         choix_modal.choix_modal(n, 'PPS', itern)
     traitement.finalise(n)
 
-def croissancecoutvp(bdinter):
-    if idcoutvp == 1:
-        dbfile = open(f'{dir_dataTemp}bdinter_scen', 'rb')
-        bdinter_scen = pkl.load(dbfile)
-        bdinter_scen['CTVP'] *= croiscoutVP
-
 
 def bouclage_func(idBcl, MaxIter):
     if idBcl == 0:
         itern = 1
+        dir_iter = os.path.join(out_bcl, 'Iter1')
+        try:
+            os.mkdir(dir_iter)
+        except OSError:
+            pass
         if PPM == 1:
             distribution.distribution('scen', 'PPM')
             choix_modal.choix_modal('scen', 'PPM', itern)
@@ -74,6 +73,11 @@ def bouclage_func(idBcl, MaxIter):
         traitement.finalise('scen')
         traitement.report_calage(idTC, idVP)
     else:
+        dir_iter = os.path.join(out_bcl, 'Iter1')
+        try:
+            os.mkdir(dir_iter)
+        except OSError:
+            pass
         itern = 1
         done_affect = 0
         dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'wb')
@@ -94,7 +98,7 @@ def bouclage_func(idBcl, MaxIter):
             # AFFECT_iter_PPS = bouclage.mat_iter('PPS', cParMatBcl)
         traitement.finalise('scen')
         traitement.report_calage(idTC, idVP)
-        bouclage.boucle(cParMatBcl, 1)
+        bouclage.boucle(cParMatBcl, 1, dir_iter)
         while done_affect < PPM + PCJ + PPS:
             dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
             done_affect = pkl.load(dbfile)
@@ -111,6 +115,11 @@ def bouclage_func(idBcl, MaxIter):
         bouclage.data_update(cParTpsBcl, 'scen')
         while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern <= MaxIter:
             itern += 1
+            dir_iter = os.path.join(out_bcl, f'Iter{itern}')
+            try:
+                os.mkdir(dir_iter)
+            except OSError:
+                pass
             done_affect = 0
             dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'wb')
             pkl.dump(done_affect, dbfile)
@@ -128,7 +137,7 @@ def bouclage_func(idBcl, MaxIter):
                     choix_modal.choix_modal('scen', 'PPS', itern)
                 traitement.finalise('scen')
                 traitement.report_calage(idTC, idVP)
-                bouclage.boucle(cParMatBcl, itern)
+                bouclage.boucle(cParMatBcl, itern, dir_iter)
                 while done_affect < PPM + PCJ + PPS:
                     dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
                     done_affect = pkl.load(dbfile)
@@ -165,6 +174,16 @@ def bouclage_func(idBcl, MaxIter):
                 if PPS == 1:
                     RMSE_PPS = bouclage.RMSE('PPS', itern)
                 bouclage.data_update(cParTpsBcl, 'scen')
+        # Dernière itération, avec paramètres à 0
+        dir_iter = os.path.join(out_bcl, f'Iter{itern}')
+        try:
+            os.mkdir(dir_iter)
+        except OSError:
+            pass
+        bouclage.data_update(0, 'scen')
+        bouclage.boucle(0, itern, dir_iter)
+
+
 
 if __name__ == '__main__':
     # demande('scen', 1)

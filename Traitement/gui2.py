@@ -1,8 +1,7 @@
 import PySimpleGUI as sg
-import sys
 from Data.A_CstesModus import *
-from Quatre_Etapes import choix_modal
-from Quatre_Etapes import generation
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
+
 sg.theme("Dark Teal 4")
 
 
