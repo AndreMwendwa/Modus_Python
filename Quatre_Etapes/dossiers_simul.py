@@ -7,6 +7,7 @@ dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..',
 dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
 
 
+
 # Nom de la simulation
 name = 'with TTV_tribut_recalibré_factech_02_12'
 out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{name}\\'   # Pour garder les
