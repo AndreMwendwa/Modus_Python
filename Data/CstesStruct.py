@@ -37,8 +37,8 @@ dir_resultCalibrage = os.path.join(dir_calibrage, '2_Resultats')    # répertoir
 
 # 4. Répertoires de MODUS
 
-dir_modus = os.path.join(dir_root, 'M3_Chaine') # répertoire de MODUS sous SAS
-dir_progModus = os.path.join(dir_modus, '0_Programmes')     # répertoire de stockage des programmes de MODUS sous SAS
-dir_tblModus = os.path.join(dir_modus, '1_Tables')      # répertoire de stockage des tables de MODUS sous SAS
-dir_resultModus = os.path.join(dir_modus, '2_Resultats')    # répertoire des résultats de l'exécution de MODUS
+# dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
+# dir_progModus = os.path.join(dir_modus, '0_Programmes')     # répertoire de stockage des programmes de MODUS sous SAS
+# dir_tblModus = os.path.join(dir_modus, '1_Tables')      # répertoire de stockage des tables de MODUS sous SAS
+# dir_resultModus = os.path.join(dir_modus, '2_Resultats')    # répertoire des résultats de l'exécution de MODUS
 

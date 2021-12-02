@@ -4,11 +4,7 @@ from Data.fonctions_gen import *
 from Data.generation_data import generation
 from Quatre_Etapes.dossiers_simul import *
 
-# att = ['INTTC', 'INTVP', 'INTCY', 'TR_PPM', 'TATT_PPM', 'TTC_PPM', 'TR_PPS', 'TATT_PPS', 'TTC_PPS', 'TR_PCJ',
-#        'TATT_PCJ', 'TTC_PCJ', 'TVPM', 'TVPS', 'TVPC', 'TMD', 'TCY', 'CTTKKM', 'CTVP', 'CSTATMOY', 'CAPVELIB']
 # 2. Lecture des donnés interzonales
-
-# Kiko - mets tout ça dans une classe.
 
 # IV. DONNES INTERZONALES
 OD = pd.DataFrame(np.zeros((cNbZone,cNbZone)))
@@ -104,17 +100,6 @@ def var_MD(OD, att):
     OD_input2 = OD_input[att]
     return OD_input2
 
-# def var_CY(OD, att):
-#     OD_input = OD.copy()
-#     att2 = att.copy()
-#     att2.remove('CAPVELIB')
-#     DVOL_col = OD_input.loc[:, 'DVOL'].copy()
-#     for col in att2:
-#         OD_input[col] = 0
-#     OD_input['INTCY'] = 1
-#     OD_input['TCY'] = 1.3 * DVOL_col /(VCY/60)
-#     OD_input2 = OD_input[att2]
-#     return OD_input2
 
 # Crée les variables utilisés dans le calcul utilitaire pour les vélos
 def var_CY(OD, att):
@@ -148,8 +133,8 @@ def OD(n):
                     calcul_util_instance.DVOL(), calcul_util_instance.CTTC()], axis = 1)
     OD = OD.loc[:,~OD.columns.duplicated()]
 
-    Pop_Emp_All_colsdf = generation_instance.Pop_Emp_All_Cols()  #Dataframe de tous les 34 colonnes, contrairement au dataframe
-    # Pop-Emp, qui ne contient que 28
+    Pop_Emp_All_colsdf = generation_instance.Pop_Emp_All_Cols()
+    # Dataframe de tous les 34 colonnes, contrairement au dataframe Pop-Emp, qui ne contient que 28
     Pop_Emp_All_colsdf.index = range(1, cNbZone+1)
     CSTAT = Pop_Emp_All_colsdf.CSTAT
     ClasseAcc = Pop_Emp_All_colsdf.ClasseAcc
@@ -195,19 +180,6 @@ def OD(n):
                          (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|(OD['ZONEO']==OD['ZONED'])
                           ), 0, 1)
 
-    # OD['QBD'] = np.where((
-    #                      (OD['TRAB_PPM']>seuilRab)|(OD['TVEH_PPM']>seuilVeh)|(OD['TMAR_PPM']>seuilMar)|(OD['TACC_PPM']>seuilRab)|
-    #                      (OD['TATT_PPM']>seuilAtt)|(OD['TVEH_PPM'] == 0)
-    #                     ), 0, 1)
-    # OD['QBD'] = np.where(((OD['TRAB_PCJ']>seuilRab)|(OD['TVEH_PCJ']>seuilVeh)|(OD['TMAR_PCJ']>seuilMar)|(OD['TACC_PCJ']>seuilRab)|
-    #                      (OD['TATT_PCJ']>seuilAtt)|(OD['TVEH_PCJ'] == 0)
-    #                     ), 0, 1)
-    #                      (OD['TRAB_PPS']>seuilRab)|(OD['TVEH_PPS']>seuilVeh)|(OD['TMAR_PPS']>seuilMar)|(OD['TACC_PPS']>seuilRab)|
-    #                      (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|
-    #                      (OD['ZONEO']==OD['ZONED'])
-    #                       ), 0, 1)
-
-
     # 6. Agrégation des données zonales utiles pour la BDD interzonale
     OD = pd.merge(OD, DENSH, left_on='ZONEO', right_index=True, how='left')
     OD = OD.rename(columns = {'DENSH': 'DENSHO'})
@@ -217,10 +189,6 @@ def OD(n):
     OD = OD.rename(columns = {'DENSH': 'DENSHD', 'PTOT':'PTOTD', 'ETOT': 'ETOTD'})
     OD.fillna(0, inplace=True)
     OD.replace(np.nan, 0, inplace=True)
-    # OD.drop(OD.index[OD['ZONEO'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
-    #                                    1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
-    # OD.drop(OD.index[OD['ZONED'].isin([1290, 1291.0, 1292.0, 1293.0, 1328.0, 1329.0, 1330.0, 1331.0, 1332.0, 1333.0, 1334.0,
-    #                                    1335.0, 1336.0, 1337.0, 1338.0, 1339.0])], inplace = True)
 
     # IV. DONNEES INTRAZONALES
     # - a. identification des 3 zones les plus proches au départ d'une zone
@@ -235,7 +203,6 @@ def OD(n):
 
     OD_proche_dvol = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
     OD_proche_dvol = OD_proche_dvol.sort_values(by = ['ZONEO'])
-    # Kiko -> Beaucoup des résultats sont 0 pour la DVOL -> est-ce qu'il y a un problème?
 
     # - b. calcul d'une distance caractéristique et du temps intrazonal d'après MODUSv2.0
     DCAR = OD_proche_dvol.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
@@ -265,8 +232,6 @@ def OD(n):
         TVPINTRA['TVPS'] *= DINTRA / DCAR   # temps HPS intra par "homothétie"
         TVPINTRA['TVPC'] *= DINTRA / DCAR   # temps HC intra par "homothétie"
         TVPINTRA.fillna(value=0, inplace=True)
-        #TVPINTRA = TVPINTRA[TVPINTRA.notna().any(axis = 1)]     # Kiko - > On se retrouve finalement avec une série de
-        # colonnes difficiles à expliquer. Pourquoi 0 à 1273 ?
         return TVPINTRA
 
     def prepare_TTCintra():
@@ -285,19 +250,13 @@ def OD(n):
         OD_proche_TTC = OD_proche_dvol.sort_values(by=['ZONEO'])
         OD_proche_TTC['TTOT'] = OD_proche_TTC['TRAB_PPM'] + OD_proche_TTC['TVEH_PPM'] + OD_proche_TTC['TATT_PPM'] + \
                                 OD_proche_TTC['TMAR_PPM'] + OD_proche_TTC['TACC_PPM']
-        # OD_proche_TTC['TTOTS'] = OD_proche_TTC['TRAB_PPS'] + OD_proche_TTC['TVEH_PPS'] + OD_proche_TTC['TATT_PPS'] + \
-        #                         OD_proche_TTC['TMAR_PPS'] + OD_proche_TTC['TACC_PPS']
-        #
-        # OD_proche_TTC = OD_proche_TTC.sort_values(by = ['TTOT', 'TTOTS'])
         OD_proche_TTC = OD_proche_TTC.sort_values(by=['TTOT'])
         OD_proche_TTC = OD_proche_TTC.drop_duplicates(subset='ZONEO', keep='first')
         OD_proche_TTC = OD_proche_TTC.sort_values(by = ['ZONEO'])
         TTCINTRA = OD_proche_TTC[['ZONEO', 'TRAB_PPM', 'TVEH_PPM', 'TMAR_PPM', 'TATT_PPM', 'TACC_PPM', 'TRAB_PPS', 'TVEH_PPS',
                                  'TMAR_PPS', 'TATT_PPS', 'TACC_PPS', 'TRAB_PCJ', 'TVEH_PCJ', 'TMAR_PCJ', 'TATT_PCJ',
                                   'TACC_PCJ']].copy()
-        # TTCINTRA.loc[:, 'TACC_PPM'] = TTCINTRA['TRAB_PPM']
         TTCINTRA[['TACC_PPM', 'TACC_PCJ', 'TACC_PPS']] = TTCINTRA[['TRAB_PPM', 'TRAB_PCJ', 'TRAB_PPS']]
-        # TTCINTRA = TTCINTRA.sort_values(by = ['ZONEO'])
         return TTCINTRA
 
     TVPINTRA = prepare_TVPintra()
@@ -308,16 +267,7 @@ def OD(n):
     del TTCINTRA['ZONEO']
     list_cols_TTC = list(TTCINTRA.columns)
 
-    # for index, row in OD.iterrows():
-    #     if row['ZONEO'] == row['ZONED']:
-    #         row['DVOL'] = DINTRA[row['ZONEO']]
-    #         row[['TVPM', 'TVPS', 'TVPC']] = TVPINTRA.loc[row['ZONEO'], ['TVPM', 'TVPS', 'TVPC']]
-    #         row[list_cols_TTC] = TTCINTRA.loc[row['ZONEO'], list_cols_TTC]
-    # OD.reset_index(inplace = True)
-    # del OD['index']
-
     OD.index = OD['ZONEO']
-    # OD['DVOL'].where(OD['ZONEO'] == OD['ZONED'], DINTRA, OD['DVOL'])
 
 
     OD.loc[OD['ZONEO'] == OD['ZONED'], 'DVOL'] = DINTRA
@@ -333,3 +283,11 @@ def OD(n):
 if __name__ == '__main__':
     # OD('actuel')
     OD('scen')
+    dbfile = open('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
+                  '\\Other_files\\with_TTV_gen_no_dist\\test_calage\\bdinter_scen', 'rb')
+    bdinter_scen_real = pkl.load(dbfile)
+    dbfile = open('C:\\Users\\mwendwa.kiko\\Documents\\Stage\\MODUSv3.1.3\\M3_Chaine\\Modus_Python'
+                  '\\Other_files\\with_TTV_gen_no_dist\\bdinter_scen', 'rb')
+    bdinter_scen_test = pkl.load(dbfile)
+    diff = (bdinter_scen_real - bdinter_scen_test).sum().sum()
+    assert diff == 0

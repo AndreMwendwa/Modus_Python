@@ -5,7 +5,7 @@ import multiprocessing
 import os
 import pickle as pkl
 from Data.fonctions_gen import ODvide_func
-from dossiers_simul import *
+from Quatre_Etapes.dossiers_simul import *
 
 
 # I. PRÉPARATION ET ANALYSE DES MATRICES VP

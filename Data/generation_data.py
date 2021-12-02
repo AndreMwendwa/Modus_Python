@@ -19,13 +19,35 @@ from Data.CstesStruct import *
 
 @dataclass
 class generation:
-# Kiko -> can perhaps be done like the other dataclass, with instead of if statements, a dictionary with names and,
-# based on what is entered as n and per different values are read.
     per: str = ''
     n: str = ''
 
+    # Création du fichier P + E à partir des fichiers individuels de données zonales.
+
     def Pop_Emp(self):
-        Pop_Emp_temp = pd.read_sas(Pop_Emp[self.n])
+        OS = pd.read_csv(Donnees_Zonales[f'OS_{self.n}'].path, sep=Donnees_Zonales[f'OS_{self.n}'].sep)
+        Surf = pd.read_csv(Donnees_Zonales[f'Surf_{self.n}'].path, sep=Donnees_Zonales[f'Surf_{self.n}'].sep)
+        CTSTAT = pd.read_csv(Donnees_Zonales[f'CTSTAT_{self.n}'].path, sep=Donnees_Zonales[f'CTSTAT_{self.n}'].sep)
+        # VELIB = pd.read_csv(Donnees_Zonales[f'VELIB_{self.n}'].path, sep=Donnees_Zonales[f'VELIB_{self.n}'].sep)
+        AccessTC = pd.read_csv(Donnees_Zonales[f'AccessTC_{self.n}'].path,
+                               sep=Donnees_Zonales[f'AccessTC_{self.n}'].sep)
+        Zone = pd.read_sas(f'{dir_zonage}\\zone.sas7bdat')
+        BDZonetemp = pd.concat([OS, Surf.iloc[:, 1:], CTSTAT.iloc[:, 1:]], axis=1)
+        BDZonetemp['DENSH'] = (BDZonetemp['PTOT'] + BDZonetemp['ETOT']) / BDZonetemp['SBAT']
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 35) & (AccessTC['DPOPSECT'] > 16000), 1, 0)
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 35) & (AccessTC['DPOPSECT'] > 16000), 2,
+                                           BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 50) & (AccessTC['DPOPSECT'] > 8000)
+                                           & (AccessTC['DPOPSECT'] <= 16000), 3, BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 50) & (AccessTC['DPOPSECT'] > 8000)
+                                           & (AccessTC['DPOPSECT'] <= 16000), 4, BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 90) & (AccessTC['DPOPSECT'] <= 8000), 5,
+                                           BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 90) & (AccessTC['DPOPSECT'] <= 8000), 6,
+                                           BDZonetemp['ClasseAcc'])
+        Pop_Emp_temp = pd.concat([BDZonetemp, Zone['DPRT']], axis=1)
+
+        # Pop_Emp_temp = pd.read_sas(Pop_Emp[self.n])
         Pop_Emp_df = pd.DataFrame()  # Un dataframe vide pour permettre de réorganiser le colonnes.
 
         for VAR in list(VARGEN):
@@ -75,5 +97,42 @@ class generation:
         return TX
 
     def Pop_Emp_All_Cols(self):
-        Pop_Emp_df = pd.read_sas(Pop_Emp[self.n])
-        return Pop_Emp_df
+        OS = pd.read_csv(Donnees_Zonales[f'OS_{self.n}'].path, sep=Donnees_Zonales[f'OS_{self.n}'].sep)
+        Surf = pd.read_csv(Donnees_Zonales[f'Surf_{self.n}'].path, sep=Donnees_Zonales[f'Surf_{self.n}'].sep)
+        CTSTAT = pd.read_csv(Donnees_Zonales[f'CTSTAT_{self.n}'].path, sep=Donnees_Zonales[f'CTSTAT_{self.n}'].sep)
+        # VELIB = pd.read_csv(Donnees_Zonales[f'VELIB_{self.n}'].path, sep=Donnees_Zonales[f'VELIB_{self.n}'].sep)
+        AccessTC = pd.read_csv(Donnees_Zonales[f'AccessTC_{self.n}'].path, sep=Donnees_Zonales[f'AccessTC_{self.n}'].sep)
+        Zone = pd.read_sas(f'{dir_zonage}\\zone.sas7bdat')
+        BDZonetemp = pd.concat([OS, Surf.iloc[:, 1:], CTSTAT.iloc[:, 1:]], axis=1)
+        BDZonetemp['DENSH'] = (BDZonetemp['PTOT'] + BDZonetemp['ETOT'])/BDZonetemp['SBAT']
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 35) & (AccessTC['DPOPSECT'] > 16000), 1, 0)
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 35) & (AccessTC['DPOPSECT'] > 16000), 2,
+                                           BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 50) & (AccessTC['DPOPSECT'] > 8000)
+                                           & (AccessTC['DPOPSECT'] <= 16000), 3, BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 50) & (AccessTC['DPOPSECT'] > 8000)
+                                           & (AccessTC['DPOPSECT'] <= 16000), 4, BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] <= 90) & (AccessTC['DPOPSECT'] <= 8000), 5,
+                                           BDZonetemp['ClasseAcc'])
+        BDZonetemp['ClasseAcc'] = np.where((AccessTC['TTCACC'] > 90) & (AccessTC['DPOPSECT'] <= 8000), 6,
+                                           BDZonetemp['ClasseAcc'])
+        BDZonetemp = pd.concat([BDZonetemp, Zone['DPRT']], axis=1)
+        return BDZonetemp
+
+if __name__ == '__main__':
+    # generation = generation()
+    # generation.n = 'actuel'
+    # generation.per = 'PPM'
+    # a0 = generation.Pop_Emp_All_Cols()
+    # a1 = pd.read_sas(os.path.join(dir_dataAct, 'bdzone2012.sas7bdat'))
+    # a2 = set(a0.columns).symmetric_difference(set(a1.columns))
+    # assert np.abs(a0 - a1).sum().sum() <= 1e-10
+
+    generation = generation()
+    generation.n = 'scen'
+    generation.per = 'PPM'
+    a0 = generation.Pop_Emp_All_Cols()
+    a1 = pd.read_sas(os.path.join(dir_dataScen, 'bdzone2022.sas7bdat'))
+    a2 = set(a0.columns).symmetric_difference(set(a1.columns))
+    diff = np.abs(a0 - a1).sum().sum()
+    assert diff <= 1e-10

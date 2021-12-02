@@ -38,6 +38,4 @@ def teletravail(n):   # Kiko - Il me semble que scen et n parlent finalement de 
     Result.index = Result['ZONE']
     del Result['ZONE']
 
-
-
     return Result

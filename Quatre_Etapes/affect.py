@@ -4,7 +4,7 @@ from Data.A_CstesModus import *
 import multiprocessing
 import os
 import pickle as pkl
-from dossiers_simul import *
+# from dossiers_simul import *
 
 from Quatre_Etapes.dossiers_simul import *
 

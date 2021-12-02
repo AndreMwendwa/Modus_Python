@@ -3,40 +3,41 @@ from Traitement import traitement
 from Traitement.gui3 import *
 import time
 from Traitement.indicateurs import indicateurs_func, print_typo
+import shutil
 from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
-from dossiers_simul import *
+# from dossiers_simul import *
 
-def run_GUI():
-    modus_mode, bdinter, gen_results, dist_results, choix_results = None, None, None, None, None
-
-    submit = GUI()
-    print(submit)
-
-
-    if submit['-Bdinter_res-']:
-        modus_mode = 1
-        bdinter = submit['-bdinter-']
-    elif submit['-Gen_res-']:
-        modus_mode = 2
-        gen_results = submit['-gen_results-']
-    elif submit['-dist_results-']:
-        modus_mode = 3
-        dist_results = submit['-dist_results-']
-    elif submit['-choix_results-']:
-        modus_mode = 4
-        choix_results = submit['-choix_results-']
-
-
-    params_user = {'modus_mode': modus_mode, 'bdinter': bdinter, 'gen_results': gen_results,
-                                 'dist_results': dist_results, 'choix_results': choix_results}
-
-    dbfile = open(f'{dir_dataTemp}params_user', 'wb')
-    pkl.dump(params_user, dbfile)
-    dbfile.close()
-
-    n = submit[2]
-    per = submit[3]
+# def run_GUI():
+#     modus_mode, bdinter, gen_results, dist_results, choix_results = None, None, None, None, None
+#
+#     submit = GUI()
+#     print(submit)
+#
+#
+#     if submit['-Bdinter_res-']:
+#         modus_mode = 1
+#         bdinter = submit['-bdinter-']
+#     elif submit['-Gen_res-']:
+#         modus_mode = 2
+#         gen_results = submit['-gen_results-']
+#     elif submit['-dist_results-']:
+#         modus_mode = 3
+#         dist_results = submit['-dist_results-']
+#     elif submit['-choix_results-']:
+#         modus_mode = 4
+#         choix_results = submit['-choix_results-']
+#
+#
+#     params_user = {'modus_mode': modus_mode, 'bdinter': bdinter, 'gen_results': gen_results,
+#                                  'dist_results': dist_results, 'choix_results': choix_results}
+#
+#     dbfile = open(f'{dir_dataTemp}params_user', 'wb')
+#     pkl.dump(params_user, dbfile)
+#     dbfile.close()
+#
+#     n = submit[2]
+#     per = submit[3]
 
 
 
@@ -183,12 +184,33 @@ def bouclage_func(idBcl, MaxIter):
         bouclage.data_update(0, 'scen')
         bouclage.boucle(0, itern, dir_iter)
 
+def copy_files():
+    Data_orig = os.path.join(dir_modus, 'Data')
+    Data_new = os.path.join(programmes, 'Data')
+    try:
+        destination = shutil.copytree(Data_orig, Data_new)
+    except FileExistsError:
+        pass
 
+    Quatre_Etapes_orig = os.path.join(dir_modus, 'Quatre_Etapes')
+    Quatre_Etapes_new = os.path.join(programmes, 'Quatre_Etapes')
+    try:
+        destination = shutil.copytree(Quatre_Etapes_orig, Quatre_Etapes_new)
+    except FileExistsError:
+        pass
+
+    Traitement_orig = os.path.join(dir_modus, 'Traitement')
+    Traitement_new = os.path.join(programmes, 'Traitement')
+    try:
+        destination = shutil.copytree(Traitement_orig, Traitement_new)
+    except FileExistsError:
+        pass
 
 if __name__ == '__main__':
     # demande('scen', 1)
+    copy_files()
     demande('actuel', 0)
     bouclage_func(1, cNbBcl)
     indicateurs_func()
-    print_typo()
+    # print_typo()
     # run_GUI()
