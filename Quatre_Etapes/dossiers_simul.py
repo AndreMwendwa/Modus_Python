@@ -9,7 +9,7 @@ dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de
 
 
 # Nom de la simulation
-name = 'with TTV_tribut_recalibré_factech_02_12'
+name = 'without_TTV_noboucl'
 out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{name}\\'   # Pour garder les
 # résultats intérmediaire
 

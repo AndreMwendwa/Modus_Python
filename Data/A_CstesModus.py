@@ -137,7 +137,7 @@ cNbcalzonage = cNbZone + cNbZspec  # zonage sur lequel appliqué le report de ca
 
 
 # 5. Bouclage
-idBcl = 1       # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
+idBcl = 0       # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
 # restreint aux modes motorisés (=3), le choix modal restreint aux modes véhiculés (=4) ou pas du tout (=0)
 cConv_M = 50    # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_C = 50    # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
@@ -185,8 +185,8 @@ dir_dataRef = CstesStruct.dir_dataRef
 
 
 # 9. Télétravail
-fact_reducn = 1   # A appliquer à la génération ainsi qu'à la distribution.
-idTTV = 1   # 1 = activation du module télétravail en scénario, 0 sinon
+fact_reducn = 0.25   # A appliquer à la génération ainsi qu'à la distribution.
+idTTV = 0   # 1 = activation du module télétravail en scénario, 0 sinon
 jourTTV = 0.3 * fact_reducn    # part moyenne du temps de travail réalisée en télétravail (nb jour télétravaillé / nb jour travaillé)
 partTTV = 0.75   # part des emplois télétravaillables occupées par des télétravailleurs
 tauxTTVHQ = 0.85     # part des emplois HQ télétravaillables : 0.85 selon DADDT 2020
@@ -195,18 +195,18 @@ tauxTTVAQemp = 0.228     # part des emplois AQ télétravaillables : 0.228 selon
 varJTTVpro = 0.07       # ratio de mobilité professionnelle un jour télétravaillé : 0.07 selon ADEME 2020
 varJLTHpro = 1.00       # ratio de mobilité professionnelle un jour en lieu de travail habituel : 1.00 selon ADEME 2020
 varJTTVacc = 1.00      # ratio de mobilité accompagnement un jour télétravaillé : 0.55 selon ADEME 2020, 1.00 si inactif
-# varJLTHacc = 1.3/3 * (jourTTV * fact_reducn) + 1      # ratio de mobilité accompagnement un jour en lieu de travail habituel : 1.13 selon ADEME 2020,
+varJLTHacc = 1.3/3 * (jourTTV * fact_reducn) + 1      # ratio de mobilité accompagnement un jour en lieu de travail habituel : 1.13 selon ADEME 2020,
 # # 1.00 si inactif
-varJLTHacc = 1.00
+# varJLTHacc = 1.00
 varJTTVaut = 1.00   # ratio de mobilité autres un jour télétravaillé : 0.43 selon ADEME 2020, 1.00 si inactif
-# varJLTHaut = 1.6/3 * (jourTTV * fact_reducn) + 1  # ratio de mobilité autres un jour en lieu de travail habituel :
+varJLTHaut = 1.6/3 * (jourTTV * fact_reducn) + 1  # ratio de mobilité autres un jour en lieu de travail habituel :
 # 1.16 selon ADEME 2020, 1.00 si inactif
-varJLTHaut = 1.00
+# varJLTHaut = 1.00
 tauxTTVAQ = Path_sep(os.path.join(dir_dataScen, 'tauxTTVAQ.txt'), '\t')
 
 # 9b. Télétravail_distribution
 # Module introduit pour prendre en compte le télétravail au niveau de la distribution.
-idTTVdist = 0
+idTTVdist = 1
 # ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
 # EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
 # HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
@@ -249,13 +249,13 @@ Donnees_Res = {}    # Un dictionnaire pour contenir les données de réseau (fic
 
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
-Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
+Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_edited.ver')
 
 # Version du scénario étudié
 Donnees_Res[f'Version_PCJ_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
 # Version du scénario étudié
 # Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
-Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
+Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited.ver')
 
 # Version du scénario étudié
 

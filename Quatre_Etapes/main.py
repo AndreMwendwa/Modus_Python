@@ -6,6 +6,7 @@ from Traitement.indicateurs import indicateurs_func, print_typo
 import shutil
 from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
+from Data.A_CstesModus import *
 # from dossiers_simul import *
 
 # def run_GUI():
@@ -210,7 +211,7 @@ if __name__ == '__main__':
     # demande('scen', 1)
     copy_files()
     demande('actuel', 0)
-    bouclage_func(1, cNbBcl)
+    bouclage_func(idBcl, cNbBcl)
     indicateurs_func()
-    # print_typo()
+    print_typo()
     # run_GUI()
