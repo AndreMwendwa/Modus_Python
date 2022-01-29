@@ -163,7 +163,7 @@ def generation(n, per):
     tmp = {'EM': EM_final, 'ATT': ATT_final}
     pkl.dump(tmp, dbfile)
     dbfile.close()
-
+    print(f'Génération terminé pour {n}, {per}')
     return EM_final, ATT_final
 
 if __name__ == '__main__':

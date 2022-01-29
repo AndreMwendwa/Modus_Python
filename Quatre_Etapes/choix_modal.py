@@ -101,6 +101,7 @@ def choix_modal(n, hor, itern):
         dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
         pkl.dump(Modus_TC_motcat, dbfile)
         dbfile.close()
+        print(f'Choix modal terminé pour {n}, {hor}')
 
     # return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
 

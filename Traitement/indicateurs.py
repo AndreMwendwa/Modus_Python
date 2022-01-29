@@ -789,6 +789,7 @@ def print_typo():
 
 
 
+
 if __name__ == '__main__':
     indicateurs_func()
     print_typo()

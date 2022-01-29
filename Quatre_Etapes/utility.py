@@ -53,7 +53,8 @@ def utilite(n, hor):
 
 
     def transformationBC(matrice):
-
+        # Considére la possibilité de retravailler ça avec
+        # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.boxcox.html
         mask = matrice['TTC_PPM'] != 0
         matrice.loc[mask, 'TTC_PPM'] = (matrice.loc[mask, 'TTC_PPM'] ** lambda_TTC - 1) / lambda_TTC
         mask = matrice['TTC_PCJ'] != 0
@@ -165,5 +166,8 @@ def utilite(n, hor):
     UTMD -= CORRECTD
     
     UTMD = UTMD @ Duplication
+    print(f'Calcul utilitaire terminé pour {n}, {hor}')
     return UTM, UTMD
 
+if __name__ == '__main__':
+    utilite('actuel', 'PPM')

@@ -13,6 +13,11 @@ import pickle as pkl
 
 from Data import CstesStruct
 from Data.CstesStruct import *
+import yaml
+
+yaml_file = open(f'{dir_modus_py}\\Data\\config_yml.yml', 'r')
+yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
 
 # Variables qui sous SAS étaient dans le module 0_CstesCalibr, séction II, III
 
@@ -137,7 +142,11 @@ cNbcalzonage = cNbZone + cNbZspec  # zonage sur lequel appliqué le report de ca
 
 
 # 5. Bouclage
-idBcl = 0       # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
+# Maintenant dans le YML
+if yaml_content['idBcl'] != -1:
+    idBcl = yaml_content['idBcl']
+else:
+    idBcl = 0       # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
 # restreint aux modes motorisés (=3), le choix modal restreint aux modes véhiculés (=4) ou pas du tout (=0)
 cConv_M = 50    # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_C = 50    # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)

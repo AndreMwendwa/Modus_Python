@@ -7,6 +7,7 @@ import shutil
 from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
 from Data.A_CstesModus import *
+# from Traitement.Dashboard_streamlit import dashboard_streamlit
 # from dossiers_simul import *
 
 # def run_GUI():
@@ -44,6 +45,7 @@ from Data.A_CstesModus import *
 
 def demande(n, itern):
     if PPM == 1:
+        print('Iteration = 0 \n\n')
         distribution.distribution(n, 'PPM')
         choix_modal.choix_modal(n, 'PPM', itern)
     if PCJ == 1:
@@ -58,6 +60,7 @@ def demande(n, itern):
 def bouclage_func(idBcl, MaxIter):
     if idBcl == 0:
         itern = 1
+        print('Iteration = 1 \n\n')
         dir_iter = os.path.join(out_bcl, 'Iter1')
         try:
             os.mkdir(dir_iter)
@@ -117,6 +120,7 @@ def bouclage_func(idBcl, MaxIter):
         bouclage.data_update(cParTpsBcl, 'scen')
         while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern <= MaxIter:
             itern += 1
+            print(f'Iteration = {itern} \n\n')
             dir_iter = os.path.join(out_bcl, f'Iter{itern}')
             try:
                 os.mkdir(dir_iter)
@@ -167,7 +171,7 @@ def bouclage_func(idBcl, MaxIter):
                 while done_affect < PPM + PCJ + PPS:
                     dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
                     done_affect = pkl.load(dbfile)
-                    print(done_affect)
+                    # print(done_affect)
                     time.sleep(60)
                 if PPM == 1:
                     RMSE_PPM = bouclage.RMSE('PPM', itern)
@@ -185,6 +189,7 @@ def bouclage_func(idBcl, MaxIter):
         bouclage.data_update(0, 'scen')
         bouclage.boucle(0, itern, dir_iter)
 
+# Une fonction pour copier les fichiers Python comme SAS fait actuellement avec les fichiers SAS.
 def copy_files():
     Data_orig = os.path.join(dir_modus, 'Data')
     Data_new = os.path.join(programmes, 'Data')
@@ -207,6 +212,14 @@ def copy_files():
     except FileExistsError:
         pass
 
+def main_func():
+    # copy_files()
+    demande('actuel', 0)
+    bouclage_func(idBcl, cNbBcl)
+    indicateurs_func()
+    print_typo()
+    # dashboard_streamlit()
+
 if __name__ == '__main__':
     # demande('scen', 1)
     copy_files()
@@ -214,4 +227,5 @@ if __name__ == '__main__':
     bouclage_func(idBcl, cNbBcl)
     indicateurs_func()
     print_typo()
+    # dashboard_streamlit()
     # run_GUI()

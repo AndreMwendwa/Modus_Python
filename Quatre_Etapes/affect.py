@@ -39,6 +39,7 @@ def affect(ver, matVP, Iter, H, dir_itern):
     dbfile = open(f'{dir_dataTemp}done_affect{Iter}', 'wb')
     pkl.dump(done_affect, dbfile)
     dbfile.close()
+    print(f'Affectation terminé pour {H}')
     return mat1
 
 # # # This is to test the route assignment code above.

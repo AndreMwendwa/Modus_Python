@@ -82,6 +82,7 @@ def distribution(n, hor):
     dbfile = open(f'{dir_dataTemp}Modus_motcat_{n}_{hor}', 'wb')
     pkl.dump(Modus_motcat, dbfile)
     dbfile.close()
+    print(f'Distribution terminé pour {n}, {hor}')
     return Modus_motcat
 
 if __name__ == '__main__':

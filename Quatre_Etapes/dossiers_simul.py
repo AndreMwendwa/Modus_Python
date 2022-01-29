@@ -3,13 +3,24 @@ from datetime import date
 from Data.CstesStruct import *
 # from Data.CstesStruct import dir_root
 
-dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))
+import yaml
+
+yaml_file = open(f'{dir_modus_py}\\Data\\config_yml.yml', 'r')
+yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))   # Pour créér
+# le fichier .exe
+# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))   # Pour tourner MODUS depuis
+# le IDE
 dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
 
 
 
 # Nom de la simulation
-name = 'without_TTV_noboucl'
+if yaml_content['idBcl'] != -1:
+    name = yaml_content['name']
+else:
+    name = 'test_pyinstaller'  # Maintenant YML
 out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{name}\\'   # Pour garder les
 # résultats intérmediaire
 
