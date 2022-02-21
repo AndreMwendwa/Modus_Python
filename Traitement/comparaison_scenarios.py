@@ -46,6 +46,7 @@ def dashboard_datapane_comparaison():
 
     button, values = GetFilesToCompare()
     f1, f2 = values['-file1-'], values['-file2-']
+    name1, name2 = f1.split('/')[-1], f2.split('/')[-1]
 
     if any((button != 'Submit', f1 == '', f2 == '')):
         sg.popup_error('Operation cancelled')
@@ -524,32 +525,47 @@ def dashboard_datapane_comparaison():
 
 
     # Différence de VKM, Veh-hr
-    couts_df_diff = couts_df_scen1 - couts_df_scen2
+    couts_df_diff = couts_df_scen1 - couts_df_scen2     # Difference entre les dataframes pour trouver le dataframe
+    # de comparaison
     cout_df_diff_total = couts_df_diff.sum(axis=1)
-    cout_df_diff_total.name = 'Difference totale entre les scénarios'
+    cout_diff_comparative = cout_df_diff_total/couts_df_scen1.sum(axis=1) * 100
+    cout_df_diff_total.name = f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})'
+    cout_diff_comparative.name = f'Différence relative entre les scénarios \n ({name1} - {name2})\n/{name1}'
     valeurs_tutelaires = pd.DataFrame.from_dict({'Valeurs_tutelaires': [yaml_content['CO2_VP'],
                                                                         yaml_content['Valeur_temp']]})
     valeurs_tutelaires.index = ['VKM', 'Veh-hr']
+    cout_df_diff_total = pd.concat([cout_df_diff_total, cout_diff_comparative], axis=1)
     cout_df_diff_total = pd.concat([cout_df_diff_total, valeurs_tutelaires], axis=1)
-    cout_df_diff_total['Valeurs économiques'] = cout_df_diff_total['Difference totale entre les scénarios'] * \
+    cout_df_diff_total['Valeurs économiques'] = cout_df_diff_total[f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})'] * \
                                                 cout_df_diff_total['Valeurs_tutelaires']
-    somme = pd.DataFrame({'Difference totale entre les scénarios': '-', 'Valeurs_tutelaires': '-',
+    somme = pd.DataFrame({f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})': '-', 'Valeurs_tutelaires': '-',
                                    'Valeurs économiques': cout_df_diff_total['Valeurs économiques'].sum()},
                                    index=['Total'])
     cout_df_diff_total = pd.concat([cout_df_diff_total, somme])
+    cout_df_diff_total.fillna(inplace=True, value='-')
     cout_df_diff_total = cout_df_diff_total.round(2)
 
     # Les graphes des indicateurs socio-éco
     fig30, ax30 = plt.subplots()
     sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['VKM', :])
-    plt.title('Différence de VKM parcourus entre les deux scénarios')
+    plt.title(f'Différence de VKM parcourus entre les deux scénarios \n ({name1} - {name2})')
     plt.tight_layout()
 
     fig31, ax31 = plt.subplots()
     sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['Veh-hr', :])
-    plt.title('Différence de véhicule-hrs parcourus entre les deux scénarios')
+    plt.title(f'Différence de véhicule-hrs parcourus entre les deux scénarios \n ({name1} - {name2})')
     plt.tight_layout()
 
+    #Les graphes des valeurs relatives des indicateurs socio-éco
+    fig32, ax32 = plt.subplots()
+    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['VKM', :]/couts_df_scen1.loc['VKM', :])
+    plt.title(f'Différence relative de VKM parcourus entre les deux scénarios \n ({name1} - {name2})\n/{name1}')
+    plt.tight_layout()
+
+    fig33, ax33 = plt.subplots()
+    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['Veh-hr', :]/couts_df_scen1.loc['VKM', :])
+    plt.title(f'Différence relative de véhicule-hrs parcourus entre les deux scénarios \n ({name1} - {name2})\n/{name1}')
+    plt.tight_layout()
 
 
     # Début du code qui lance le dashboard.
@@ -558,16 +574,19 @@ def dashboard_datapane_comparaison():
             '# Les parts modaux',
             dp.Group(
                 blocks=[dp.Plot(fig7), dp.Plot(fig8)], columns=2),
+
             '# Indicateurs socio-économiques',
             dp.Group(blocks=[dp.Plot(fig30), dp.Plot(fig31)], columns=2),
+            dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
+
             '# Calcul socio-économique',
             dp.Table(cout_df_diff_total),
             title='Résumé',
         ),
         dp.Page(
         '# Comparaison des résultats de deux simulations de MODUS',
-        f'## Simulation 1 = {f1}',
-        f'## Simulation 2 = {f2}',
+        f'## Simulation 1 = {name1}',
+        f'## Simulation 2 = {name2}',
         '## Le type de simulation',
         dp.Table(tous_mobs.simul),
 
@@ -627,12 +646,13 @@ def dashboard_datapane_comparaison():
 
         '### Indicateurs socio-économiques',
         dp.Group(blocks=[dp.Plot(fig30), dp.Plot(fig31)], columns=2),
+        dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
 
         '## Calcul socio-économique',
         dp.Table(cout_df_diff_total),
             title='Détaillé'
     ))
-    name_file = f1.split('/')[-1] + '-' + f2.split('/')[-1]
+    name_file = name1 + '-' + name2
     report.save(f"{name_file}.html", open=True)
 
 
