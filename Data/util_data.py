@@ -146,6 +146,7 @@ def OD(n):
     OD = pd.merge(OD, CSTAT, left_on='ZONED', right_index=True, how = 'left')
     OD['CSTATMOY'] = (OD['CSTAT_x'] + OD['CSTAT_y'])/2
     OD.rename(columns={'CSTAT_x':'CSTATO', 'CSTAT_y':'CSTATD'}, inplace=True)
+    print('.\n')
 
     OD = pd.merge(OD, ClasseAcc, left_on='ZONEO', right_index=True, how = 'left')
     OD = pd.merge(OD, ClasseAcc, left_on='ZONED', right_index=True, how = 'left')
@@ -164,7 +165,7 @@ def OD(n):
 
     OD['CAPVELIB'] = (OD['CAPAO'] * OD['CAPAD'])**0.5
     OD['NBVELIB'] = (OD['NBSTATO']*OD['NBSTATD'])**0.5
-
+    print('.\n')
     del OD['CAPAO'], OD['CAPAD'], OD['NBSTATO'], OD['NBSTATD']
 
     # 3. Remplacement des valeurs manquantes par des 0
@@ -179,7 +180,7 @@ def OD(n):
                          (OD['TRAB_PPS']>seuilRab)|(OD['TVEH_PPS']>seuilVeh)|(OD['TMAR_PPS']>seuilMar)|(OD['TACC_PPS']>seuilRab)|
                          (OD['TATT_PPS']>seuilAtt)|(OD['TVEH_PPS'] == 0)|(OD['ZONEO']==OD['ZONED'])
                           ), 0, 1)
-
+    print('.\n')
     # 6. Agrégation des données zonales utiles pour la BDD interzonale
     OD = pd.merge(OD, DENSH, left_on='ZONEO', right_index=True, how='left')
     OD = OD.rename(columns = {'DENSH': 'DENSHO'})
@@ -203,7 +204,7 @@ def OD(n):
 
     OD_proche_dvol = pd.concat([OD1ST, OD2ND, OD3RD], axis = 0)
     OD_proche_dvol = OD_proche_dvol.sort_values(by = ['ZONEO'])
-
+    print('.\n')
     # - b. calcul d'une distance caractéristique et du temps intrazonal d'après MODUSv2.0
     DCAR = OD_proche_dvol.groupby(by = 'ZONEO').mean().loc[:, 'DVOL']
     DINTRA = 0.09*np.sqrt(Pop_Emp_All_colsdf['STOT']) + 0.2*np.sqrt(Pop_Emp_All_colsdf['SBAT']) + 0.05
@@ -259,6 +260,7 @@ def OD(n):
         TTCINTRA[['TACC_PPM', 'TACC_PCJ', 'TACC_PPS']] = TTCINTRA[['TRAB_PPM', 'TRAB_PCJ', 'TRAB_PPS']]
         return TTCINTRA
 
+    print('.\n')
     TVPINTRA = prepare_TVPintra()
     TTCINTRA = prepare_TTCintra()
     TVPINTRA.index = TVPINTRA.index.astype('int64')

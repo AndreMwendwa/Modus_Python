@@ -82,7 +82,20 @@ def distribution(n, hor):
     dbfile = open(f'{dir_dataTemp}Modus_motcat_{n}_{hor}', 'wb')
     pkl.dump(Modus_motcat, dbfile)
     dbfile.close()
-    print(f'Distribution terminé pour {n}, {hor}')
+    if n == 'actuel':
+        if hor == 'PPM':
+            print(f"\t Distribution terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Matin")
+        elif hor == 'PCJ':
+            print(f"\t Distribution terminé pour l'année de calage du modèle ({actuel}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Distribution terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Soir")
+    else:
+        if hor == 'PPM':
+            print(f"\t Distribution terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Matin")
+        elif hor == 'PCJ':
+            print(f"\t Distribution terminé pour l'année de scénario du modèle ({scen}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Distribution terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Soir")
     return Modus_motcat
 
 if __name__ == '__main__':

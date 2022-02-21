@@ -8,9 +8,9 @@ import yaml
 yaml_file = open(f'{dir_modus_py}\\Data\\config_yml.yml', 'r')
 yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))   # Pour créér
+# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))   # Pour créér
 # le fichier .exe
-# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))   # Pour tourner MODUS depuis
+dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))   # Pour tourner MODUS depuis
 # le IDE
 dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
 

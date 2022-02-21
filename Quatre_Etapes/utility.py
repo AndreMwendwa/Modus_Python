@@ -10,6 +10,8 @@ from Data.A_CstesModus import *
 # dbfile = open(f'{dir_dataTemp}params_user', 'rb')
 # params_user = pkl.load(dbfile)
 
+
+
 lambda_COUT = 0.16
 lambda_TVP = 1.36
 lambda_TTC = 1.36
@@ -49,7 +51,8 @@ def utilite(n, hor):
 
     calcul_util = util_data.calcul_util()
     calcul_util.per = hor
-
+    
+    print(f'\t Base de données interzonale pour {n}, {hor} prêt')
 
 
     def transformationBC(matrice):
@@ -111,6 +114,8 @@ def utilite(n, hor):
     util_CY = transformationBC(util_data.var_CY(OD, att))
     util_MD = transformationBC(util_data.var_MD(OD, att))
 
+    print(f'\t Calcul des utilités pour {n}, {hor} terminé')
+    
     seU = pd.DataFrame(np.zeros((1289**2, 22)))
     seUD = seU.copy()
 
@@ -166,7 +171,20 @@ def utilite(n, hor):
     UTMD -= CORRECTD
     
     UTMD = UTMD @ Duplication
-    print(f'Calcul utilitaire terminé pour {n}, {hor}')
+    if n == 'actuel':
+        if hor == 'PPM':
+            print(f"\t Calcul utilitaire terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Matin")
+        elif hor == 'PCJ':
+            print(f"\t Calcul utilitaire terminé pour l'année de calage du modèle ({actuel}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Calcul utilitaire terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Soir")
+    else:
+        if hor == 'PPM':
+            print(f"\t Calcul utilitaire terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Matin")
+        elif hor == 'PCJ':
+            print(f"\t Calcul utilitaire terminé pour l'année de scénario du modèle ({scen}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Calcul utilitaire terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Soir")
     return UTM, UTMD
 
 if __name__ == '__main__':

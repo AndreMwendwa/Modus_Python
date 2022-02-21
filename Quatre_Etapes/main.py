@@ -1,13 +1,16 @@
 from Quatre_Etapes import utility, distribution, choix_modal, bouclage
 from Traitement import traitement
+# import streamlit as st
 from Traitement.gui3 import *
 import time
 from Traitement.indicateurs import indicateurs_func, print_typo
 import shutil
+import logging
 from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
 from Data.A_CstesModus import *
-# from Traitement.Dashboard_streamlit import dashboard_streamlit
+# from Traitement.dashboard_streamlit import dashboard_streamlit
+# from Traitement.dashboard_datapane import dashboard_datapane
 # from dossiers_simul import *
 
 # def run_GUI():
@@ -42,10 +45,9 @@ from Data.A_CstesModus import *
 #     per = submit[3]
 
 
-
 def demande(n, itern):
     if PPM == 1:
-        print('Iteration = 0 \n\n')
+        print("Calcul de la demande pour l'année de calage  \n")
         distribution.distribution(n, 'PPM')
         choix_modal.choix_modal(n, 'PPM', itern)
     if PCJ == 1:
@@ -60,7 +62,7 @@ def demande(n, itern):
 def bouclage_func(idBcl, MaxIter):
     if idBcl == 0:
         itern = 1
-        print('Iteration = 1 \n\n')
+        print("Calcul de la demande pour l'année de scénario  \n")
         dir_iter = os.path.join(out_bcl, 'Iter1')
         try:
             os.mkdir(dir_iter)
@@ -84,6 +86,8 @@ def bouclage_func(idBcl, MaxIter):
         except OSError:
             pass
         itern = 1
+        print("Calcul de la demande pour l'année de scénario  \n")
+        print('Iteration = 1 \n')
         done_affect = 0
         dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'wb')
         pkl.dump(done_affect, dbfile)
@@ -107,7 +111,7 @@ def bouclage_func(idBcl, MaxIter):
         while done_affect < PPM + PCJ + PPS:
             dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
             done_affect = pkl.load(dbfile)
-            print(done_affect)
+            # print(done_affect)
             time.sleep(60)      # Tant que la fonction d'affectation de VISUM défini dans Quatre_Etapes.affect n'a pas fini
             # de tourner, on s'arrête ici et on regarde tous les 60 secs pour voir s'il a terminé ou non.
         RMSE_PPM, RMSE_PCJ, RMSE_PPS = 0, 0, 0
@@ -167,7 +171,7 @@ def bouclage_func(idBcl, MaxIter):
                     choix_modal.choix_modal('scen', 'PPS', itern)
                 traitement.finalise('scen')
                 traitement.report_calage(idTC, idVP)
-                bouclage.boucle(cParMatBcl, itern)
+                bouclage.boucle(cParMatBcl, itern, dir_iter)
                 while done_affect < PPM + PCJ + PPS:
                     dbfile = open(f'{dir_dataTemp}done_affect{itern}', 'rb')
                     done_affect = pkl.load(dbfile)
@@ -214,18 +218,44 @@ def copy_files():
 
 def main_func():
     # copy_files()
+    print("Bienvenue à Modus_Python. \n Vous avez choisi d'utiliser le modèle en mode ")
+    if idBcl == 0:
+        print("sans bouclage")
+    else:
+        print("avec bouclage")
+    print(f"pour l'année de calage {actuel} et l'année de scénario {scen}")
+
+    logging.basicConfig(filename=f'{dir_dataTemp}{name}_log.log', level=logging.INFO)
+    logging.info('Début')
     demande('actuel', 0)
     bouclage_func(idBcl, cNbBcl)
     indicateurs_func()
     print_typo()
+    logging.info('Fin')
+    print('Quatre étapes de MODUS terminées')
+    input("Appuyer sur 'Enter' pour fermer")
     # dashboard_streamlit()
+    # dashboard_datapane()
 
 if __name__ == '__main__':
     # demande('scen', 1)
-    copy_files()
+    # copy_files()
+    print("Bienvenue à Modus_Python. \n Vous avez choisi d'utiliser le modèle en mode ")
+    if idBcl == 0:
+        print("sans bouclage")
+    else:
+        print("avec bouclage")
+    print(f"pour l'année de calage {actuel} et l'année de scénario {scen}")
+
+    logging.basicConfig(filename=f'{dir_dataTemp}{name}_log.log', level=logging.INFO)
+    logging.info('Début')
     demande('actuel', 0)
     bouclage_func(idBcl, cNbBcl)
     indicateurs_func()
     print_typo()
+    logging.info('Fin')
+    print('Quatre étapes de MODUS terminées')
+    input("Appuyer sur 'Enter' pour fermer")
     # dashboard_streamlit()
     # run_GUI()
+    # dashboard_datapane()

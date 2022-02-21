@@ -16,9 +16,9 @@ vers_Visum=16
 dir_7zip = os.path.join('C:\\', 'Program Files', '7-Zip')
 
 # 2. Répertoire des données
-dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))    # Pour créér
+# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))    # Pour créér
 # le fichier .exe
-# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))      # Pour tourner MODUS depuis
+dir_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))      # Pour tourner MODUS depuis
 # le IDE
 dir_data = os.path.join(dir_root, 'Donnees')    # répertoire racine de stockage des données
 dir_EGT = os.path.join(dir_data, 'EGT')     # répertoire de stockage des données de l'EGT

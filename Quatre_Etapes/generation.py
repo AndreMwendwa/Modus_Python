@@ -163,8 +163,23 @@ def generation(n, per):
     tmp = {'EM': EM_final, 'ATT': ATT_final}
     pkl.dump(tmp, dbfile)
     dbfile.close()
-    print(f'Génération terminé pour {n}, {per}')
+    if n == 'actuel':
+        if per == 'PPM':
+            print(f"\t Génération terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Matin")
+        elif per == 'PCJ':
+            print(f"\t Génération terminé pour l'année de calage du modèle ({actuel}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Génération terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Soir")
+    else:
+        if per == 'PPM':
+            print(f"\t Génération terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Matin")
+        elif per == 'PCJ':
+            print(f"\t Génération terminé pour l'année de scénario du modèle ({scen}), pour la Période Creuse de la journée")
+        else:
+            print(f"\t Génération terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Soir")
+
     return EM_final, ATT_final
+
 
 if __name__ == '__main__':
     generation('actuel', 'PPM')

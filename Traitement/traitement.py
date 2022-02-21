@@ -54,7 +54,7 @@ def classe_gen(n):
 
 def traitementTC(H, n, hor):
     # -- TC : chargement de la matrice de la période concernée
-
+    print('.\n')
     dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'rb')
     ModusTC_motcat = pkl.load(dbfile)
 
@@ -72,7 +72,7 @@ def traitementTC(H, n, hor):
     dbfile = open(f'{dir_dataTemp}ModusTCcarre_{H}_{n}', 'wb')
     pkl.dump(ModusTCcarre, dbfile)
     dbfile.close()
-
+    print('.\n')
     #  Créant la dataframe de format ZONEO, ZONED, FLUX
     ModusTC_df = ModusTC_motcatH.sum(1)
     ODvide = pd.DataFrame(ODvide_func(cNbZone))
@@ -131,6 +131,7 @@ def traitementVP(H, n, hor):
 
         return TXCONV, TXSOLO
 
+    print('.\n')
     dbfile = open(f'{dir_dataTemp}Modus_VP_motcat_{n}_{hor}', 'rb')
     ModusVP_motcat = pkl.load(dbfile)
 
@@ -157,7 +158,7 @@ def traitementVP(H, n, hor):
     ModusUVPSOLO = np.where(ModusUVP_df > 0, ModusUVPSOLO/ModusUVP_df, ModusUVPSOLO)   # calcul de la part d'autosoliste
     # par OD
     ModusUVPSOLO = ModusUVPSOLO.reshape(cNbZone**2, 1)
-
+    print('.\n')
     ODvide = ODvide_func(cNbZone)
 
     # ajout de Modus 3.1.3 : calcul de coefficient de séparation des matrices VP solistes et covoitureurs
@@ -199,7 +200,7 @@ def AjoutMode_Gare(H, n, mode):
 
     dbfile = open(f'{dir_dataTemp}ModusUVP_df{H}_{n}', 'rb')
     ModusUVP_df = pkl.load(dbfile)
-
+    print('.\n')
     # b. Ajout du vecteur Flux voyageurs émis et attirés par les gares
     if mode == 'VP':
         if idVGVP == 1:
@@ -283,7 +284,7 @@ def ajout_evol(type: 'UVP ou TC', H: 'PPM, PCJ, PPS', id: 'idTC, idVP', seuilh, 
     read_mat = read_mat()
     read_mat.n = 'actuel'
     read_mat.per = H
-
+    print('.\n')
     # Fichiers avec VS
     dbfile = open(f'{dir_dataTemp}ModusTC_{H}_actuel', 'rb')
     MODUSTC_actuel = pkl.load(dbfile)
@@ -316,7 +317,7 @@ def ajout_evol(type: 'UVP ou TC', H: 'PPM, PCJ, PPS', id: 'idTC, idVP', seuilh, 
     ModusTC_VS_scen = ModusTC_VS_scen.to_numpy().reshape(cNbZone + cNbZspec, cNbZone + cNbZspec)
 
     MODUSUVP_cord_scen = MODUSUVP_cord_scen.loc[:, 'FLUX'].to_numpy().reshape((cNbZtot, cNbZtot))
-
+    print('.\n')
     MODUSCaleUVP_actuel = read_mat.CALEUVP()
     MODUSCaleTC_actuel = read_mat.CALETC()
 
@@ -495,7 +496,7 @@ def ajout_evol(type: 'UVP ou TC', H: 'PPM, PCJ, PPS', id: 'idTC, idVP', seuilh, 
         dbfile = open(f'{dir_dataTemp}MODUSCaleTC_df_{H}_scen', 'wb')
         pkl.dump(MODUSCaleTC_df, dbfile)
         dbfile.close()
-
+    print('.\n')
 # Fonction de regroupement des étapes
 
 def report_calage(idTC, idVP):
@@ -515,6 +516,7 @@ if __name__ == '__main__':
     # traitementTC('PPS', 'scen', 'PPS')
     # finalise('actuel')
     # finalise('scen')
+    traitementVP('PPM', 'actuel', 'PPM')
     from Data.A_CstesModus import cSeuilh, cSeuilb
     ajout_evol('TC', 'PPM', idTC, cSeuilh, cSeuilb)
     ajout_evol('VP', 'PPM', idVP, cSeuilh, cSeuilb)
@@ -526,4 +528,5 @@ if __name__ == '__main__':
                   '\\Other_files\\with_TTV_gen_no_dist\\MODUSCaleUVP_PPM_scen', 'rb')
     real_calUVP = pkl.load(dbfile)
     diff = (test_calUVP - real_calUVP).sum().sum()
+
     assert diff == 0

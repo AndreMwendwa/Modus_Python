@@ -10,10 +10,13 @@ from collections import namedtuple
 from collections import defaultdict
 import numpy as np
 import pickle as pkl
+import os
 
 from Data import CstesStruct
 from Data.CstesStruct import *
 import yaml
+import openpyxl
+from pathlib import Path
 
 yaml_file = open(f'{dir_modus_py}\\Data\\config_yml.yml', 'r')
 yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
@@ -106,7 +109,7 @@ cNbZtot = cNbZone + cNbZspec + cNbZext      # nombre total de zones affectation 
 cNbZintsp = cNbZone + cNbZspec
 # 1. Horizons considérés
 actuel = 2012   # année de la situation de calage du modèle
-scen = 2022     # année de la situation de scénario > actuel
+scen = 2030     # année de la situation de scénario > actuel
 caleVP = 2012
 caleTC = 2012
 
@@ -215,7 +218,7 @@ tauxTTVAQ = Path_sep(os.path.join(dir_dataScen, 'tauxTTVAQ.txt'), '\t')
 
 # 9b. Télétravail_distribution
 # Module introduit pour prendre en compte le télétravail au niveau de la distribution.
-idTTVdist = 1
+idTTVdist = 0
 # ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
 # EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
 # HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
@@ -359,8 +362,12 @@ Donnees_Interz['carte_o_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
                                                          '11FEB2021_CoutTC2030_GPErer_MOTIF_Distancetotale.txt'), '\t')
 # coût TC moyen par Moti et OD en scénario
 
-Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
-                                                         '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
+if yaml_content[f'cout_TC_{scen}'] != -1:
+    Donnees_Interz['couttc_scen'] = Path_sep(Path(yaml_content[f'cout_TC_{scen}']), '\t')
+else:
+    Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+                                                          '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
+
 # coût TC par OD en scénario
 
 
@@ -401,11 +408,11 @@ Mat_Calees[f'CALEPL_PPS_actuel'] = Path_sep_skip(os.path.join(dir_dataAct, '122_
 Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_PL_INTERNE_2030.fma'), '\s+', 13)
 # Mat_Calees[f'CALEPL_J_scen'] = Path_sep_skip(os.path.join(dir_dataAct, 'PL_JOUR_2009_FRETURB.fma'), '\s+', 8)
 # Matrice PL FretUrb journalière scénario
-Mat_Calees[f'CALEPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '121_Mat_PL_PPM_t-flow.fma'), '\s+', 13)
+Mat_Calees[f'CALEPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '121_Mat_PL_PPM_t-flow.fma'), '\s+', 7)
 # Matrice PL scénario PPM
 Mat_Calees[f'CALEPL_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataAct, 'PL_PCJ2012_cordons_corriges.fma'), '\s+', 13)
 # Matrice PL scénario PCJ à modifier une fois l'HC calée
-Mat_Calees[f'CALEPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '122_Mat_PL_PPS_t-flow.fma'), '\s+', 13)
+Mat_Calees[f'CALEPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataAct, '122_Mat_PL_PPS_t-flow.fma'), '\s+', 7)
 # Matrice PL scénario PPS
 
 
@@ -436,13 +443,13 @@ Mat_Calees[f'CORDVP_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030'
 
 # Cordon VP scénario PPS en veh/h
 
-Mat_Calees[f'CORDPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPM_2017.fma'),
-                                             '\t', 8)
+Mat_Calees[f'CORDPL_PPM_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPM_2030.fma'),
+                                             '\s+', 8)
 # Cordon PL scénario PPM en veh/h
-Mat_Calees[f'CORDPL_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_PL_HC_2030.fma'), '\t', 8)
+Mat_Calees[f'CORDPL_PCJ_scen'] = Path_sep_skip(os.path.join(dir_dataScen, 'cordon_PL_HC_2030.fma'), '\s+', 8)
 # Cordon PL scénario PCJ en veh/h
-Mat_Calees[f'CORDPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPS_2017.fma'),
-                                             '\t', 8)
+Mat_Calees[f'CORDPL_PPS_scen'] = Path_sep_skip(os.path.join(dir_dataScen, '2030', '15.02.2021_cordon_PL_HPS_2030.fma'),
+                                             '\s+', 8)
 # Cordon PL scénario PPS en veh/h
 
 

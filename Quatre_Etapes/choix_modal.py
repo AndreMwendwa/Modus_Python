@@ -101,7 +101,26 @@ def choix_modal(n, hor, itern):
         dbfile = open(f'{dir_dataTemp}Modus_TC_motcat_{n}_{hor}', 'wb')
         pkl.dump(Modus_TC_motcat, dbfile)
         dbfile.close()
-        print(f'Choix modal terminé pour {n}, {hor}')
+        if n == 'actuel':
+            if hor == 'PPM':
+                print(
+                    f"\t Choix modal terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Matin")
+            elif hor == 'PCJ':
+                print(
+                    f"\t Choix modal terminé pour l'année de calage du modèle ({actuel}), pour la Période Creuse de la journée")
+            else:
+                print(
+                    f"\t Choix modal terminé pour l'année de calage du modèle ({actuel}), pour la Période de Pointe du Soir")
+        else:
+            if hor == 'PPM':
+                print(
+                    f"\t Choix modal terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Matin")
+            elif hor == 'PCJ':
+                print(
+                    f"\t Choix modal terminé pour l'année de scénario du modèle ({scen}), pour la Période Creuse de la journée")
+            else:
+                print(
+                    f"\t Choix modal terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Soir")
 
     # return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
 
