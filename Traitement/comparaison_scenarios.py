@@ -23,15 +23,15 @@ import datapane as dp
 yaml_file = open(f'{dir_modus_py}\\Data\\config_yml.yml', 'r')
 yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-# Cette fonction créé le Tableau de bord des indicateurs
+
 def dashboard_datapane_comparaison():
-
-    # SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-    # sys.path.append(os.path.dirname(SCRIPT_DIR))
-    # dbfile = open(f'{dir_dataTemp}tous_mobs', 'rb')
-    # tous_mobs = pkl.load(dbfile)
-
+    '''Cette fonction créé le Tableau de bord des indicateurs
+    L'utilisateur séléctionne  les deux dossiers contenant les résultats de MODUS qu'il veut comparer.
+    Le programme navigue automatiquement à la localisation de différents résultats, et alors construit un tableau de
+    bord de comparaison entre ces résultats.
+    '''
     def GetFilesToCompare():
+        '''Pour séléctionner les dossiers avec les résultats'''
         form_rows = [[sg.Text('Fichier à comparer avec')],
                      [sg.Text('Scénario 1', size=(15, 1)),
                       sg.InputText(key='-file1-'), sg.FolderBrowse()],
@@ -51,6 +51,7 @@ def dashboard_datapane_comparaison():
         sg.popup_error('Operation cancelled')
         return
 
+    # Ici on prend les deux fichiers sur lesquels on se basera pour calculer les indicateurs de la mobilité
     dbfile = open(Path(f1 + '/1_Fichiers_intermediares/tous_mobs'), 'rb')
     tous_mobs1 = pkl.load(dbfile)
 
@@ -71,6 +72,7 @@ def dashboard_datapane_comparaison():
                     if tous_mobs[key][i][col].dtypes != 'object':
                         tous_mobs[key][i][col] = tous_mobs1[key][i][col] - tous_mobs2[key][i][col]
 
+    # Le nombre de générations par motif pour les périodes étudiées
     plots26 = []
     if PPM:
         tous_mobsPPM = tous_mobs.mob_PPM
@@ -93,9 +95,6 @@ def dashboard_datapane_comparaison():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPPM.columns[1:3], y=tous_mobsPPM.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax26.legend(loc="right", frameon=True)
         plots26.append(fig26)
     if PCJ:
@@ -119,9 +118,6 @@ def dashboard_datapane_comparaison():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPCJ.columns[1:3], y=tous_mobsPCJ.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax27.legend(loc="right", frameon=True)
         plots26.append(fig27)
     else:
@@ -148,15 +144,13 @@ def dashboard_datapane_comparaison():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPPS.columns[1:3], y=tous_mobsPPS.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax28.legend(loc="right", frameon=True)
         plots26.append(fig28)
     else:
         fig28 = plt.figure(figsize=(0, 0))
         plots26.append(fig28)
 
+    # Les indicateurs de portée, sous forme de table et de graphe
     plots9 = []
     if PPM:
         tous_mobs.port_PPM.reset_index(inplace=True)
@@ -168,14 +162,10 @@ def dashboard_datapane_comparaison():
         valeurs_evol = list_cols[7:]
         labels10 = ['\n'.join(wrap(l, 10)) for l in valeurs_evol]
         valeurs_evol.append(list_cols[0])  # La colonne 'index' doit être présente
-        # ticks = plt.xticks(ticks=[], labels=valeurs_abs,  rotation='vertical')
-        # ax9.set_xticklabels(labels9)
-        # wrap_labels(ax9, 5)
         plt.yticks(fontsize=20)
         plt.title('Les indicateurs de portée', fontsize=24)
         parallel_coordinates(tous_mobs.port_PPM.loc[:, valeurs_abs], 'index', colormap=plt.get_cmap("tab20"),
                              linewidth=6)
-        # plt.xticks(rotation=90, fontsize=20, ticks=range(1, 7), labels=labels9)
         plt.xticks(rotation=90, fontsize=20)
         plt.tight_layout()
         ax9.legend(fontsize=20)
@@ -325,6 +315,7 @@ def dashboard_datapane_comparaison():
     sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
     ax8.legend(loc="best", frameon=True)
 
+    # Le nombre de déplacements par classe de distance
     if PPM:
         fig, ax = plt.subplots()
         ax = sns.barplot(x='Portee', y='Value', hue='Variable', data=tous_mobs.graph_TC_PPM)

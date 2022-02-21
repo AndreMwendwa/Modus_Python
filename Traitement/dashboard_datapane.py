@@ -15,14 +15,17 @@ from Data.A_CstesModus import *
 from pandas.plotting import parallel_coordinates
 import datapane as dp
 
-# Cette fonction créé le Tableau de bord des indicateurs
-def dashboard_datapane():
 
+def dashboard_datapane():
+    '''Cette fonction créé le Tableau de bord des indicateurs'''
+
+    # On lit d'abord la localisation actuelle de MODUS
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(os.path.dirname(SCRIPT_DIR))
     dbfile = open(f'{dir_dataTemp}tous_mobs', 'rb')
     tous_mobs = pkl.load(dbfile)
 
+    # Le nombre de générations par motif pour les périodes étudiées
     plots26 = []
     if PPM:
         tous_mobsPPM = tous_mobs.mob_PPM
@@ -45,9 +48,6 @@ def dashboard_datapane():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPPM.columns[1:3], y=tous_mobsPPM.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax26.legend(loc="right", frameon=True)
         plots26.append(fig26)
     if PCJ:
@@ -71,9 +71,6 @@ def dashboard_datapane():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPCJ.columns[1:3], y=tous_mobsPCJ.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax27.legend(loc="right", frameon=True)
         plots26.append(fig27)
     else:
@@ -100,15 +97,13 @@ def dashboard_datapane():
                     label='Achats-loisirs')
         sns.barplot(x=tous_mobsPPS.columns[1:3], y=tous_mobsPPS.iloc[9, 1:3], color='black',
                     label='Achats-loisirs')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :3].sum(1), color='brown', label='MD')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
-        # sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
         ax28.legend(loc="right", frameon=True)
         plots26.append(fig28)
     else:
         fig28 = plt.figure(figsize=(0, 0))
         plots26.append(fig28)
 
+    # Les indicateurs de portée, sous forme de table et de graphe
     plots9 = []
     if PPM:
         tous_mobs.port_PPM.reset_index(inplace=True)
@@ -120,9 +115,6 @@ def dashboard_datapane():
         valeurs_evol = list_cols[7:]
         labels10 = ['\n'.join(wrap(l, 10)) for l in valeurs_evol]
         valeurs_evol.append(list_cols[0])  # La colonne 'index' doit être présente
-        # ticks = plt.xticks(ticks=[], labels=valeurs_abs,  rotation='vertical')
-        # ax9.set_xticklabels(labels9)
-        # wrap_labels(ax9, 5)
         plt.yticks(fontsize=20)
         plt.title('Les indicateurs de portée', fontsize=24)
         parallel_coordinates(tous_mobs.port_PPM.loc[:, valeurs_abs], 'index', colormap=plt.get_cmap("tab20"), linewidth=6)
@@ -272,6 +264,7 @@ def dashboard_datapane():
     sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
     ax8.legend(loc="best", frameon=True)
 
+    # Le nombre de déplacements par classe de distance
     if PPM:
         fig, ax = plt.subplots()
         ax = sns.barplot(x='Portee', y='Value', hue='Variable', data=tous_mobs.graph_TC_PPM)
@@ -403,6 +396,7 @@ def dashboard_datapane():
                                             plt.figure(figsize=(0, 0)), plt.figure(figsize=(0, 0)), \
                                                 plt.figure(figsize=(0, 0)), plt.figure(figsize=(0, 0))
 
+    # Début du code qui lance le dashboard.
     report = dp.Report(
     '# Dashboard simple de MODUS',
     '## Le type de simulation',
