@@ -25,6 +25,22 @@ def dashboard_datapane():
     dbfile = open(f'{dir_dataTemp}tous_mobs', 'rb')
     tous_mobs = pkl.load(dbfile)
 
+    ## Arrondir les valeurs du dataframe de générations
+    # différemment
+    if PPM:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PPM.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PPM = tous_mobs.mob_PPM.round(decimales)
+
+    if PCJ:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PCJ.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PCJ = tous_mobs.mob_PCJ.round(decimales)
+    if PPS:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PPS.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PPS = tous_mobs.mob_PPS.round(decimales)
+
     # Le nombre de générations par motif pour les périodes étudiées
     plots26 = []
     if PPM:
@@ -103,9 +119,12 @@ def dashboard_datapane():
         fig28 = plt.figure(figsize=(0, 0))
         plots26.append(fig28)
 
+
+
     # Les indicateurs de portée, sous forme de table et de graphe
     plots9 = []
     if PPM:
+        tous_mobs.port_PPM = tous_mobs.port_PPM.round(2)   # On arrondit le dataframe des portées ici
         tous_mobs.port_PPM.reset_index(inplace=True)
         fig9, ax9 = plt.subplots(figsize=(20, 12))  # Pour faire des graphes
         list_cols = list(tous_mobs.port_PPM.columns)
@@ -135,6 +154,7 @@ def dashboard_datapane():
     
     if PCJ:
         tous_mobs.port_PCJ.reset_index(inplace=True)
+        tous_mobs.port_PCJ = tous_mobs.port_PCJ.round(2)  # On arrondit le dataframe des portées ici
         fig29, ax29 = plt.subplots(figsize=(20, 12))   # Pour faire des graphes
         list_cols = list(tous_mobs.port_PCJ.columns)
         valeurs_abs = list_cols[:7]
@@ -161,6 +181,7 @@ def dashboard_datapane():
 
     if PPS:
         tous_mobs.port_PPS.reset_index(inplace=True)
+        tous_mobs.port_PPS = tous_mobs.port_PPS.round(2)  # On arrondit le dataframe des portées ici
         fig12, ax12 = plt.subplots(figsize=(20, 12))   # Pour faire des graphes
         list_cols = list(tous_mobs.port_PPS.columns)
         valeurs_abs = list_cols[:7]
@@ -189,34 +210,32 @@ def dashboard_datapane():
     df_total = pd.DataFrame()   # Dataframe de tous les modes pour le calcul des parts modaux
     modes = ['TC', 'VP', 'CY', 'MD']    # Pour le dataframe montrant tous les modes
     if PPM:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PPM[0])
-            tous_mobs.part_actuel_PPM[0].columns = modes
-            tous_mobs.part_actuel_PPM[0].index = [f'{actuel} PPM']
-            # dp.Table(tous_mobs.part_scen_PPM[0])
-            tous_mobs.part_scen_PPM[0].columns = modes
-            tous_mobs.part_scen_PPM[0].index = [f'{scen} PPM']
-            df_total = pd.concat([df_total, tous_mobs.part_actuel_PPM[0], tous_mobs.part_scen_PPM[0]])
+        # dp.Table(tous_mobs.part_actuel_PPM[0])
+        tous_mobs.part_actuel_PPM[0].columns = modes
+        tous_mobs.part_actuel_PPM[0].index = [f'{actuel} PPM']
+        # dp.Table(tous_mobs.part_scen_PPM[0])
+        tous_mobs.part_scen_PPM[0].columns = modes
+        tous_mobs.part_scen_PPM[0].index = [f'{scen} PPM']
+        df_total = pd.concat([df_total, tous_mobs.part_actuel_PPM[0], tous_mobs.part_scen_PPM[0]])
 
     if PCJ:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PCJ[0])
-            tous_mobs.part_actuel_PCJ[0].columns = modes
-            tous_mobs.part_actuel_PCJ[0].index = [f'{actuel} PCJ']
-            # dp.Table(tous_mobs.part_scen_PCJ[0])
-            tous_mobs.part_scen_PCJ[0].columns = modes
-            tous_mobs.part_scen_PCJ[0].index = [f'{scen} PCJ']
-            df_total = pd.concat([df_total, tous_mobs.part_actuel_PCJ[0], tous_mobs.part_scen_PCJ[0]])
+        # dp.Table(tous_mobs.part_actuel_PCJ[0])
+        tous_mobs.part_actuel_PCJ[0].columns = modes
+        tous_mobs.part_actuel_PCJ[0].index = [f'{actuel} PCJ']
+        # dp.Table(tous_mobs.part_scen_PCJ[0])
+        tous_mobs.part_scen_PCJ[0].columns = modes
+        tous_mobs.part_scen_PCJ[0].index = [f'{scen} PCJ']
+        df_total = pd.concat([df_total, tous_mobs.part_actuel_PCJ[0], tous_mobs.part_scen_PCJ[0]])
     
     if PPS:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PPS[0])
-            tous_mobs.part_actuel_PPS[0].columns = modes
-            tous_mobs.part_actuel_PPS[0].index = [f'{actuel} PPS']
-            # dp.Table(tous_mobs.part_scen_PPS[0])
-            tous_mobs.part_scen_PPS[0].columns = modes
-            tous_mobs.part_scen_PPS[0].index = [f'{scen} PPS']
-            df_total = pd.concat([df_total, tous_mobs.part_actuel_PPS[0], tous_mobs.part_scen_PPS[0]])
+        # dp.Table(tous_mobs.part_actuel_PPS[0])
+        tous_mobs.part_actuel_PPS[0].columns = modes
+        tous_mobs.part_actuel_PPS[0].index = [f'{actuel} PPS']
+        # dp.Table(tous_mobs.part_scen_PPS[0])
+        tous_mobs.part_scen_PPS[0].columns = modes
+        tous_mobs.part_scen_PPS[0].index = [f'{scen} PPS']
+        df_total = pd.concat([df_total, tous_mobs.part_actuel_PPS[0], tous_mobs.part_scen_PPS[0]])
+    df_total = df_total.round(4)    # On arrondit le dataframe des parts modaux
 
     fig7, ax7 = plt.subplots()
     sns.barplot(x=df_total.index, y=df_total.iloc[:, :4].sum(1), color='grey', label='MD')
@@ -229,40 +248,61 @@ def dashboard_datapane():
     df_moto = pd.DataFrame()    # Dataframe des modes motorisés pour le calcul des parts modaux
     modes_moto = ['TC', 'VP']  # Pour le dataframe montrant tous les modes motorisés
     if PPM:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PPM[1])
-            tous_mobs.part_actuel_PPM[1].columns = modes_moto
-            tous_mobs.part_actuel_PPM[1].index = [f'{actuel} PPM']
-            # dp.Table(tous_mobs.part_scen_PPM[1])
-            tous_mobs.part_scen_PPM[1].columns = modes_moto
-            tous_mobs.part_scen_PPM[1].index = [f'{scen} PPM']
-            df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPM[1], tous_mobs.part_scen_PPM[1]])
+        # dp.Table(tous_mobs.part_actuel_PPM[1])
+        tous_mobs.part_actuel_PPM[1].columns = modes_moto
+        tous_mobs.part_actuel_PPM[1].index = [f'{actuel} PPM']
+        # dp.Table(tous_mobs.part_scen_PPM[1])
+        tous_mobs.part_scen_PPM[1].columns = modes_moto
+        tous_mobs.part_scen_PPM[1].index = [f'{scen} PPM']
+        df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPM[1], tous_mobs.part_scen_PPM[1]])
 
 
     if PCJ:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PCJ[1])
-            tous_mobs.part_actuel_PCJ[1].columns = modes_moto
-            tous_mobs.part_actuel_PCJ[1].index = [f'{actuel} PCJ']
-            # dp.Table(tous_mobs.part_scen_PCJ[1])
-            tous_mobs.part_scen_PCJ[1].columns = modes_moto
-            tous_mobs.part_scen_PCJ[1].index = [f'{scen} PCJ']
-            df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPM[1], tous_mobs.part_scen_PPM[1]])
+        # dp.Table(tous_mobs.part_actuel_PCJ[1])
+        tous_mobs.part_actuel_PCJ[1].columns = modes_moto
+        tous_mobs.part_actuel_PCJ[1].index = [f'{actuel} PCJ']
+        # dp.Table(tous_mobs.part_scen_PCJ[1])
+        tous_mobs.part_scen_PCJ[1].columns = modes_moto
+        tous_mobs.part_scen_PCJ[1].index = [f'{scen} PCJ']
+        df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPM[1], tous_mobs.part_scen_PPM[1]])
 
     if PPS:
-        with pd.option_context('display.float_format', '{:0.3f}'.format):
-            # dp.Table(tous_mobs.part_actuel_PPS[1])
-            tous_mobs.part_actuel_PPS[1].columns = modes_moto
-            tous_mobs.part_actuel_PPS[1].index = [f'{actuel} PPS']
-            # dp.Table(tous_mobs.part_scen_PPS[1])
-            tous_mobs.part_scen_PPS[1].columns = modes_moto
-            tous_mobs.part_scen_PPS[1].index = [f'{scen} PPS']
-            df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPS[1], tous_mobs.part_scen_PPS[1]])
+        # dp.Table(tous_mobs.part_actuel_PPS[1])
+        tous_mobs.part_actuel_PPS[1].columns = modes_moto
+        tous_mobs.part_actuel_PPS[1].index = [f'{actuel} PPS']
+        # dp.Table(tous_mobs.part_scen_PPS[1])
+        tous_mobs.part_scen_PPS[1].columns = modes_moto
+        tous_mobs.part_scen_PPS[1].index = [f'{scen} PPS']
+        df_moto = pd.concat([df_moto, tous_mobs.part_actuel_PPS[1], tous_mobs.part_scen_PPS[1]])
+    df_moto = df_moto.round(4)     # On arrondit le dataframe des parts modaux motorisés.
 
     fig8, ax8 = plt.subplots()
     sns.barplot(x=df_total.index, y=df_total.iloc[:, :2].sum(1), color='lightblue', label='VP')
     sns.barplot(x=df_total.index, y=df_total.iloc[:, :1].sum(1), color='darkblue', label='TC')
     ax8.legend(loc="best", frameon=True)
+
+    # Arrondir les indicateurs de l'affectation
+    if PPM:
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PPM[0].columns)
+        tous_mobs.affect_PPM[0] = tous_mobs.affect_PPM[0].round(decimales)
+        tous_mobs.affect_PPM[1] = tous_mobs.affect_PPM[1].round(decimales)
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PPM[2].columns)
+        tous_mobs.affect_PPM[2] = tous_mobs.affect_PPM[2].round(decimales)
+        tous_mobs.affect_PPM[3] = tous_mobs.affect_PPM[3].round(decimales)
+    if PCJ:
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PCJ[0].columns)
+        tous_mobs.affect_PCJ[0] = tous_mobs.affect_PCJ[0].round(decimales)
+        tous_mobs.affect_PCJ[1] = tous_mobs.affect_PCJ[1].round(decimales)
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PCJ[2].columns)
+        tous_mobs.affect_PCJ[2] = tous_mobs.affect_PCJ[2].round(decimales)
+        tous_mobs.affect_PCJ[3] = tous_mobs.affect_PCJ[3].round(decimales)
+    if PPS:
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PPS[0].columns)
+        tous_mobs.affect_PPS[0] = tous_mobs.affect_PPS[0].round(decimales)
+        tous_mobs.affect_PPS[1] = tous_mobs.affect_PPS[1].round(decimales)
+        decimales = pd.Series([0, 0, 0, 2, 4], index=tous_mobs.affect_PPS[2].columns)
+        tous_mobs.affect_PPS[2] = tous_mobs.affect_PPS[2].round(decimales)
+        tous_mobs.affect_PPS[3] = tous_mobs.affect_PPS[3].round(decimales)
 
     # Le nombre de déplacements par classe de distance
     if PPM:
@@ -435,11 +475,14 @@ def dashboard_datapane():
 
 
     "## Les indicateurs de l'affectation",
-    dp.Table(tous_mobs.affect_PPM[0]), dp.Table(tous_mobs.affect_PPM[1]), dp.Table(tous_mobs.affect_PPM[2]),
+    dp.Table(tous_mobs.affect_PPM[0]), dp.Table(tous_mobs.affect_PPM[1]), dp.Table(tous_mobs.affect_PPM[2]), 
+                                                                                   dp.Table(tous_mobs.affect_PPM[3]),
 
-    dp.Table(tous_mobs.affect_PCJ[0]), dp.Table(tous_mobs.affect_PCJ[1]), dp.Table(tous_mobs.affect_PCJ[2]),
+    dp.Table(tous_mobs.affect_PCJ[0]), dp.Table(tous_mobs.affect_PCJ[1]), dp.Table(tous_mobs.affect_PCJ[2]), 
+                                                                                   dp.Table(tous_mobs.affect_PCJ[3]),
 
-    dp.Table(tous_mobs.affect_PPS[0]), dp.Table(tous_mobs.affect_PPS[1]), dp.Table(tous_mobs.affect_PPS[2]),
+    dp.Table(tous_mobs.affect_PPS[0]), dp.Table(tous_mobs.affect_PPS[1]), dp.Table(tous_mobs.affect_PPS[2]), 
+                                                                                   dp.Table(tous_mobs.affect_PPS[3]),
 
     "## Indicateurs graphiques des matrices MODUS",
 

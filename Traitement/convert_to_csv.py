@@ -15,6 +15,7 @@ def GetFiles():
     return event, values
 
 def main():
+    """Un programme simple pour séléctionner les résultats picklés de MODUS et les convertir en csv un par un."""
     while True:
         button, values = GetFiles()
         if button == sg.WIN_CLOSED:

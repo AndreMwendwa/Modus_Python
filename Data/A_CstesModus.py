@@ -27,7 +27,10 @@ yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
 # MACROVARIABLES GÉNÉRALES
 # 1. Caractéristiques géographique
 
-cNbZone = 1289      # nombre de zones interne Idf
+if yaml_content['cNbZone'] != -1:
+    cNbZone = yaml_content['cNbZone']
+else:
+    cNbZone = 1289       # nombre de zones interne Idf
 cNbDpt = 8          # nombre de départements : DPRT
 cNbCour = 3         # nombre de couronnes : COUR
 cNbClacc = 6        # nombre de classes d'accessibilité TC : CLACC
@@ -101,26 +104,37 @@ VARGEN = ['PTOT', 'PACT', 'PACTHQ', 'PACTAQ', 'RETR', 'SCOLSUP','SCOLSEC', 'SCOL
 # 0. Caractéristiques du zonage
 # hors zones internes, cNbZones défini dans le fichier de constantes du calibrage
 
-cNbZgare = 12   # nombre de zones gares
-cNbZext = 34    # nombre de zones du cordon
-cNbZspec = 4    # nombre de zones spécifiques externes
+cNbZext = yaml_content['cNbZext']       # nombre de zones du cordon
+cNbZgare = yaml_content['cNbZgare']     # nombre de zones gares
+cNbZspec = yaml_content['cNbZspec']     # nombre de zones spécifiques externes
+# cNbZgare = 12   # nombre de zones gares
+# cNbZext = 34    # nombre de zones du cordon
+# cNbZspec = 4    # nombre de zones spécifiques externes
 cNbZtot = cNbZone + cNbZspec + cNbZext      # nombre total de zones affectation VP
 # Kiko cNbZtot = %eval(&cNbZone+&cNbZspec+&cNbZext) Problème: version originelle, mais c'est quoi cNbZone?
 cNbZintsp = cNbZone + cNbZspec
 # 1. Horizons considérés
-actuel = 2012   # année de la situation de calage du modèle
-scen = 2030     # année de la situation de scénario > actuel
-caleVP = 2012
-caleTC = 2012
+actuel = yaml_content['actuel']     # année de la situation de calage du modèle
+scen = yaml_content['scen']         # année de la situation de scénario > actuel
+caleVP = yaml_content['caleVP']
+caleTC = yaml_content['caleTC']
+# actuel = 2012   # année de la situation de calage du modèle
+# scen = 2030     # année de la situation de scénario > actuel
+# caleVP = 2012
+# caleTC = 2012
 
 # 2. Périodes horaires simulées
-PPM = 1     # exécution ou non de la simulation en PPM
-PCJ = 0     # exécution ou non de la simulation en PCJ
-PPS = 1     # exécution ou non de la simulation en PPS
+PPM = yaml_content['PPM']       # exécution ou non de la simulation en PPM
+PCJ = yaml_content['PCJ']       # exécution ou non de la simulation en PCJ
+PPS = yaml_content['PPS']       # exécution ou non de la simulation en PPS
+# PPM = 1     # exécution ou non de la simulation en PPM
+# PCJ = 0     # exécution ou non de la simulation en PCJ
+# PPS = 1     # exécution ou non de la simulation en PPS
 
 # 3. Méthode demande PL
 # a. choix de la méthode
-idPL = 2    # =0, 1, 2 ou 3 selon la méthode choisie parmi les quatre ci-dessous
+idPL = yaml_content['idPL']     # =0, 1, 2 ou 3 selon la méthode choisie parmi les quatre ci-dessous
+# idPL = 2    # =0, 1, 2 ou 3 selon la méthode choisie parmi les quatre ci-dessous
 
 # b. Méthodes
 # -- méthode 0 : pas de prise en compte des PL dans l'affectation
@@ -361,12 +375,13 @@ Donnees_Interz['dist_vol_scen'] = Path_sep(os.path.join(dir_dataRef, '090721_DVO
 Donnees_Interz['carte_o_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
                                                          '11FEB2021_CoutTC2030_GPErer_MOTIF_Distancetotale.txt'), '\t')
 # coût TC moyen par Moti et OD en scénario
-
-if yaml_content[f'cout_TC_{scen}'] != -1:
-    Donnees_Interz['couttc_scen'] = Path_sep(Path(yaml_content[f'cout_TC_{scen}']), '\t')
-else:
-    Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
                                                           '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
+# if yaml_content[f'cout_TC_{scen}'] != -1:
+#     Donnees_Interz['couttc_scen'] = Path_sep(Path(yaml_content[f'cout_TC_{scen}']), '\t')
+# else:
+#     Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+#                                                           '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
 
 # coût TC par OD en scénario
 

@@ -225,7 +225,7 @@ def main_func():
         print("avec bouclage")
     print(f"pour l'année de calage {actuel} et l'année de scénario {scen}")
 
-    logging.basicConfig(filename=f'{dir_dataTemp}{name}_log.log', level=logging.INFO)
+    logging.basicConfig(filename=f'{dir_dataTemp}{nom_simul}_log.log', level=logging.INFO)
     logging.info('Début')
     demande('actuel', 0)
     bouclage_func(idBcl, cNbBcl)
@@ -247,7 +247,7 @@ if __name__ == '__main__':
         print("avec bouclage")
     print(f"pour l'année de calage {actuel} et l'année de scénario {scen}")
 
-    logging.basicConfig(filename=f'{dir_dataTemp}{name}_log.log', level=logging.INFO)
+    logging.basicConfig(filename=f'{dir_dataTemp}{nom_simul}_log.log', level=logging.INFO)
     logging.info('Début')
     demande('actuel', 0)
     bouclage_func(idBcl, cNbBcl)

@@ -1,6 +1,38 @@
-name: 'Econtrans_sans_gratuite'
-idBcl: 0
-cout_TC_2030: C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\Donnees\Input\2_Scenario\2030 - original\11FEB2021_CoutTC_ABO_TK_2030sansGPE.txt
+nom_simul: 'test_21_02_21'
+
+# 0. Caractéristiques du zonage
+cNbZone: 1289
+cNbZext: 34     # nombre de zones du cordon
+cNbZgare: 12    # nombre de zones gares
+cNbZspec: 4     # nombre de zones spécifiques externes (les aéroports Orly et CDG). Ce paramètre n'est pas utilisé pour l'instant.
+
+# 1. Horizons considérés
+actuel: 2012        # année de la situation de calage du modèle
+scen: 2030          # année de la situation de scénario > actuel
+caleVP: 2012        # année de la situation de calage du modèle
+caleTC: 2012        # 
+    
+# 2. Périodes horaires simulées
+PPM: 1      # exécution ou non de la simulation en PPM
+PCJ: 0      # exécution ou non de la simulation en PCJ
+PPS: 1      # # exécution ou non de la simulation en PPS
+
+# 3. Méthode demande PL
+idPL: 2
+
+# 4. Bouclage
+idBcl: 0        # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
+# restreint aux modes motorisés (=3), le choix modal restreint aux modes véhiculés (=4) ou pas du tout (=0)
+cConv_M: 50     # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cConv_C: 50     # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cConv_S: 50     # critère de convergence du bouclage en HPS (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cNbBcl: 10      # nombre maximum d'itérations lors du bouclage - doit être >1
+cParTpsBcl: 0.6667      # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
+cParMatBcl: 0.6667      # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
+
+# Repertoires de données
+
+
 
 # Valeurs pour le calcul socio-économique
 CO2_VP: 0.015837718

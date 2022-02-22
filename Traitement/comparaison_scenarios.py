@@ -73,6 +73,22 @@ def dashboard_datapane_comparaison():
                     if tous_mobs[key][i][col].dtypes != 'object':
                         tous_mobs[key][i][col] = tous_mobs1[key][i][col] - tous_mobs2[key][i][col]
 
+    ## Arrondir les valeurs du dataframe de générations
+    # différemment
+    if PPM:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PPM.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PPM = tous_mobs.mob_PPM.round(decimales)
+
+    if PCJ:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PCJ.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PCJ = tous_mobs.mob_PCJ.round(decimales)
+    if PPS:
+        decimales = pd.Series([0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3],
+                                  index=tous_mobs.mob_PPS.columns)  # A utiliser pour arrondir chaque colonne
+        tous_mobs.mob_PPS = tous_mobs.mob_PPS.round(decimales)
+
     # Le nombre de générations par motif pour les périodes étudiées
     plots26 = []
     if PPM:
@@ -529,17 +545,21 @@ def dashboard_datapane_comparaison():
     # de comparaison
     cout_df_diff_total = couts_df_diff.sum(axis=1)
     cout_diff_comparative = cout_df_diff_total/couts_df_scen1.sum(axis=1) * 100
-    cout_df_diff_total.name = f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})'
-    cout_diff_comparative.name = f'Différence relative entre les scénarios \n ({name1} - {name2})\n/{name1}'
-    valeurs_tutelaires = pd.DataFrame.from_dict({'Valeurs_tutelaires': [yaml_content['CO2_VP'],
+    cout_df_diff_total.name = f'Difference en valeur absolu entre les scénarios (unités)'
+    cout_diff_comparative.name = f'Différence relative entre les scénarios (%)'
+    valeurs_tutelaires = pd.DataFrame.from_dict({'Valeurs_tutelaires (€/unité)': [yaml_content['CO2_VP'],
                                                                         yaml_content['Valeur_temp']]})
     valeurs_tutelaires.index = ['VKM', 'Veh-hr']
     cout_df_diff_total = pd.concat([cout_df_diff_total, cout_diff_comparative], axis=1)
     cout_df_diff_total = pd.concat([cout_df_diff_total, valeurs_tutelaires], axis=1)
-    cout_df_diff_total['Valeurs économiques'] = cout_df_diff_total[f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})'] * \
-                                                cout_df_diff_total['Valeurs_tutelaires']
-    somme = pd.DataFrame({f'Difference en valeur absolu entre les scénarios \n ({name1} - {name2})': '-', 'Valeurs_tutelaires': '-',
-                                   'Valeurs économiques': cout_df_diff_total['Valeurs économiques'].sum()},
+    cout_df_diff_total['Valeurs économiques (€)'] = cout_df_diff_total[f'Difference en valeur absolu entre les scénarios (unités)'] * \
+                                                cout_df_diff_total['Valeurs_tutelaires (€/unité)']
+    decimales = pd.Series([2, 2, 4, 2], index=cout_df_diff_total.columns)    # A utiliser pour arrondir chaque colonne
+    # différemment
+    cout_df_diff_total = cout_df_diff_total.round(decimales)   # On doit arrondir deux fois, puisque on va vréer une ligne qui
+    # contient un mélange de string et de float, alors il faut arrondir toute la dataframe avant de la rajouter.
+    somme = pd.DataFrame({f'Difference en valeur absolu entre les scénarios (unités)': '-', 'Valeurs_tutelaires (€/unité)': '-',
+                                   'Valeurs économiques (€)': cout_df_diff_total['Valeurs économiques (€)'].sum()},
                                    index=['Total'])
     cout_df_diff_total = pd.concat([cout_df_diff_total, somme])
     cout_df_diff_total.fillna(inplace=True, value='-')
@@ -548,24 +568,26 @@ def dashboard_datapane_comparaison():
     # Les graphes des indicateurs socio-éco
     fig30, ax30 = plt.subplots()
     sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['VKM', :])
-    plt.title(f'Différence de VKM parcourus entre les deux scénarios \n ({name1} - {name2})')
-    plt.tight_layout()
+    plt.title(f'Différence de VKM parcourus entre les deux scénarios ')
+    plt.tight_layout(pad=2)
 
     fig31, ax31 = plt.subplots()
     sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['Veh-hr', :])
-    plt.title(f'Différence de véhicule-hrs parcourus entre les deux scénarios \n ({name1} - {name2})')
-    plt.tight_layout()
+    plt.title(f'Différence de véhicule-hrs parcourus entre les deux scénarios ')
+    plt.tight_layout(pad=2)
 
     #Les graphes des valeurs relatives des indicateurs socio-éco
     fig32, ax32 = plt.subplots()
-    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['VKM', :]/couts_df_scen1.loc['VKM', :])
-    plt.title(f'Différence relative de VKM parcourus entre les deux scénarios \n ({name1} - {name2})\n/{name1}')
-    plt.tight_layout()
+    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['VKM', :]/couts_df_scen1.loc['VKM', :] * 100)
+    plt.title(f'Différence relative de VKM parcourus entre les deux scénarios ')
+    plt.ylabel('Différence en %')
+    plt.tight_layout(pad=2)
 
     fig33, ax33 = plt.subplots()
-    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['Veh-hr', :]/couts_df_scen1.loc['VKM', :])
-    plt.title(f'Différence relative de véhicule-hrs parcourus entre les deux scénarios \n ({name1} - {name2})\n/{name1}')
-    plt.tight_layout()
+    sns.barplot(x=couts_df_diff.columns, y=couts_df_diff.loc['Veh-hr', :]/couts_df_scen1.loc['VKM', :] * 100)
+    plt.title(f'Différence relative de véhicule-hrs parcourus entre les deux scénarios ')
+    plt.ylabel('Différence en %')
+    plt.tight_layout(pad=2)
 
 
     # Début du code qui lance le dashboard.
@@ -580,6 +602,7 @@ def dashboard_datapane_comparaison():
             dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
 
             '# Calcul socio-économique',
+            f'## Scénario 1 = {name1} \n ## Scénario 2 = {name2}',
             dp.Table(cout_df_diff_total),
             title='Résumé',
         ),
@@ -648,7 +671,12 @@ def dashboard_datapane_comparaison():
         dp.Group(blocks=[dp.Plot(fig30), dp.Plot(fig31)], columns=2),
         dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
 
+        '# Indicateurs socio-économiques',
+        dp.Group(blocks=[dp.Plot(fig30), dp.Plot(fig31)], columns=2),
+        dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
+
         '## Calcul socio-économique',
+        f'## Scénario 1 = {name1} \n ## Scénario 2 = {name2}',
         dp.Table(cout_df_diff_total),
             title='Détaillé'
     ))

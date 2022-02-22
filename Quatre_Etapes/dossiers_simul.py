@@ -18,10 +18,10 @@ dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de
 
 # Nom de la simulation
 if yaml_content['idBcl'] != -1:
-    name = yaml_content['name']
+    nom_simul = yaml_content['nom_simul']
 else:
-    name = 'test_pyinstaller'  # Maintenant YML
-out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{name}\\'   # Pour garder les
+    nom_simul = 'test_pyinstaller'  # Maintenant YML
+out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{nom_simul}\\'   # Pour garder les
 # résultats intérmediaire
 
 try:
