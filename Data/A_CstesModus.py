@@ -139,7 +139,8 @@ idPL = yaml_content['idPL']     # =0, 1, 2 ou 3 selon la méthode choisie parmi 
 # b. Méthodes
 # -- méthode 0 : pas de prise en compte des PL dans l'affectation
 # -- méthode 1 : projection des matrices de flux PL calées par période horaire selon la croissance du PIB
-CroisPIB = 1.5      # % de croissance annuelle du PIB : 1.5%
+CroisPIB = yaml_content['CroisPIB']         # % de croissance annuelle du PIB : 1.5%
+# CroisPIB = 1.5      # % de croissance annuelle du PIB : 1.5%
 
 # -- méthode 2 : utilisation d'une matrice flux PL journalière interne IdF et de cordons PL actuelle et projetée pour
 # déterminer les évolutions par OD à appliquer aux matrices PL calées par période horaire définies dans la méthode 1
@@ -148,8 +149,10 @@ CroisPIB = 1.5      # % de croissance annuelle du PIB : 1.5%
 
 # 4. Paramètre du report de calage
 
-idVP = 1    # identifiant d'exécution (=1) ou pas (=0) du report de calage VP
-idTC = 1    # identifiant d'exécution (=1) ou pas (=0) du report de calage TC
+idVP = yaml_content['idVP']         # identifiant d'exécution (=1) ou pas (=0) du report de calage VP
+# idVP = 1    # identifiant d'exécution (=1) ou pas (=0) du report de calage VP
+idTC = yaml_content['idTC']         # identifiant d'exécution (=1) ou pas (=0) du report de calage TC
+# idTC = 1    # identifiant d'exécution (=1) ou pas (=0) du report de calage TC
 k0 = 1.77   # seuil de croissance extreme avant prise en compte du taux de croissance annuel de la méthode de report de
 # calage n°2
 cSeuilh = 2 # borne de l'amplification multiplicative de la méthode de report de calage n°1
@@ -165,12 +168,12 @@ if yaml_content['idBcl'] != -1:
 else:
     idBcl = 0       # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
 # restreint aux modes motorisés (=3), le choix modal restreint aux modes véhiculés (=4) ou pas du tout (=0)
-cConv_M = 50    # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
-cConv_C = 50    # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
-cConv_S = 50    # critère de convergence du bouclage en HPS (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
-cNbBcl = 10     # nombre maximum d'itérations lors du bouclage - doit être >1
-cParTpsBcl = 0.667  # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
-cParMatBcl = 0.667    # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
+cConv_M = yaml_content['cConv_M']    # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cConv_C = yaml_content['cConv_C']    # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cConv_S = yaml_content['cConv_S']    # critère de convergence du bouclage en HPS (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
+cNbBcl = yaml_content['cNbBcl']     # nombre maximum d'itérations lors du bouclage - doit être >1
+cParTpsBcl = yaml_content['cParTpsBcl']  # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
+cParMatBcl = yaml_content['cParMatBcl']    # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
 
 # 6. Vecteurs Spécifiques
 # a. identifiant d'éxécution de l'implémentation des vecteurs spécifiques
@@ -275,13 +278,13 @@ Donnees_Res = {}    # Un dictionnaire pour contenir les données de réseau (fic
 
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPM2020.ver')
 # Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030.ver')
-Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_edited.ver')
+Donnees_Res[f'Version_PPM_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPM2030_edited_d.ver')
 
 # Version du scénario étudié
 Donnees_Res[f'Version_PCJ_scen'] = os.path.join(dir_dataScen, '2019', '210219_ReseauVPv4.6_GV_GT_lambert93_PPS2020.ver')
 # Version du scénario étudié
 # Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030.ver')
-Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited.ver')
+Donnees_Res[f'Version_PPS_scen'] = os.path.join(dir_dataScen, '210219_ReseauVPv4.6_PPS2030_edited_d.ver')
 
 # Version du scénario étudié
 
@@ -704,11 +707,18 @@ for ligne, value in Motifs_Choix_Dist.items():
         Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
 
 
+# Pour l'ESE, la liste des colonnes de la table ESE
+list_cols_ESE_tuple = namedtuple('list_cols_ESE_tuple', 'Item Diff_scenarios Val_tutelaires Val_econ')
+# list_cols_ESE = ['Item', 'Difference en valeur absolu entre les scénarios (unités)', 'Valeurs_tutelaires (€/unité)',
+#                  'Valeurs économiques (€)']
+list_cols_ESE = list_cols_ESE_tuple('Item', 'Difference en valeur absolu entre les scénarios (unités)', 'Valeurs_tutelaires (€/unité)',
+                 'Valeurs économiques (€)')
 
 
 
-
-
+# Gratuite
+gratuite_on = 1         # 1 = On, 0 = Off
+colonne_gratuite ='SCOLSUP'
 
 
 

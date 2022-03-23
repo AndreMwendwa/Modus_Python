@@ -25,29 +25,16 @@ lambda_TCY = 0.67
 def utilite(n, hor):
     if not Path(f'{dir_dataTemp}bdinter_{n}').is_file():
         OD = util_data.OD(n)
-        # bdinter = pd.read_sas(dir_root + '\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
-        #
-        # bdinter.rename(
-        #     columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
-        #              'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
-        #              'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
-        #              'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
-        #     inplace=True)
-        # OD = bdinter.copy()
     else:
-        # bdinter = pd.read_sas(dir_root + '\\M3_Chaine\\Modus_Python\\bdinter2012.sas7bdat')
-        #
-        # bdinter.rename(
-        #     columns={'TMAR_HC': 'TMAR_PCJ', 'TACC_HC': 'TACC_PCJ', 'TMAR_HPS': 'TMAR_PPS', 'TVEH_HC': 'TVEH_PCJ',
-        #              'TACC_HPS': 'TACC_PPS', 'TRAB_HPM': 'TRAB_PPM', 'TATT_HPS': 'TATT_PPS', 'TRAB_HPS': 'TRAB_PPS',
-        #              'TMAR_HPM': 'TMAR_PPM', 'TVEH_HPS': 'TVEH_PPS', 'TRAB_HC': 'TRAB_PCJ', 'TVEH_HPM': 'TVEH_PPM',
-        #              'TACC_HPM': 'TACC_PPM', 'TATT_HC': 'TATT_PCJ', 'TATT_HPM': 'TATT_PPM', 'CTKKM': 'CTTKKM'},
-        #     inplace=True)
-        # OD = bdinter.copy()
         dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
         OD = pkl.load(dbfile)
 
+    if gratuite_on:
+        dbfile = open(f'{dir_dataTemp}gratuite', 'rb')
+        gratuite_counter = pkl.load(dbfile)
 
+        if gratuite_counter == 0:
+            OD['CTTKKM'] = 0
 
     calcul_util = util_data.calcul_util()
     calcul_util.per = hor
@@ -116,7 +103,7 @@ def utilite(n, hor):
 
     print(f'\t Calcul des utilités pour {n}, {hor} terminé')
     
-    seU = pd.DataFrame(np.zeros((1289**2, 22)))
+    seU = pd.DataFrame(np.zeros((cNbZone**2, 22)))
     seUD = seU.copy()
 
     if hor == 'PPM':

@@ -5,7 +5,7 @@ from Data.A_CstesModus import *
 from Quatre_Etapes.dossiers_simul import *
 from Data.teletravail import teletravail
 import pickle as pkl
-
+from Data.gratuite import coupe_en_deux
 
 # ------------
 # I. GENERATION
@@ -29,6 +29,18 @@ def generation(n, per):
     #     for VAR in list(VARGEN):
     #         Pop_Emp[VAR] = Pop_Emp_temp[VAR]
     #     Pop_Emp.index = range(1, cNbZone + 1)
+    if gratuite_on:
+        coupe_en_deux(Pop_Emp, colonne_gratuite)
+
+        dbfile = open(f'{dir_dataTemp}gratuite', 'rb')
+        gratuite_counter = pkl.load(dbfile)
+        if gratuite_counter == 0:
+            dbfile = open(f'{dir_dataTemp}pop_emp', 'rb')
+            Pop_Emp = pkl.load(dbfile)          # Toutes les colonnes sauf celle qu'on étudie sont = 0
+        else:
+            dbfile = open(f'{dir_dataTemp}pop_emp_2', 'rb')
+            Pop_Emp = pkl.load(dbfile)          # Celle la colonne qu'on étudie = 0
+
 
     # - b. Lecture des paramètres de génération
 

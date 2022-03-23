@@ -57,12 +57,19 @@ def affect(ver, matVP, Iter, H, dir_itern):
 # mat1 = affect(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver', matVP, matPL)
 
 if __name__ == '__main__':
-
-    mat1 = multiprocessing.Process(name='mat1', target=affect,
-                                   args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver', matVP, matPL, result))
-    mat2 = multiprocessing.Process(name='mat2', target=affect,
-                                   args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPS2030_edited.ver', matVP, matPL, result))
-    mat1.start()
-    mat2.start()
+    myvisum = win32.Dispatch("Visum.Visum")
+    myvisum.LoadVersion(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver')
+    mat1 = helpers.GetODMatrix(myvisum, 'V')
+    mat2 = helpers.GetODMatrix(myvisum, 'P')
+    matrand = np.abs(np.random.randn(1327, 1327))
+    matVP = mat1 + matrand
+    matPL = mat2 + matrand
+    affect(Donnees_Res[f'Version_PPM_scen'], matVP, 1, 'PPM', dir_itern=dir_iter)
+    # mat1 = multiprocessing.Process(name='mat1', target=affect,
+    #                                args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver', matVP, matPL, result))
+    # mat2 = multiprocessing.Process(name='mat2', target=affect,
+    #                                args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPS2030_edited.ver', matVP, matPL, result))
+    # mat1.start()
+    # mat2.start()
 
 

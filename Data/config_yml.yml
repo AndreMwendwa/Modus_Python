@@ -1,4 +1,4 @@
-nom_simul: 'test_21_02_21'
+nom_simul: 'Econtrans_sans_gratuite'
 
 # 0. Caractéristiques du zonage
 cNbZone: 1289
@@ -19,9 +19,15 @@ PPS: 1      # # exécution ou non de la simulation en PPS
 
 # 3. Méthode demande PL
 idPL: 2
+CroisPIB: 1.5
 
-# 4. Bouclage
-idBcl: 0        # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
+# 4. Report de Calage
+idVP: 1
+idTC: 1
+
+
+# 5. Bouclage
+idBcl: 1        # identifiant d'exécution du bouclage sur la distribution (=1), le choix modal (=2), le choix modal
 # restreint aux modes motorisés (=3), le choix modal restreint aux modes véhiculés (=4) ou pas du tout (=0)
 cConv_M: 50     # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_C: 50     # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
@@ -30,11 +36,52 @@ cNbBcl: 10      # nombre maximum d'itérations lors du bouclage - doit être >1
 cParTpsBcl: 0.6667      # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
 cParMatBcl: 0.6667      # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
 
+
+
 # Repertoires de données
 
 
 
-# Valeurs pour le calcul socio-économique
+## Valeurs pour le calcul socio-économique
+
+# 1_Consumer surplus 
+## 1.1_Le module user_veh
+VP_moy_fuel_basic: 0.103
+VP_non_fuel_basic: 0.127
+VP_capital_marginal_basic: 0.015
+
+## Time (pour les modules user_veh et user_pt)
+VTTS: 13.76
+VTTS_business: 28.60
+VTTS_commute_school_childcare: 16.17
+VTTS_others: 11.22
+taux_occupation: 1.52
+multiplier_wait: 1.5
+multiplier_access: 2
+multiplier_transfer: 2
+
+## Coûts externes
+VP_CO2_gkm: 94          # Emissions de GES moyennes par km 
+CO2_prix_tonne: 246.0   # Prix de la tonne de CO2
+VP_LCA: 1
+
+## Polluants locaux
+bornes: [ 4500, 1500, 450, 37 ]     # Définissent les catégories de population pour le calcul du coût de la pollution atmosphérique
+valeurs_vp: [ 0.116, 0.032, 0.013, 0.011, 0.008]     # Les valeurs du coût/km pour les bornes donnés ci-dessous.
+
+# valeurs_vp[0] -- >bornes[0]
+# valeurs_vp[1] -- <bornes[0] & >bornes[1]
+# valeurs_vp[2] -- <bornes[1] & >bornes[2]
+# valeurs_vp[3] -- <bornes[2] & >bornes[3]
+# valeurs_vp[4] -- >bornes[3]
+
+# Usage des infrastructure
+usage_infra_vp: [1.53, 0.41, 0.63, 0.69, 0.82]
+# Valeurs pour autoroutes, nationales, départementales, communales, et moyenne resp. 
+
+# List_cols - liste des colonnes pour l'ESE
+
+
 CO2_VP: 0.015837718
 CO2_VUL: 0.021854282
 CO2_PL: 0.081459549
