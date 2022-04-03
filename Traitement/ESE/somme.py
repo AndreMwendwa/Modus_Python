@@ -11,6 +11,7 @@ from externalites import *
 def calcul_socio_eco(fichier1, fichier2):
     vkm2, vhr2, *autres2 = vkm_vhr_fn(fichier2)
     vkm1, vhr1, *autres1 = vkm_vhr_fn(fichier1)
+    #FIXME: Should it be scenario 2 - scenario 1 or the inverse?
     vkm_diff = vkm2 - vkm1
     vhr_diff = vhr2 - vhr1
     autres_diff = [i - j for i, j in zip(autres2, autres1)]

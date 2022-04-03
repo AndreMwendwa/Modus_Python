@@ -46,19 +46,19 @@ cParMatBcl: 0.6667      # paramètre du bouclage pour la pondération des matric
 
 # 1_Consumer surplus 
 ## 1.1_Le module user_veh
-VP_moy_fuel_basic: 0.103
-VP_non_fuel_basic: 0.127
-VP_capital_marginal_basic: 0.015
+VP_moy_fuel_basic: 0.103        # Source DGITM basic method
+VP_non_fuel_basic: 0.127        # Source DGITM basic method
+VP_capital_marginal_basic: 0.015    # Source DGITM basic method
 
 ## Time (pour les modules user_veh et user_pt)
-VTTS: 13.76
-VTTS_business: 28.60
-VTTS_commute_school_childcare: 16.17
-VTTS_others: 11.22
+VTTS: 13.76        # Souce: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique"  
+VTTS_business: 28.60        # Souce: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique"  
+VTTS_commute_school_childcare: 16.17        # Souce: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique"  
+VTTS_others: 11.22      # Souce: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique"  
 taux_occupation: 1.52
-multiplier_wait: 1.5
-multiplier_access: 2
-multiplier_transfer: 2
+multiplier_wait: 1.5       # Source: MTES, Fiche outil "Valeurs recommandées pour le calcul socio-économique"
+multiplier_access: 2        # Source: MTES, Fiche outil "Valeurs recommandées pour le calcul socio-économique"
+multiplier_transfer: 2      # Source: MTES, Fiche outil "Valeurs recommandées pour le calcul socio-économique"
 
 ## Coûts externes
 VP_CO2_gkm: 94          # Emissions de GES moyennes par km 
@@ -66,8 +66,8 @@ CO2_prix_tonne: 246.0   # Prix de la tonne de CO2
 VP_LCA: 1
 
 ## Polluants locaux
-bornes: [ 4500, 1500, 450, 37 ]     # Définissent les catégories de population pour le calcul du coût de la pollution atmosphérique
-valeurs_vp: [ 0.116, 0.032, 0.013, 0.011, 0.008]     # Les valeurs du coût/km pour les bornes donnés ci-dessous.
+bornes: [ 4500, 1500, 450, 37 ]     # Définissent les catégories de population pour le calcul du coût de la pollution atmosphérique     Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
+valeurs_vp: [ 0.116, 0.032, 0.013, 0.011, 0.008]     # Les valeurs du coût/km pour les bornes donnés ci-dessous. Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 
 # valeurs_vp[0] -- >bornes[0]
 # valeurs_vp[1] -- <bornes[0] & >bornes[1]
@@ -75,16 +75,25 @@ valeurs_vp: [ 0.116, 0.032, 0.013, 0.011, 0.008]     # Les valeurs du coût/km p
 # valeurs_vp[3] -- <bornes[2] & >bornes[3]
 # valeurs_vp[4] -- >bornes[3]
 
+## Bruit
+# Attention, il s'agit de couts marginaux (alors pas pour des nouveaux projets d'infrastructure).
+valeurs_bruit_autoroutes: [0.84, 0.5, 0.34, 0.12, 0.03]     # Source: CAS (2013) Evaluation socio-économique des investissements publiques
+valeurs_bruit_nationales_departementales: [1.01, 0.55, 0.34, 0.2, 0.12]     # Source: CAS (2013) Evaluation socio-économique des investissements publiques
+valeurs_bruit_communales: [2.58, 2.28, 1.89, 1.01, 0.63]        # Source: CAS (2013) Evaluation socio-économique des investissements publiques
+
 # Usage des infrastructure
-usage_infra_vp: [1.53, 0.41, 0.63, 0.69, 0.82]
+usage_infra_vp: [1.53, 0.41, 0.63, 0.69, 0.82]      # Source: Martin Konïng
 # Valeurs pour autoroutes, nationales, départementales, communales, et moyenne resp. 
 
 # List_cols - liste des colonnes pour l'ESE
 
 
-CO2_VP: 0.015837718
-CO2_VUL: 0.021854282
-CO2_PL: 0.081459549
+CO2_VP: 0.015837718         # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
+CO2_VUL: 0.021854282        # # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
+CO2_PL: 0.081459549         # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 
 Valeur_temp: 11.2  # Valeur pour Transports Urbains, tous modes, sans détail du motif, IdF 
+
+
+intersect_file: 'C:\Users\mwendwa.kiko\Documents\Personal Kiko\Intersect_test.ver'     # Fichier avec la liste des zones par lesquelles passent tous nos tronçons. 
 

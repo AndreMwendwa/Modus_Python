@@ -3,6 +3,209 @@ import pandas as pd
 from pathlib import Path
 from Data.A_CstesModus import *
 import win32com.client as win32
+from dataclasses import dataclass
+from visum_data import visum_data
+
+@dataclass
+class externalites:
+    visum_data: visum_data
+    # Liste de la moyenne des densité pous des zones traversées
+        
+    def polln_local(self):
+        '''
+        Input: The visum_data object with all its constituent methods
+        :return: The cost of polln for a single scenario
+        '''
+        somme_intermediare1 = np.where(self.visum_data.avg_density_along_links > yaml_content['bornes'][0],
+                                       (self.visum_data.vkm_links * yaml_content['valeurs_vp'][0]), 0).sum()
+                                         # Zones les plus denses
+        somme_intermediare2 = (
+            np.where((self.visum_data.avg_density_along_links < yaml_content['bornes'][0]) &
+                (self.visum_data.avg_density_along_links > yaml_content['bornes'][1]), (self.visum_data.vkm_links *
+                                                                                        yaml_content['valeurs_vp'][1]), 0).sum())
+        somme_intermediare3 = (
+            np.where((self.visum_data.avg_density_along_links < yaml_content['bornes'][1]) |
+                (self.visum_data.avg_density_along_links > yaml_content['bornes'][2]), (self.visum_data.vkm_links *
+                                                                                        yaml_content['valeurs_vp'][2]), 0).sum())
+        somme_intermediare4 = (
+            np.where((self.visum_data.avg_density_along_links < yaml_content['bornes'][2]) |
+                (self.visum_data.avg_density_along_links > yaml_content['bornes'][3]), (self.visum_data.vkm_links *
+                                                                                        yaml_content['valeurs_vp'][3]), 0).sum())
+        somme_intermediare5 = (
+            np.where(self.visum_data.avg_density_along_links < yaml_content['bornes'][3], (self.visum_data.vkm_links *
+                                                                                           yaml_content['valeurs_vp'][4]), 0).sum())  # Zones les moins denses
+        somme_intermediare = somme_intermediare1 + somme_intermediare2 + somme_intermediare3 + somme_intermediare4 \
+                                 + somme_intermediare5
+        return somme_intermediare
+
+    def ghg_LCA_fn(self):
+        '''
+        Inputs: vkm for one scenario
+        :return: cost of GHG emissions for one scenario
+        '''
+        ghg_vp = yaml_content['CO2_prix_tonne'] * self.visum_data.vkm_links.sum()
+        ghg_LCA_vp = yaml_content['VP_LCA'] * self.visum_data.vkm_links.sum()
+        return ghg_vp, ghg_LCA_vp
+
+    def usage_infras(self):
+        '''
+        
+        :return: 
+        '''
+        route_classes = self.visum_data.routes_class_df.copy()
+        vkm_links = self.visum_data.vkm_links.copy()
+        route_classe_vkm = pd.merge(vkm_links, route_classes, left_index=True, right_index=True, how='outer')
+        usage_infra_cout = (np.where(route_classe_vkm['Autoroute'] == 1, vkm_links * yaml_content['usage_infra_vp'][0],
+            np.where(route_classe_vkm['Nat'] == 1, vkm_links * yaml_content['usage_infra_vp'][1],
+                 np.where(route_classe_vkm['Dep'] == 1, vkm_links * yaml_content['usage_infra_vp'][2],
+                    np.where(route_classe_vkm['Comm'] == 1, vkm_links * yaml_content['usage_infra_vp'][3],
+                             vkm_links * yaml_content['usage_infra_vp'][4],
+                 )))))
+        return usage_infra_cout
+
+    def noise(self):
+        route_classes = self.visum_data.routes_class_df.copy()
+        vkm_links = self.visum_data.vkm_links.copy()
+        avg_density_along_links = self.visum_data.avg_density_along_links.copy()
+        avg_density_along_links = pd.merge(avg_density_along_links, route_classes,
+                                           left_index=True, right_index=True, how='outer')
+        # Autoroutes
+        sum1_autoroutes = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy > @yaml_content["bornes"][0] & Autoroute == 1').index]
+        ).sum()         # Highest densities
+        sum1_autoroutes *= yaml_content['valeurs_bruit_autoroutes'][0]
+
+        sum2_autoroutes = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][0] & '
+                                                        'densh_moy > @yaml_content["bornes"][1] & Autoroute == 1').index]
+        ).sum()  # 2nd highest densities
+        sum2_autoroutes *= yaml_content['valeurs_bruit_autoroutes'][1]
+
+        sum3_autoroutes = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][1] & '
+                                                        'densh_moy > @yaml_content["bornes"][2] & Autoroute == 1').index]
+        ).sum()  # 3rd highest densities
+        sum3_autoroutes *= yaml_content['valeurs_bruit_autoroutes'][2]
+
+        sum4_autoroutes = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][2] & '
+                                                        'densh_moy > @yaml_content["bornes"][3] & Autoroute == 1').index]
+        ).sum()  # 4th highest densities
+        sum4_autoroutes *= yaml_content['valeurs_bruit_autoroutes'][3]
+
+        sum5_autoroutes = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][3] & '
+                                                        ' Autoroute == 1').index]
+        ).sum()  # Lowest densities
+        sum5_autoroutes *= yaml_content['valeurs_bruit_autoroutes'][4]
+        sum_autoroutes = sum1_autoroutes + sum2_autoroutes + sum3_autoroutes + sum4_autoroutes + sum5_autoroutes
+
+        # Routes nationales et départementales
+        sum1_nationales_departementales = (
+            vkm_links.loc[
+                avg_density_along_links.query('densh_moy > @yaml_content["bornes"][0] & Nat == 1').index]
+        ).sum()  # Highest densities
+        sum1_nationales_departementales *= yaml_content['valeurs_bruit_nationales_departementales'][0]
+
+        sum2_nationales_departementales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][0] & '
+                                                        'densh_moy > @yaml_content["bornes"][1] & Nat == 1').index]
+        ).sum()  # 2nd highest densities
+        sum2_nationales_departementales *= yaml_content['valeurs_bruit_nationales_departementales'][1]
+
+        sum3_nationales_departementales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][1] & '
+                                                        'densh_moy > @yaml_content["bornes"][2] & Nat == 1').index]
+        ).sum()  # 3rd highest densities
+        sum3_nationales_departementales *= yaml_content['valeurs_bruit_nationales_departementales'][2]
+
+        sum4_nationales_departementales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][2] & '
+                                                        'densh_moy > @yaml_content["bornes"][3] & Nat == 1').index]
+        ).sum()  # 4th highest densities
+        sum4_nationales_departementales *= yaml_content['valeurs_bruit_nationales_departementales'][3]
+
+        sum5_nationales_departementales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][3] & '
+                                                        ' Nat == 1').index]
+        ).sum()  # Lowest densities
+        sum5_nationales_departementales *= yaml_content['valeurs_bruit_nationales_departementales'][4]
+        sum_nationales_departementales = (sum1_nationales_departementales + sum2_nationales_departementales +
+                    sum3_nationales_departementales + sum4_nationales_departementales + sum5_nationales_departementales)
+
+        # Routes communales
+        sum1_communales = (
+            vkm_links.loc[
+                avg_density_along_links.query('densh_moy > @yaml_content["bornes"][0] & Comm == 1').index]
+        ).sum()  # Highest densities
+        sum1_communales *= yaml_content['valeurs_bruit_communales'][0]
+
+        sum2_communales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][0] & '
+                                                        'densh_moy > @yaml_content["bornes"][1] & Comm == 1').index]
+        ).sum()  # 2nd highest densities
+        sum2_communales *= yaml_content['valeurs_bruit_communales'][1]
+
+        sum3_communales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][1] & '
+                                                        'densh_moy > @yaml_content["bornes"][2] & Comm == 1').index]
+        ).sum()  # 3rd highest densities
+        sum3_communales *= yaml_content['valeurs_bruit_communales'][2]
+
+        sum4_communales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][2] & '
+                                                        'densh_moy > @yaml_content["bornes"][3] & Comm == 1').index]
+        ).sum()  # 4th highest densities
+        sum4_communales *= yaml_content['valeurs_bruit_communales'][3]
+
+        sum5_communales = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][3] & '
+                                                        ' Comm == 1').index]
+        ).sum()  # Lowest densities
+        sum5_communales *= yaml_content['valeurs_bruit_communales'][4]
+        sum_communales = (sum1_communales + sum2_communales +
+                                          sum3_communales + sum4_communales + sum5_communales)
+
+        # Routes sans noms
+        valeurs_bruit_sans_nom = [(x + y)/2 for x, y in zip(yaml_content['valeurs_bruit_nationales_departementales'], 
+                                                            yaml_content['valeurs_bruit_communales'])]
+        # We assume that all the autoroutes have been named in the VISUM file, so routes without names take the avg of 
+        # routes nationales-departementales and communales                                                    
+        sum1_sans_nom = (
+            vkm_links.loc[
+                avg_density_along_links.query('densh_moy > @yaml_content["bornes"][0] & Comm == 1').index]
+        ).sum()  # Highest densities
+        sum1_sans_nom *= valeurs_bruit_sans_nom[0]
+
+        sum2_sans_nom = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][0] & '
+                                                        'densh_moy > @yaml_content["bornes"][1] & Comm == 1').index]
+        ).sum()  # 2nd highest densities
+        sum2_sans_nom *= valeurs_bruit_sans_nom[1]
+
+        sum3_sans_nom = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][1] & '
+                                                        'densh_moy > @yaml_content["bornes"][2] & Comm == 1').index]
+        ).sum()  # 3rd highest densities
+        sum3_sans_nom *= valeurs_bruit_sans_nom[2]
+
+        sum4_sans_nom = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][2] & '
+                                                        'densh_moy > @yaml_content["bornes"][3] & Comm == 1').index]
+        ).sum()  # 4th highest densities
+        sum4_sans_nom *= valeurs_bruit_sans_nom[3]
+
+        sum5_sans_nom = (
+            vkm_links.loc[avg_density_along_links.query('densh_moy < @yaml_content["bornes"][3] & '
+                                                        ' Comm == 1').index]
+        ).sum()  # Lowest densities
+        sum5_sans_nom *= valeurs_bruit_sans_nom[4]
+        sum_sans_nom = (sum1_sans_nom + sum2_sans_nom +
+                          sum3_sans_nom + sum4_sans_nom + sum5_sans_nom)
+        sum_noise = (sum_autoroutes + sum_nationales_departementales + sum_communales + sum_sans_nom)/1000   # We divide
+        # by 1000 because the values given in the socio-eco evaluation guidelines are per 1000vkm.
+        return sum_noise
+
 
 
 def polln_local_fn2(fichier1, fichier2):
@@ -407,10 +610,14 @@ def usage_infras(fichier1, fichier2):
     usage_infras_df[list_cols_ESE.Val_econ] = usage_infras_somme
     return pd.DataFrame(usage_infras_df)
 
+
+
+
 if __name__ == '__main__':
     f1 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_avec_gratuite'
     f2 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_sans_gratuite'
-    usage_infras(f1, f2)
-    # polln_local_fn(f1, f2)
-    polln_local_fn2(f1, f2)
-    ghg_LCA_fn(1e5)
+    # usage_infras(f1, f2)
+    visum_data1 = visum_data(f1, 'PPM')
+    externalites = externalites(visum_data1)
+    # externalites.usage_infras()
+    externalites.noise()

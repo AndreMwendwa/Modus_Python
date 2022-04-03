@@ -378,7 +378,7 @@ Donnees_Interz['dist_vol_scen'] = Path_sep(os.path.join(dir_dataRef, '090721_DVO
 Donnees_Interz['carte_o_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
                                                          '11FEB2021_CoutTC2030_GPErer_MOTIF_Distancetotale.txt'), '\t')
 # coût TC moyen par Moti et OD en scénario
-Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030',
+Donnees_Interz['couttc_scen'] = Path_sep(os.path.join(dir_dataScen, '2030 - original',
                                                           '11FEB2021_CoutTC_ABO_TK_2030_GPErer.txt'), '\t')
 # if yaml_content[f'cout_TC_{scen}'] != -1:
 #     Donnees_Interz['couttc_scen'] = Path_sep(Path(yaml_content[f'cout_TC_{scen}']), '\t')
