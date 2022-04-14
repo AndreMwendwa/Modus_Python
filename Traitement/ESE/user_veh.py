@@ -2,15 +2,23 @@ import numpy as np
 
 from Data.A_CstesModus import *
 import pandas as pd
-from visum_data import visum_data
+
 import Data.VisumPy.helpers2 as helpers
 import win32com.client as win32
 from dataclasses import dataclass
-from dotmap import DotMap
+import sys
 
-@dataclass
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
+from visum_data import visum_data
+
+
 class all_outputs_ROTH:
-    visum_data: visum_data
+    def __init__(self, visum_data):
+        self.visum_data = visum_data
+        self.flux_business, self.flux_commute_school_childcare, self.flux_others = \
+            self.flux_division(self.visum_data.flux_motifs_drieat)
+        self.travel_time = pd.DataFrame(self.visum_data.temps[:cNbZone, :cNbZone].reshape((cNbZone**2)))
+        self.travel_distance = pd.DataFrame(self.visum_data.distance[:cNbZone, :cNbZone].reshape((cNbZone**2)))
     # def __init__(self, dossier, hor):
         # self.carburant_vp = yaml_content['VP_moy_fuel_basic']        # Vehicle fuel costs
         # self.operating_vp = yaml_content['VP_non_fuel_basic']        # Vehicle operating  costs - non fuel
@@ -71,6 +79,13 @@ class all_outputs_ROTH:
     #                                                         .sum(1).reshape(cNbZone, cNbZone)
     #     flux_different_types.flux_others = flux_motifs_drieat[[9, 10, 20, 21]].to_numpy().sum(1).reshape(cNbZone, cNbZone)
     #     return flux_different_types
+
+
+    def flux_division(self, flux_input):
+        flux_business = flux_input[[2, 3, 13, 14]].sum(1)
+        flux_commute_school_childcare = flux_input[[0, 1, 4, 5, 6, 7, 8, 11, 12, 15, 16, 17, 18, 19]].sum(1)
+        flux_others = flux_input[[9, 10, 20, 21]].sum(1)
+        return flux_business, flux_commute_school_childcare, flux_others
 
     def flux_to_person_hr(self, flux, tmps, taux_occupation):
         psn_hr = ((flux * tmps[:cNbZone, :cNbZone]).sum()/60) * taux_occupation
@@ -134,6 +149,24 @@ class all_outputs_ROTH:
         generalised_cost_money = self.visum_data.user_veh_unit_cost * self.vkm()/self.visum_data.flux_uvp_sum
         return generalised_cost_money
 
+# def rule_of_half_vp_function(visum_data1, visum_data2):
+#     '''
+#     :param f1: Path to reference scenario
+#     :param f2:  Path to project scenario
+#     :param hor: PPM/PCJ/PPS
+#     :return: Consumer surplus for a single scenario
+#     '''
+#     ROTH1 = all_outputs_ROTH(visum_data1)
+#     ROTH2 = all_outputs_ROTH(visum_data2)
+#     delta_consumer_surp = (
+#         0.5 * (ROTH1.visum_data.flux_uvp_sum + ROTH2.visum_data.flux_uvp_sum) *
+#         (
+#                 ROTH1.generalised_cost_time() + ROTH1.generalised_cost_money()
+#               - ROTH2.generalised_cost_time() - ROTH2.generalised_cost_money()
+#         )
+#     )
+#     return delta_consumer_surp
+
 def rule_of_half_vp_function(visum_data1, visum_data2):
     '''
     :param f1: Path to reference scenario
@@ -143,11 +176,11 @@ def rule_of_half_vp_function(visum_data1, visum_data2):
     '''
     ROTH1 = all_outputs_ROTH(visum_data1)
     ROTH2 = all_outputs_ROTH(visum_data2)
-    delta_consumer_surp = (
-        0.5 * (ROTH1.visum_data.flux_uvp_sum + ROTH2.visum_data.flux_uvp_sum) *
+    delta_consumer_surp_business = (
+        0.5 * (ROTH1.visum_data.flux_ + ROTH2.visum_data.flux_uvp_sum) *
         (
-                ROTH2.generalised_cost_time() + ROTH2.generalised_cost_money()
-              - ROTH1.generalised_cost_time() - ROTH1.generalised_cost_money()
+                ROTH1.generalised_cost_time() + ROTH1.generalised_cost_money()
+              - ROTH2.generalised_cost_time() - ROTH2.generalised_cost_money()
         )
     )
     return delta_consumer_surp
@@ -176,8 +209,8 @@ def calc_rule_of_the_half(f1, f2):
 if __name__ == '__main__':
     # user_veh_fn(1e5)
     # user_time_vp(5e5)
-    f1 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_sans_gratuite'
-    f2 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_avec_gratuite'
+    f1 = Path(r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_sans_gratuite')
+    f2 = Path(r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_avec_gratuite')
 
     calc_rule_of_the_half(f1, f2)
 
