@@ -62,11 +62,11 @@ multiplier_transfer: 2      # Source: MTES, Fiche outil "Valeurs recommandées p
 
 ## Coûts externes
 VP_CO2_gkm: 94          # Emissions de GES moyennes par km 
-CO2_prix_tonne: 246.0   # Prix de la tonne de CO2
-VP_LCA: 1
+CO2_prix_tonne: 246.0   # Prix de la tonne de CO2 = 53€ en 2018, 246€ en 2030, 491€ en 2040. 
+VP_LCA: 0.01            
 
 ## Polluants locaux
-bornes: [ 4500, 1500, 450, 37 ]     # Définissent les catégories de population pour le calcul du coût de la pollution atmosphérique     Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
+bornes: [ 4500, 1500, 450, 37 ]     # Définissent les catégories de densité pour le calcul du coût de la pollution atmosphérique     Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 valeurs_vp: [ 0.116, 0.032, 0.013, 0.011, 0.008]     # Les valeurs du coût/km pour les bornes donnés ci-dessous. Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 
 # valeurs_vp[0] -- >bornes[0]
@@ -86,8 +86,6 @@ usage_infra_vp: [1.53, 0.41, 0.63, 0.69, 0.82]      # Source: Martin Konïng
 # Valeurs pour autoroutes, nationales, départementales, communales, et moyenne resp. 
 
 # List_cols - liste des colonnes pour l'ESE
-
-
 CO2_VP: 0.015837718         # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 CO2_VUL: 0.021854282        # # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
 CO2_PL: 0.081459549         # Source: MTES, Fiche outil "Valeurs de référence prescrites pour le calcul socio-économique", https://www.ecologie.gouv.fr/sites/default/files/V.2.pdf
@@ -96,4 +94,33 @@ Valeur_temp: 11.2  # Valeur pour Transports Urbains, tous modes, sans détail du
 
 
 intersect_file: 'C:\Users\mwendwa.kiko\Documents\Personal Kiko\Intersect_test.ver'     # Fichier avec la liste des zones par lesquelles passent tous nos tronçons. 
+
+
+# Accidentologie en année de référence
+## Ces chiffres sont pour l'année 2012: source - https://www.driea.ile-de-france.developpement-durable.gouv.fr/IMG/pdf/Bilan_2012_cle762114.pdf
+# victimes_tues_annee_calage: 312        
+# victimes_blesses_hospitalises_annee_calage: 4570
+# victimes_blesses_non_hospitalises_annee_calage: 17819
+accidents_per_vkm: 3.9e-7
+
+tues_100_accidents: [9.6, 4.8, 3.0, 3.1, 2.3]
+blesses_100_accidents: [37.4, 23.4, 12.3, 11.9, 7.7]
+blesses_legers_100_accidents: [101.6, 106.3, 115.8, 110.9, 123.2]
+
+valeur_vie: 3.83e+6
+valeur_blesse: 4.77e+5
+valeur_blesse_leger: 19.13e+3 
+valeur_dommages_materiels: 7065
+
+
+# Configuration du calcul des zones traversés par les tronçons et des noms des routes, tous les deux nécessaires dans l'évaluation socio-éco.
+calc_zones_traversed: 0         # Si == 1, le module ESE recalculera une nouvelle liste de zones traversées, sinon il utilisera la liste prédefini ci-dessous. 
+zones_traversed_file: C:\Users\mwendwa.kiko\Documents\VA Saclay\zones_traversed.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de zones traversés en faisant le calcul du coût de la pollution locale.        
+
+calc_avg_density_along_links: 0    # Si == 1, le module ESE recalculera une nouvelle liste de densité moyenne des zones adjacentes à chacune des tronçons, sinon il utilisera la liste prédefini ci-dessous. 
+avg_density_along_links_file: C:\Users\mwendwa.kiko\Documents\VA Saclay\avg_density_along_links.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de densité moyenne des zones adjacentes à chacune des tronçons en faisant le calcul du coût de la pollution locale.
+
+calc_routes_class: 0    # Si == 1, le module ESE recalculera une nouvelle liste des catégories des routes (autoroutes/nationales/départementales/communales) sinon il utilisera la liste prédefini ci-dessous. 
+routes_class_df_fle: C:\Users\mwendwa.kiko\Documents\VA Saclay\routes_class_df.xlsx     # Si calc_routes_class == 0, le module ESE utilisera cette liste de des catégories des routes en faisant le calcul du coût du coût d'usage des infrastructures et du bruit.
+
 

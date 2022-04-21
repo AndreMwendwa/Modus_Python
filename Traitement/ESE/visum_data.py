@@ -3,6 +3,8 @@ from Data.A_CstesModus import *
 import pandas as pd
 import Data.VisumPy.helpers2 as helpers
 import win32com.client as win32
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from dotmap import DotMap
 
 class visum_data:
@@ -17,12 +19,14 @@ class visum_data:
         # commute/school/childcare
         self.VTTS_others = yaml_content['VTTS_others']      # motif = 'others'
         self.taux_occpation = yaml_content['taux_occupation']
-        dbfile = open(Path(dossier + f'/1_Fichiers_intermediares/MODUSCaleUVP_df_{hor}_scen'), 'rb')
+        dbfile = open(os.path.join(dossier, '1_Fichiers_intermediares', f'MODUSCaleUVP_df_{hor}_scen'), 'rb')
+        # dbfile = open(Path(dossier + f'/1_Fichiers_intermediares/MODUSCaleUVP_df_{hor}_scen'), 'rb')
         self.flux_uvp = pkl.load(dbfile)
-        dbfile = open(Path(dossier + f'/1_Fichiers_intermediares/Modus_VP_motcat_scen_{hor}'), 'rb')
 
         # Pour chacun des motifs, on va créet une série, et le transformer en array numpy pour ensuite faire un
         # reshape pour créer les matrices qui sont les inputs de l'étape de calculation des temps moyens
+        dbfile = open(os.path.join(dossier, '1_Fichiers_intermediares', f'Modus_VP_motcat_scen_{hor}'), 'rb')
+        # dbfile = open(Path(dossier + f'/1_Fichiers_intermediares/Modus_VP_motcat_scen_{hor}'), 'rb')
         self.flux_apres_cm = pkl.load(dbfile)
         self.flux_motifs_drieat = pd.DataFrame(np.zeros(self.flux_apres_cm.shape))
         for col in self.flux_motifs_drieat.columns:
@@ -39,9 +43,30 @@ class visum_data:
         self.vkm_links = self.flux_links * self.lengths_links       # The vkm flows along the links
         self.temps_sum = self.temps[:cNbZone, :cNbZone].sum()    # Car dans VISUM il y a plus que les
         # cNbZone nombre de zones qui sont des zones ordinaires de MODUS
-        self.zones_traversed = self.zones_traversed_fn()       # List des zones traversées par des tronçons.
-        self.avg_density_along_links = self.avg_density_along_links_fn()
-        self.routes_class_df = self.routes_classes()        # Hierarchy of routes within the Visum network
+        if yaml_content['calc_zones_traversed'] == 1:
+            self.zones_traversed = self.zones_traversed_fn()       # List des zones traversées par des tronçons.
+        else:
+            self.zones_traversed = pd.read_excel(yaml_content['zones_traversed_file'])
+
+        if yaml_content['calc_avg_density_along_links'] == 1:
+            self.avg_density_along_links = self.avg_density_along_links_fn()       # List des zones traversées par des tronçons.
+        else:
+            self.avg_density_along_links = pd.read_excel(yaml_content['avg_density_along_links_file'])['densh_moy']
+
+        # self.avg_density_along_links = self.avg_density_along_links_fn()
+        # self.routes_class_df = self.routes_classes()        # Hierarchy of routes within the Visum network
+
+        if yaml_content['calc_routes_class'] == 1:
+            self.routes_class_df = self.routes_classes()
+        else:
+            self.routes_class_df = pd.read_excel(yaml_content['routes_class_df_fle'])
+
+        ## Les UVP en année de calage
+        dbfile = open(os.path.join(dossier, '1_Fichiers_intermediares', f'ModusUVP_df{hor}_actuel'), 'rb')
+        # dbfile = open(Path(dossier + f'/1_Fichiers_intermediares/ModusUVP_df{hor}_actuel'), 'rb')
+        self.flux_uvp_actuel = pkl.load(dbfile)
+        self.flux_uvp_actuel_sum = self.flux_uvp_actuel['FLUX'].sum()
+
 
     def load_skims(self):
         visum_path = os.path.join(self.dossier, '2_Bouclage')
@@ -66,6 +91,10 @@ class visum_data:
         myvisum = win32.Dispatch("Visum.Visum")
         myvisum.LoadVersion(intersect_file)
         zones_traversed = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('Zones_traversed'))
+        return zones_traversed
+
+    def zones_traversed_fn_new(self):
+        zones_traversed = pd.read_csv(r'C:\Users\mwendwa.kiko\Documents\VA Saclay\zones_traversed.csv')
         return zones_traversed
 
     def avg_density_along_links_fn(self):

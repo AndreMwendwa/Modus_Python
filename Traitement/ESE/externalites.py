@@ -43,7 +43,7 @@ class externalites:
         Inputs: vkm for one scenario
         :return: cost of GHG emissions for one scenario
         '''
-        ghg_vp = yaml_content['CO2_prix_tonne'] * self.visum_data.vkm_links.sum()
+        ghg_vp = yaml_content['CO2_prix_tonne'] * yaml_content['VP_CO2_gkm']/1e6 * self.visum_data.vkm_links.sum()
         ghg_LCA_vp = yaml_content['VP_LCA'] * self.visum_data.vkm_links.sum()
         return ghg_vp, ghg_LCA_vp
 
@@ -61,7 +61,7 @@ class externalites:
                     np.where(route_classe_vkm['Comm'] == 1, vkm_links * yaml_content['usage_infra_vp'][3],
                              vkm_links * yaml_content['usage_infra_vp'][4],
                  )))))
-        return usage_infra_cout
+        return usage_infra_cout.sum()/100
 
     def noise(self):
         route_classes = self.visum_data.routes_class_df.copy()
@@ -205,6 +205,70 @@ class externalites:
         sum_noise = (sum_autoroutes + sum_nationales_departementales + sum_communales + sum_sans_nom)/1000   # We divide
         # by 1000 because the values given in the socio-eco evaluation guidelines are per 1000vkm.
         return sum_noise
+
+    def accidentologie(self):
+        bornes = [x for x in reversed(yaml_content['bornes'])]   # Limites de densité qu'on utilise
+        # Nb de tues, blesses, blesses legers pour 100 accidents
+        tues = [x/100 for x in yaml_content['tues_100_accidents']]
+        blesses = [x/100 for x in yaml_content['blesses_100_accidents']]
+        blesses_legers = [x/100 for x in yaml_content['blesses_legers_100_accidents']]
+
+        # Nb d'accidents/vkm calculé précedemment.
+        accidents_per_vkm =  yaml_content['accidents_per_vkm']
+
+        avg_density = self.visum_data.avg_density_along_links.copy()
+        vkm_links = self.visum_data.vkm_links.copy()
+
+        # Les valeurs à appliquer en évaluant le cout de l'accidentologie.
+        valeur_vie = yaml_content['valeur_vie']
+        valeur_blesse = yaml_content['valeur_blesse']
+        valeur_blesse_leger = yaml_content['valeur_blesse_leger']
+        valeur_dommages_materiels = yaml_content['valeur_dommages_materiels']
+
+        accidents = pd.DataFrame(vkm_links * accidents_per_vkm)       # Nb d'accidents per route, selon les vkm pour chaque route.
+        accidents.columns = ['Accidents']
+
+        # Calcul du nombre de tués, blessés, blésses legers avec les seuils de densité.
+        accidents['Tues'] = (
+            np.where(avg_density < bornes[0], tues[0] * accidents['Accidents'],
+              np.where((avg_density > bornes[0]) & (avg_density < bornes[1]), tues[1] * accidents['Accidents'],
+                np.where((avg_density > bornes[1]) & (avg_density < bornes[2]), tues[2] * accidents['Accidents'],
+                  np.where((avg_density > bornes[2]) & (avg_density < bornes[3]), tues[3] * accidents['Accidents'],
+                    tues[4] * accidents['Accidents']
+                     )
+        ))))
+
+        accidents['Blesses'] = (
+            np.where(avg_density < bornes[0], blesses[0] * accidents['Accidents'],
+                     np.where((avg_density > bornes[0]) & (avg_density < bornes[1]), blesses[1] * accidents['Accidents'],
+                              np.where((avg_density > bornes[1]) & (avg_density < bornes[2]),
+                                       blesses[2] * accidents['Accidents'],
+                                       np.where((avg_density > bornes[2]) & (avg_density < bornes[3]),
+                                                blesses[3] * accidents['Accidents'],
+                                                blesses[4] * accidents['Accidents']
+                                                )
+                                       ))))
+
+        accidents['Blesses_legers'] = (
+            np.where(avg_density < bornes[0], blesses_legers[0] * accidents['Accidents'],
+                     np.where((avg_density > bornes[0]) & (avg_density < bornes[1]),
+                              blesses_legers[1] * accidents['Accidents'],
+                              np.where((avg_density > bornes[1]) & (avg_density < bornes[2]),
+                                       blesses_legers[2] * accidents['Accidents'],
+                                       np.where((avg_density > bornes[2]) & (avg_density < bornes[3]),
+                                                blesses_legers[3] * accidents['Accidents'],
+                                                blesses_legers[4] * accidents['Accidents']
+                                                )
+                                       ))))
+        cout_tues = accidents['Tues'].sum() * valeur_vie
+        cout_blesses = accidents['Blesses'].sum() * valeur_blesse
+        cout_blesses_legers = accidents['Blesses_legers'].sum() * valeur_blesse_leger
+        cout_dommages_materiels = accidents['Accidents'].sum() * valeur_dommages_materiels
+
+        cout_accidentologie = cout_tues + cout_blesses + cout_blesses_legers + cout_dommages_materiels
+        return cout_accidentologie
+
+
 
 
 
@@ -614,10 +678,10 @@ def usage_infras(fichier1, fichier2):
 
 
 if __name__ == '__main__':
-    f1 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_avec_gratuite'
-    f2 = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_sans_gratuite'
+    f1 = Path(r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_avec_gratuite')
+    f2 = Path(r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_files\Econtrans_sans_gratuite')
     # usage_infras(f1, f2)
     visum_data1 = visum_data(f1, 'PPM')
     externalites = externalites(visum_data1)
-    # externalites.usage_infras()
-    externalites.noise()
+    print(externalites.polln_local())
+    print(externalites.accidentologie())

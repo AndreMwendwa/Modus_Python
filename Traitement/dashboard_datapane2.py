@@ -8,6 +8,7 @@ import sys
 import seaborn as sns
 import sys
 from textwrap import wrap
+from ESE import visum_data, user_veh, user_pt, externalites, user_md_cy_tc
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Quatre_Etapes.dossiers_simul import dir_dataTemp
@@ -249,8 +250,121 @@ def dashboard_datapane():
                                             plt.figure(figsize=(0, 0)), plt.figure(figsize=(0, 0)), \
                                                 plt.figure(figsize=(0, 0)), plt.figure(figsize=(0, 0))
 
+
+    def indicateurs_socio_eco():
+        dictionnaire_user_costs = {}  # Pour en faire un dataframe après
+        dictionnaire_externalites = {}    # Pour en faire un dataframe après
+        dossier_projet = os.path.abspath(os.path.join(dir_dataTemp, '..'))
+                
+        def outputs_socio_eco(hor):
+            visum_data_object = visum_data.visum_data(dossier_projet, hor)
+            all_outputs_ROTH = user_veh.all_outputs_ROTH(visum_data_object)
+            user_md_cy_tc_object = user_md_cy_tc.user_md_cy_tc(dossier_projet, hor)
+            externalites_object = externalites.externalites(visum_data_object)
+            dictionnaire_user_costs[f'Road user generalised cost - time component, {hor}'] = \
+                all_outputs_ROTH.avg_cost_time()
+            dictionnaire_user_costs[f'Road user generalised cost - money component, {hor}'] = \
+                all_outputs_ROTH.generalised_cost_money()
+            dictionnaire_user_costs[f'PT user generalised cost - time component, {hor}'] = \
+                user_md_cy_tc_object.avg_cost_time_tc()
+            dictionnaire_user_costs[f'PT user generalised cost - money component, {hor}'] = \
+                user_md_cy_tc_object.avg_cost_money_tc()
+            dictionnaire_user_costs[f'Walkers generalised cost - time component, {hor}'] = \
+                user_md_cy_tc_object.avg_cost_time_md()
+            dictionnaire_user_costs[f'Cyclists generalised cost - money component, {hor}'] = \
+                user_md_cy_tc_object.avg_cost_time_cy()
+            dictionnaire_externalites['Cost of local pollution'] = externalites_object.polln_local()
+            ghg, ghg_LCA = externalites_object.ghg_LCA_fn()
+            dictionnaire_externalites['Cost of climate change'] = ghg
+            dictionnaire_externalites['Cost of climate change - life cycle effects'] = ghg_LCA
+            dictionnaire_externalites['Cost of infrastructure usage'] = externalites_object.usage_infras()
+            dictionnaire_externalites['Cost of noise'] = externalites_object.noise()
+
+
+        if PPM:
+            outputs_socio_eco('PPM')
+        if PCJ:
+            outputs_socio_eco('PCJ')
+        if PPS:
+            outputs_socio_eco('PPS')
+        indic_socio_eco = pd.DataFrame(dictionnaire_user_costs, index=['Cost per user per hour (€)'])
+        indic_socio_eco = indic_socio_eco.T
+
+        externalites_df = pd.DataFrame(dictionnaire_externalites, index=['Total Cost per hour (€)'])
+        externalites_df = externalites_df.T.round(0)
+        return indic_socio_eco, externalites_df
+
+    # def indicateurs_socio_eco():
+    #     dictionnaire_user_costs = {}       # Pour en faire un dataframe après
+    #     dictionnaire_externalites = {}
+    #     dossier_projet = os.path.abspath(os.path.join(dir_dataTemp, '..'))
+    #
+    #     if PPM:
+    #         visum_data_PPM = visum_data.visum_data(dossier_projet, 'PPM')
+    #         externalites
+    #         all_outputs_ROTH_PPM = user_veh.all_outputs_ROTH(visum_data_PPM)
+    #         user_md_cy_tc_PPM = user_md_cy_tc.user_md_cy_tc(dossier_projet, 'PPM')
+    #         dictionnaire_user_costs['Road user generalised cost - time component, PPM'] = \
+    #             all_outputs_ROTH_PPM.generalised_cost_time()
+    #         dictionnaire_user_costs['Road user generalised cost - money component, PPM'] = \
+    #             all_outputs_ROTH_PPM.generalised_cost_money()
+    #         dictionnaire_user_costs['PT user generalised cost - time component, PPM'] = \
+    #             user_md_cy_tc_PPM.generalised_cost_time_tc()
+    #         dictionnaire_user_costs['PT user generalised cost - money component, PPM'] = \
+    #             user_md_cy_tc_PPM.generalised_cost_money_tc()
+    #         dictionnaire_user_costs['Walkers generalised cost - time component, PPM'] = \
+    #             user_md_cy_tc_PPM.generalised_cost_time_md()
+    #         dictionnaire_user_costs['Cyclists generalised cost - money component, PPM'] = \
+    #             user_md_cy_tc_PPM.generalised_cost_time_cy()
+    #
+    #
+    #     if PCJ:
+    #         visum_data_PCJ = visum_data.visum_data(dossier_projet, 'PCJ')
+    #         all_outputs_ROTH_PCJ = user_veh.all_outputs_ROTH(visum_data_PCJ)
+    #         user_md_cy_tc_PCJ = user_md_cy_tc.user_md_cy_tc(dossier_projet, 'PCJ')
+    #         dictionnaire_user_costs['Road user generalised cost - time component, PCJ'] = \
+    #             all_outputs_ROTH_PCJ.generalised_cost_time()
+    #         dictionnaire_user_costs['Road user generalised cost - money component, PCJ'] = \
+    #             all_outputs_ROTH_PCJ.generalised_cost_money()
+    #         dictionnaire_user_costs['PT user generalised cost - time component, PCJ'] = \
+    #             user_md_cy_tc_PCJ.generalised_cost_time_tc()
+    #         dictionnaire_user_costs['PT user generalised cost - money component, PCJ'] = \
+    #             user_md_cy_tc_PCJ.generalised_cost_money_tc()
+    #         dictionnaire_user_costs['Walkers generalised cost - time component, PCJ'] = \
+    #             user_md_cy_tc_PCJ.generalised_cost_time_md()
+    #         dictionnaire_user_costs['Cyclists generalised cost - money component, PCJ'] = \
+    #             user_md_cy_tc_PCJ.generalised_cost_time_cy()
+    #
+    #     if PPS:
+    #         visum_data_PPS = visum_data.visum_data(dossier_projet, 'PPS')
+    #         all_outputs_ROTH_PPS = user_veh.all_outputs_ROTH(visum_data_PPS)
+    #         user_md_cy_tc_PPS = user_md_cy_tc.user_md_cy_tc(dossier_projet, 'PPS')
+    #         dictionnaire_user_costs['Road user generalised cost - time component, PPS'] = \
+    #             all_outputs_ROTH_PPS.generalised_cost_time()
+    #         dictionnaire_user_costs['Road user generalised cost - money component, PPS'] = \
+    #             all_outputs_ROTH_PPS.generalised_cost_money()
+    #         dictionnaire_user_costs['PT user generalised cost - time component, PPS'] = \
+    #             user_md_cy_tc_PPS.generalised_cost_time_tc()
+    #         dictionnaire_user_costs['PT user generalised cost - money component, PPS'] = \
+    #             user_md_cy_tc_PPS.generalised_cost_money_tc()
+    #         dictionnaire_user_costs['Walkers generalised cost - time component, PPS'] = \
+    #             user_md_cy_tc_PPS.generalised_cost_time_md()
+    #         dictionnaire_user_costs['Cyclists generalised cost - money component, PPS'] = \
+    #             user_md_cy_tc_PPS.generalised_cost_time_cy()
+    #     indic_socio_eco = pd.DataFrame(dictionnaire_user_costs, index=['Indicateurs socio-économiques'])
+    #     indic_socio_eco = indic_socio_eco.T
+    #
+    #     # Graph
+    #     fig, ax = plt.subplots()
+    #     sns.barplot(x=indic_socio_eco['Indicateurs socio-économiques'], y=indic_socio_eco['Indicateurs socio-économiques'])
+    #     return indic_socio_eco, ax
+
+    # Créer les variables pour les utiliser après dans le dashboard à venir
+    indic_socio_eco, externalites_df = indicateurs_socio_eco()
+
     # Début du code qui lance le dashboard.
     report = dp.Report(
+        dp.Page(
     '# Dashboard simple de MODUS',
     '## Le type de simulation',
     dp.Table(tous_mobs.simul),
@@ -309,7 +423,18 @@ def dashboard_datapane():
     dp.Group(blocks=[dp.Plot(fig20), dp.Plot(fig21)], columns=2),
     dp.Group(blocks=[dp.Plot(fig22), dp.Plot(fig23)], columns=2),
     dp.Group(blocks=[dp.Plot(fig24), dp.Plot(fig25)], columns=2),
-    dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport')
+    dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport'),
+    title='Indicateurs de mobilité',
+        ),
+        dp.Page(
+            '# User costs',
+            dp.Table(indic_socio_eco),
+
+            '# Externalities',
+            dp.Table(externalites_df),
+            
+            title='Indicateurs socio-économiques'
+        )
     )
     name_file = dir_dataTemp.split('\\')[-3]
     # report.save(f"{name_file}.html", open=True)
