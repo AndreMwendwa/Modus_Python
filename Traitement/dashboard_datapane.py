@@ -470,6 +470,10 @@ def dashboard_datapane():
 
     '## Les parts modaux : les modes motorisés',
 
+
+
+
+
     "## Les indicateurs de l'affectation",
     dp.Table(tous_mobs.affect_PPM[0]), dp.Table(tous_mobs.affect_PPM[1]), dp.Table(tous_mobs.affect_PPM[2]), 
                                                                                    dp.Table(tous_mobs.affect_PPM[3]),
@@ -495,8 +499,7 @@ def dashboard_datapane():
     "### Periode = PPS",
     dp.Group(blocks=[dp.Plot(fig20), dp.Plot(fig21)], columns=2),
     dp.Group(blocks=[dp.Plot(fig22), dp.Plot(fig23)], columns=2),
-    dp.Group(blocks=[dp.Plot(fig24), dp.Plot(fig25)], columns=2),
-    dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport')
+    dp.Group(blocks=[dp.Plot(fig24), dp.Plot(fig25)], columns=2)
     )
     name_file = dir_dataTemp.split('\\')[-3]
     # report.save(f"{name_file}.html", open=True)

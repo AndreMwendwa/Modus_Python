@@ -58,48 +58,48 @@ def mat_iter(H, par, itern):
 
 
 # 2. Analyse des matrices utilisées pour l'itération
-# def analyse_iter(itern):
-#     if itern == 1:
-#         MODUSUVP_scen_prec = np.zeros((cNbZone, cNbZone)),
-#     else:
-#         dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen_prec', 'rb')
-#         MODUSUVP_scen_prec = pkl.load(dbfile)
-#
-#     VAL = np.zeros((1, (PPM + PCJ + PPS)*4 + 1))
-#     VAL[0, 0] = itern
-#
-#     # - b. Calcul des volumes des matrices
-#     def val_fill(H, ini):
-#         # -- matrice UVP modus finalisée
-#         dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen', 'rb')
-#         MODUSUVP = pkl.load(dbfile)
-#         VAL[0, ini - 1] = MODUSUVP['FLUX'].sum()
-#
-#         # -- matrice UVP après report de calage
-#         dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
-#         MODUSCaleUVP = pkl.load(dbfile)
-#         VAL[0, ini] = MODUSCaleUVP['FLUX'].sum()
-#
-#         # -- matrice UVP affectée lors de l'itération
-#         dbfile = open(f'{dir_dataTemp}AFFECT{H}_{itern}', 'rb')
-#         AFFECT = pkl.load(dbfile)
-#         VAL[0, ini + 1] = AFFECT['FLUX'].sum()
-#
-# #         -- comparaison des flux par RMSE
-# # 		 --- calcul du RMSE
-#         VAL[0, ini + 2] = np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum())
-#
-#         # --- mise à jour de la matrice MODUS "mémoire" en vue de l'itération suivante
-#         dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen_prec', 'wb')
-#         pkl.dump(MODUSUVP, dbfile)
-#         dbfile.close()
-#
-#     if PPM == 1:
-#         val_fill('PPM', 2)
-#     if PCJ == 1:
-#         val_fill('PCJ', (PPM * 4 + 2))
-#     if PPS == 1:
-#         val_fill('PCJ', ((PPM + PCJ) * 4 + 2))
+def analyse_iter(itern):
+    if itern == 1:
+        MODUSUVP_scen_prec = np.zeros((cNbZone, cNbZone)),
+    else:
+        dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen_prec', 'rb')
+        MODUSUVP_scen_prec = pkl.load(dbfile)
+
+    VAL = np.zeros((1, (PPM + PCJ + PPS)*4 + 1))
+    VAL[0, 0] = itern
+
+    # - b. Calcul des volumes des matrices
+    def val_fill(H, ini):
+        # -- matrice UVP modus finalisée
+        dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen', 'rb')
+        MODUSUVP = pkl.load(dbfile)
+        VAL[0, ini - 1] = MODUSUVP['FLUX'].sum()
+
+        # -- matrice UVP après report de calage
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'rb')
+        MODUSCaleUVP = pkl.load(dbfile)
+        VAL[0, ini] = MODUSCaleUVP['FLUX'].sum()
+
+        # -- matrice UVP affectée lors de l'itération
+        dbfile = open(f'{dir_dataTemp}AFFECT{H}_{itern}', 'rb')
+        AFFECT = pkl.load(dbfile)
+        VAL[0, ini + 1] = AFFECT['FLUX'].sum()
+
+#         -- comparaison des flux par RMSE
+# 		 --- calcul du RMSE
+        VAL[0, ini + 2] = np.sqrt((MODUSUVP - MODUSUVP_scen_prec).sum())
+
+        # --- mise à jour de la matrice MODUS "mémoire" en vue de l'itération suivante
+        dbfile = open(f'{dir_dataTemp}MODUSUVP_{H}_scen_prec', 'wb')
+        pkl.dump(MODUSUVP, dbfile)
+        dbfile.close()
+
+    if PPM == 1:
+        val_fill('PPM', 2)
+    if PCJ == 1:
+        val_fill('PCJ', (PPM * 4 + 2))
+    if PPS == 1:
+        val_fill('PCJ', ((PPM + PCJ) * 4 + 2))
 
     # - c. Sortie des résultats
 #     Kiko - Pas terminé du coup.

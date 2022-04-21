@@ -1,17 +1,21 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
+import pickle as pkl
 import dotmap
 import os
+import sys
 import seaborn as sns
 import sys
 from textwrap import wrap
 import PySimpleGUI as sg
-from Traitement.ESE.vkm_vhr_gen import vkm_vhr_fn
-from Traitement.ESE.somme import *
-from Traitement.ESE import user_veh
+from pathlib import Path
+from copy import deepcopy
+import yaml
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from Quatre_Etapes.dossiers_simul import dir_dataTemp
 from Data.A_CstesModus import *
 from pandas.plotting import parallel_coordinates
 import datapane as dp
@@ -28,14 +32,14 @@ def dashboard_datapane_comparaison():
     '''
     def GetFilesToCompare():
         '''Pour séléctionner les dossiers avec les résultats'''
-        form_rows = [[sg.Text('Veuillez choisir les dossiers qui contiennent des résultats que vous aimeriez comparer')],
-                     [sg.Text('Scénario de projet', size=(20, 1)),
+        form_rows = [[sg.Text('Fichier à comparer avec')],
+                     [sg.Text('Scénario 1', size=(15, 1)),
                       sg.InputText(key='-file1-'), sg.FolderBrowse()],
-                     [sg.Text('Scénario de référence', size=(20, 1)), sg.InputText(key='-file2-'),
+                     [sg.Text('Scénario 2', size=(15, 1)), sg.InputText(key='-file2-'),
                       sg.FolderBrowse(target='-file2-')],
                      [sg.Submit(), sg.Cancel()]]
 
-        window = sg.Window('Choix de scénarios', form_rows)
+        window = sg.Window('File Compare', form_rows)
         event, values = window.read()
         window.close()
         return event, values
@@ -68,10 +72,6 @@ def dashboard_datapane_comparaison():
                 for col in tous_mobs1[key][i].columns:
                     if tous_mobs[key][i][col].dtypes != 'object':
                         tous_mobs[key][i][col] = tous_mobs1[key][i][col] - tous_mobs2[key][i][col]
-
-    # vkm2, vhr2, *autres2 = vkm_vhr_fn(f2)
-    # vkm1, vhr1, *autres1 = vkm_vhr_fn(f1)
-
 
     ## Arrondir les valeurs du dataframe de générations
     # différemment
@@ -489,7 +489,7 @@ def dashboard_datapane_comparaison():
         VP1_PCJ_Vhr = VP1_PCJ.FLUX * tvpm
         VP1_PCJ_Vhr_total = VP1_PCJ_Vhr.sum()
         couts_df_scen1 = pd.concat([couts_df_scen1, pd.DataFrame.from_dict({'PCJ': [VP1_PCJ_VKM_total, VP1_PCJ_Vhr_total]})], axis=1)
-
+        
     if PPS:
         dbfile = open(Path(f1 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PPS_scen'), 'rb')
         VP1_PPS = pkl.load(dbfile)
@@ -499,100 +499,71 @@ def dashboard_datapane_comparaison():
         VP1_PPS_Vhr_total = VP1_PPS_Vhr.sum()
         couts_df_scen1 = pd.concat([couts_df_scen1, pd.DataFrame.from_dict({'PPS': [VP1_PPS_VKM_total, VP1_PPS_Vhr_total]})], axis=1)
     couts_df_scen1.index = ['VKM', 'Veh-hr']
-    #
-    # # Scénario 2
-    # dbfile = open(f'{Path(f2)}/1_Fichiers_intermediares/bdinter_scen', 'rb')
-    # bdinter = pkl.load(dbfile)
-    # dvol = bdinter['DVOL']
-    # tvpm, tpmc, tvps = bdinter['TVPM'], bdinter['TVPC'], bdinter['TVPS']  # Temps VP pour les trois périodes
-    #
-    # couts_df_scen2 = pd.DataFrame()  # Le dataframe où seront enregistrés des résultats du calcul une fois terminée.
-    #
-    # if PPM:
-    #     dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PPM_scen'), 'rb')
-    #     VP2_PPM = pkl.load(dbfile)
-    #     VP2_PPM_VKM = VP2_PPM.FLUX * dvol
-    #     VP2_PPM_VKM_total = VP2_PPM_VKM.sum()
-    #     VP2_PPM_Vhr = VP2_PPM.FLUX * tvpm
-    #     VP2_PPM_Vhr_total = VP2_PPM_Vhr.sum()
-    #     couts_df_scen2 = pd.concat(
-    #         [couts_df_scen2, pd.DataFrame.from_dict({'PPM': [VP2_PPM_VKM_total, VP2_PPM_Vhr_total]})], axis=1)
-    #
-    # if PCJ:
-    #     dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PCJ_scen'), 'rb')
-    #     VP2_PCJ = pkl.load(dbfile)
-    #     VP2_PCJ_VKM = VP2_PCJ.FLUX * dvol
-    #     VP2_PCJ_VKM_total = VP2_PCJ_VKM.sum()
-    #     VP2_PCJ_Vhr = VP2_PCJ.FLUX * tvpm
-    #     VP2_PCJ_Vhr_total = VP2_PCJ_Vhr.sum()
-    #     couts_df_scen2 = pd.concat(
-    #         [couts_df_scen2, pd.DataFrame.from_dict({'PCJ': [VP2_PCJ_VKM_total, VP2_PCJ_Vhr_total]})], axis=1)
-    #
-    # if PPS:
-    #     dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PPS_scen'), 'rb')
-    #     VP2_PPS = pkl.load(dbfile)
-    #     VP2_PPS_VKM = VP2_PPS.FLUX * dvol
-    #     VP2_PPS_VKM_total = VP2_PPS_VKM.sum()
-    #     VP2_PPS_Vhr = VP2_PPS.FLUX * tvpm
-    #     VP2_PPS_Vhr_total = VP2_PPS_Vhr.sum()
-    #     couts_df_scen2 = pd.concat(
-    #         [couts_df_scen2, pd.DataFrame.from_dict({'PPS': [VP2_PPS_VKM_total, VP2_PPS_Vhr_total]})], axis=1)
-    # couts_df_scen2.index = ['VKM', 'Veh-hr']
-    #
-    #
-    # # Différence de VKM, Veh-hr
-    # couts_df_diff = couts_df_scen1 - couts_df_scen2     # Difference entre les dataframes pour trouver le dataframe
-    # # de comparaison
-    # cout_df_diff_total = couts_df_diff.sum(axis=1)
-    # cout_diff_comparative = cout_df_diff_total/couts_df_scen1.sum(axis=1) * 100
-    # cout_df_diff_total.name = f'Difference en valeur absolu entre les scénarios (unités)'
-    # cout_diff_comparative.name = f'Différence relative entre les scénarios (%)'
-    # valeurs_tutelaires = pd.DataFrame.from_dict({'Valeurs_tutelaires (€/unité)': [yaml_content['CO2_VP'],
-    #                                                                     yaml_content['Valeur_temp']]})
-    # valeurs_tutelaires.index = ['VKM', 'Veh-hr']
-    # cout_df_diff_total = pd.concat([cout_df_diff_total, cout_diff_comparative], axis=1)
-    # cout_df_diff_total = pd.concat([cout_df_diff_total, valeurs_tutelaires], axis=1)
-    # cout_df_diff_total['Valeurs économiques (€)'] = cout_df_diff_total[f'Difference en valeur absolu entre les scénarios (unités)'] * \
-    #                                             cout_df_diff_total['Valeurs_tutelaires (€/unité)']
-    # decimales = pd.Series([2, 2, 4, 2], index=cout_df_diff_total.columns)    # A utiliser pour arrondir chaque colonne
-    # # différemment
-    # cout_df_diff_total = cout_df_diff_total.round(decimales)   # On doit arrondir deux fois, puisque on va vréer une ligne qui
-    # # contient un mélange de string et de float, alors il faut arrondir toute la dataframe avant de la rajouter.
-    # somme = pd.DataFrame({f'Difference en valeur absolu entre les scénarios (unités)': '-', 'Valeurs_tutelaires (€/unité)': '-',
-    #                                'Valeurs économiques (€)': cout_df_diff_total['Valeurs économiques (€)'].sum()},
-    #                                index=['Total'])
-    # cout_df_diff_total = pd.concat([cout_df_diff_total, somme])
-    # cout_df_diff_total.fillna(inplace=True, value='-')
-    # cout_df_diff_total = cout_df_diff_total.round(2)
 
-    # # Utilisant les chiffres des tronçons
-    # couts_df_scen1 = pd.DataFrame({'PPM': [autres1[0], autres1[2]], 'PPS': [autres1[1], autres1[3]]},
-    #                               index=['VKM', 'Veh-hr'])
-    # couts_df_scen2 = pd.DataFrame({'PPM': [autres2[0], autres2[2]], 'PPS': [autres2[1], autres2[3]]},
-    #                               index=['VKM', 'Veh-hr'])
-    # couts_df_diff = couts_df_scen1 - couts_df_scen2
-    #
-    # cout_df_diff_total = pd.DataFrame({'VKM': vkm2 - vkm1, 'Vhr': vhr2 - vhr1},
-    #                              index=['Difference en valeur absolu entre les scénarios (unités)'])
-    # cout_df_diff_total = cout_df_diff_total.T
-    # cout_df_diff_total['Différence relative entre les scénarios (%)'] = \
-    #     cout_df_diff_total['Difference en valeur absolu entre les scénarios (unités)']/pd.Series([vkm1, vhr1], index=['VKM', 'Vhr']) * 100
-    # cout_df_diff_total['Valeurs_tutelaires (€/unité)'] = pd.DataFrame({'Valeurs_tutelaires (€/unité)':[yaml_content['CO2_VP']
-    #     , yaml_content['Valeur_temp']]}, index=['VKM', 'Vhr'])
-    # cout_df_diff_total['Valeurs économiques (€)'] = cout_df_diff_total['Difference en valeur absolu entre les scénarios (unités)'] * \
-    #                                                 cout_df_diff_total['Valeurs_tutelaires (€/unité)']
-    # decimales = pd.Series([2, 2, 4, 2], index=cout_df_diff_total.columns)  # A utiliser pour arrondir chaque colonne
-    # # # différemment
-    # cout_df_diff_total = cout_df_diff_total.round(decimales)
-    # somme = pd.DataFrame(
-    #     {f'Difference en valeur absolu entre les scénarios (unités)': '-', 'Valeurs_tutelaires (€/unité)': '-',
-    #                                 'Valeurs économiques (€)': cout_df_diff_total['Valeurs économiques (€)'].sum()},
-    #                                 index=['Total'])
-    # cout_df_diff_total = pd.concat([cout_df_diff_total, somme])
-    # cout_df_diff_total.fillna(inplace=True, value='-')
-    # cout_df_diff_total = cout_df_diff_total.round(2)
+    # Scénario 2
+    dbfile = open(f'{Path(f2)}/1_Fichiers_intermediares/bdinter_scen', 'rb')
+    bdinter = pkl.load(dbfile)
+    dvol = bdinter['DVOL']
+    tvpm, tpmc, tvps = bdinter['TVPM'], bdinter['TVPC'], bdinter['TVPS']  # Temps VP pour les trois périodes
 
-    couts_df_diff, cout_df_diff_total, couts_df_scen1, couts_df_scen2 = calcul_socio_eco(f1, f2)
+    couts_df_scen2 = pd.DataFrame()  # Le dataframe où seront enregistrés des résultats du calcul une fois terminée.
+
+    if PPM:
+        dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PPM_scen'), 'rb')
+        VP2_PPM = pkl.load(dbfile)
+        VP2_PPM_VKM = VP2_PPM.FLUX * dvol
+        VP2_PPM_VKM_total = VP2_PPM_VKM.sum()
+        VP2_PPM_Vhr = VP2_PPM.FLUX * tvpm
+        VP2_PPM_Vhr_total = VP2_PPM_Vhr.sum()
+        couts_df_scen2 = pd.concat(
+            [couts_df_scen2, pd.DataFrame.from_dict({'PPM': [VP2_PPM_VKM_total, VP2_PPM_Vhr_total]})], axis=1)
+
+    if PCJ:
+        dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PCJ_scen'), 'rb')
+        VP2_PCJ = pkl.load(dbfile)
+        VP2_PCJ_VKM = VP2_PCJ.FLUX * dvol
+        VP2_PCJ_VKM_total = VP2_PCJ_VKM.sum()
+        VP2_PCJ_Vhr = VP2_PCJ.FLUX * tvpm
+        VP2_PCJ_Vhr_total = VP2_PCJ_Vhr.sum()
+        couts_df_scen2 = pd.concat(
+            [couts_df_scen2, pd.DataFrame.from_dict({'PCJ': [VP2_PCJ_VKM_total, VP2_PCJ_Vhr_total]})], axis=1)
+
+    if PPS:
+        dbfile = open(Path(f2 + '/1_Fichiers_intermediares/MODUSCaleUVP_df_PPS_scen'), 'rb')
+        VP2_PPS = pkl.load(dbfile)
+        VP2_PPS_VKM = VP2_PPS.FLUX * dvol
+        VP2_PPS_VKM_total = VP2_PPS_VKM.sum()
+        VP2_PPS_Vhr = VP2_PPS.FLUX * tvpm
+        VP2_PPS_Vhr_total = VP2_PPS_Vhr.sum()
+        couts_df_scen2 = pd.concat(
+            [couts_df_scen2, pd.DataFrame.from_dict({'PPS': [VP2_PPS_VKM_total, VP2_PPS_Vhr_total]})], axis=1)
+    couts_df_scen2.index = ['VKM', 'Veh-hr']
+
+
+    # Différence de VKM, Veh-hr
+    couts_df_diff = couts_df_scen1 - couts_df_scen2     # Difference entre les dataframes pour trouver le dataframe
+    # de comparaison
+    cout_df_diff_total = couts_df_diff.sum(axis=1)
+    cout_diff_comparative = cout_df_diff_total/couts_df_scen1.sum(axis=1) * 100
+    cout_df_diff_total.name = f'Difference en valeur absolu entre les scénarios (unités)'
+    cout_diff_comparative.name = f'Différence relative entre les scénarios (%)'
+    valeurs_tutelaires = pd.DataFrame.from_dict({'Valeurs_tutelaires (€/unité)': [yaml_content['CO2_VP'],
+                                                                        yaml_content['Valeur_temp']]})
+    valeurs_tutelaires.index = ['VKM', 'Veh-hr']
+    cout_df_diff_total = pd.concat([cout_df_diff_total, cout_diff_comparative], axis=1)
+    cout_df_diff_total = pd.concat([cout_df_diff_total, valeurs_tutelaires], axis=1)
+    cout_df_diff_total['Valeurs économiques (€)'] = cout_df_diff_total[f'Difference en valeur absolu entre les scénarios (unités)'] * \
+                                                cout_df_diff_total['Valeurs_tutelaires (€/unité)']
+    decimales = pd.Series([2, 2, 4, 2], index=cout_df_diff_total.columns)    # A utiliser pour arrondir chaque colonne
+    # différemment
+    cout_df_diff_total = cout_df_diff_total.round(decimales)   # On doit arrondir deux fois, puisque on va vréer une ligne qui
+    # contient un mélange de string et de float, alors il faut arrondir toute la dataframe avant de la rajouter.
+    somme = pd.DataFrame({f'Difference en valeur absolu entre les scénarios (unités)': '-', 'Valeurs_tutelaires (€/unité)': '-',
+                                   'Valeurs économiques (€)': cout_df_diff_total['Valeurs économiques (€)'].sum()},
+                                   index=['Total'])
+    cout_df_diff_total = pd.concat([cout_df_diff_total, somme])
+    cout_df_diff_total.fillna(inplace=True, value='-')
+    cout_df_diff_total = cout_df_diff_total.round(2)
 
     # Les graphes des indicateurs socio-éco
     fig30, ax30 = plt.subplots()
@@ -631,15 +602,14 @@ def dashboard_datapane_comparaison():
             dp.Group(blocks=[dp.Plot(fig32), dp.Plot(fig33)], columns=2),
 
             '# Calcul socio-économique',
-            f'## Scénario de projet = {name1} \n ## Scénario de réference = {name2}',
+            f'## Scénario 1 = {name1} \n ## Scénario 2 = {name2}',
             dp.Table(cout_df_diff_total),
-            dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport'),
             title='Résumé',
         ),
         dp.Page(
         '# Comparaison des résultats de deux simulations de MODUS',
-        f'## Scénario de projet = {name1}',
-        f'## Scénario de réference = {name2}',
+        f'## Simulation 1 = {name1}',
+        f'## Simulation 2 = {name2}',
         '## Le type de simulation',
         dp.Table(tous_mobs.simul),
 
@@ -708,7 +678,6 @@ def dashboard_datapane_comparaison():
         '## Calcul socio-économique',
         f'## Scénario 1 = {name1} \n ## Scénario 2 = {name2}',
         dp.Table(cout_df_diff_total),
-        dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport'),
             title='Détaillé'
     ))
     name_file = name1 + '-' + name2

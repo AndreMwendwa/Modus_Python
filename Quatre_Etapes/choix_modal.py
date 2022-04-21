@@ -5,7 +5,6 @@ from Data.A_CstesModus import *
 # dbfile = open(f'{dir_dataTemp}params_user', 'rb')
 # params_user = pkl.load(dbfile)
 from Quatre_Etapes.dossiers_simul import dir_dataTemp
-from Data.gratuite import sum_matrice
 
 
 def choix_modal(n, hor, itern):
@@ -24,14 +23,7 @@ def choix_modal(n, hor, itern):
 
     seU = euTC + euVP + euCY + euMD
 
-    if gratuite_on:
-        dbfile = open(f'{dir_dataTemp}gratuite', 'rb')
-        gratuite_counter = pkl.load(dbfile)
 
-        if gratuite_counter == 0:
-            hor += '_1'
-        else:
-            hor += '_2'
 
     if n == 'actuel':
 
@@ -131,9 +123,6 @@ def choix_modal(n, hor, itern):
                     f"\t Choix modal terminé pour l'année de scénario du modèle ({scen}), pour la Période de Pointe du Soir")
 
     # return Modus_MD_motcat, Modus_CY_motcat, Modus_VP_motcat, Modus_TC_motcat
-    if gratuite_on:
-        sum_matrice(n, hor)
-
 
 if __name__ == '__main__':
     choix_modal('actuel', 'PPS', 1)

@@ -396,8 +396,7 @@ def ajout_evol(type: 'UVP ou TC', H: 'PPM, PCJ, PPS', id: 'idTC, idVP', seuilh, 
         #   - b. Report de calage : CALE(scen) = K.MODUS(scen) + D
         if id < 2:
             MODUSCaleUVP_scen = K_UVP * MODUSUVP_cord_scen + D_UVP
-        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'wb')     # Matrice de l'affectation (module bouclage,
-        # fonction mat_iter)
+        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_{H}_scen', 'wb')
         pkl.dump(MODUSCaleUVP_scen, dbfile)
         dbfile.close()
 
@@ -500,28 +499,6 @@ def ajout_evol(type: 'UVP ou TC', H: 'PPM, PCJ, PPS', id: 'idTC, idVP', seuilh, 
     print('.\n')
 # Fonction de regroupement des étapes
 
-def redressement_hp():
-
-    if PPM:
-        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_PPM_scen', 'rb')
-        VP_PPM = pkl.load(dbfile)
-    if PPS:
-        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_PPS_scen', 'rb')
-        VP_PPS = pkl.load(dbfile)
-
-    #### Calculs de redressement
-
-
-    if PPM:
-        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_PPM_scen', 'wb')
-        pkl.dump(VP_PPM, dbfile)
-    if PPS:
-        dbfile = open(f'{dir_dataTemp}MODUSCaleUVP_PPS_scen', 'wb')
-        pkl.dump(VP_PPS, dbfile)
-
-
-
-
 def report_calage(idTC, idVP):
     if PPM == 1:
         ajout_evol('TC', 'PPM', idTC, cSeuilh, cSeuilb)
@@ -532,8 +509,6 @@ def report_calage(idTC, idVP):
     if PPS == 1:
         ajout_evol('TC', 'PPS', idTC, cSeuilh, cSeuilb)
         ajout_evol('VP', 'PPS', idVP, cSeuilh, cSeuilb)
-    redressement_hp()
-
 
 if __name__ == '__main__':
     # traitementVP('PPM', 'scen', 'PPM')
@@ -541,7 +516,6 @@ if __name__ == '__main__':
     # traitementTC('PPS', 'scen', 'PPS')
     # finalise('actuel')
     # finalise('scen')
-    redressement_hp()
     traitementVP('PPM', 'actuel', 'PPM')
     from Data.A_CstesModus import cSeuilh, cSeuilb
     ajout_evol('TC', 'PPM', idTC, cSeuilh, cSeuilb)
