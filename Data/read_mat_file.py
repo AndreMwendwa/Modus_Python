@@ -1,11 +1,8 @@
+'''Created to deal with the problem of a circular import afflicting the read_mat that was in traitement_data'''
+
 import pandas as pd
 from dataclasses import dataclass
-
-import Quatre_Etapes.main
-from Data.A_CstesModus import *
 from Data.fonctions_gen import *
-from Quatre_Etapes import dossiers_simul
-
 
 
 @dataclass
@@ -79,15 +76,15 @@ class read_mat:
                                          encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
                 CALEPL_per = complete(CALEPL_per, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
                 CALEPL_per = complete(CALEPL_per, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
-                CALEPL_per_scen = complete(CALEPL_per_scen, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
+                # CALEPL_per_scen = complete(CALEPL_per_scen, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
+                CALEPL_per_scen = complete(CALEPL_per_scen, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1,
+                                           cNbZext, 1)
                 # EvolPL_per = pd.merge(CALEPL_per, CALEPL_per_scen, on=['ZONEO', 'ZONED'])
                 EvolPL_per = np.where(CALEPL_per['FLUX'] != 0, CALEPL_per_scen['FLUX'] / CALEPL_per['FLUX'], 1)
                 CALEPL_per['FLUX'] *= EvolPL_per
                 # ecriredavisum(CALEPL, Quatre_Etapes.main.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 # Pas besoin d'ecriredavisum, car on travaille directement avec l'API de VISUM pour mettre les flux dedans.
-                with open(f'{dir_dataTemp}_CALEPL_{self.per}', 'wb') as dbfile:
-                    pkl.dump(CALEPL_per['FLUX'].to_numpy().reshape(cNbZtot, cNbZtot), dbfile)
-                return CALEPL_per
+                return CALEPL_per['FLUX'].to_numpy().reshape(cNbZtot, cNbZtot)
             elif idPL == 3:
                 CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_{self.per}_scen'].path,
                                      sep=Mat_Calees[f'CALEPL_{self.per}_scen'].sep,
@@ -97,85 +94,3 @@ class read_mat:
                 CALEPL['FLUX'].fillna(0, inplace=True)
                 ecriredavisum(CALEPL, Quatre_Etapes.main.out_mat, 'PL_S_scen', 'VP', hor[0], hor[1])
                 return CALEPL
-            #   4-a. Lecture et mise en forme des vecteurs spécifiques
-    def vect_spec(self):
-        VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = readVS(self.per, self.n, cZEmpCDG, cZEmpORLY,
-                                                                      cZVoyCDG, cZVoyORLY)
-        PoidsVS = pd.read_csv(Vect_spec[f'Poids_VS_{self.n}'].path, sep=Vect_spec[f'Poids_VS_{self.n}'].sep)
-        PoidsVS.rename(columns={'Em_HPS': 'Em_PPS', 'Em_HPC': 'Em_PCJ', 'Em_HPM': 'Em_PPM',
-                                              'Att_HPS': 'Att_PPS', 'Att_HPC': 'Att_PCJ', 'Att_HPM': 'Att_PPM'},
-                                 inplace=True)
-        # 4-b. Lecture et mise en forme des Poids VS :
-        # 			on sépare les HPM des HPS et on créé un vecteur Poids VS de 1327 lignes
-        PoidsVS = PoidsVS.loc[:, ('ZONE', f'Em_{self.per}', f'Att_{self.per}')].copy()
-        return PoidsVS, VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY
-    def VSTC(self):
-        VSTCCDG = pd.read_csv(Vect_spec[f'VSTC_CDG_{self.per}_{self.n}'].path,
-                              sep=Vect_spec[f'VSTC_CDG_{self.per}_{self.n}'].sep)
-        VSTCCDG.rename(columns={'flux': 'FLUX', 'Flux': 'FLUX'}, inplace=True)
-        VSTCORLY = pd.read_csv(Vect_spec[f'VSTC_ORLY_{self.per}_{self.n}'].path,
-                              sep=Vect_spec[f'VSTC_ORLY_{self.per}_{self.n}'].sep)
-        VSTCORLY.rename(columns={'flux': 'FLUX', 'Flux': 'FLUX'}, inplace=True)
-        return VSTCCDG, VSTCORLY
-
-#     5. Dans le cas scénario avec report de calage, lecture des matrices calées en vue du report de calage
-    def CALEUVP(self):
-        CALEUVP = pd.read_csv(Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].path,
-                              sep=Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].sep,
-                              skiprows=Mat_Calees[f'CALEUVP_{self.per}_{caleVP}'].skip,
-                              encoding='Latin-1')
-        CALEUVP.columns = ['ZONEO', 'ZONED', 'FLUX']
-        CALEUVP = complete(CALEUVP, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
-        CALEUVP.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
-        return CALEUVP
-
-    def CALETC(self):
-        CALETC = pd.read_csv(Mat_Calees[f'CALETC_{self.per}_{caleVP}'].path,
-                              sep=Mat_Calees[f'CALETC_{self.per}_{caleVP}'].sep,
-                              skiprows=Mat_Calees[f'CALETC_{self.per}_{caleVP}'].skip,
-                              encoding='Latin-1')
-        CALETC.columns = ['ZONEO', 'ZONED', 'FLUX']
-        CALETC = complete(CALETC, cNbZone, cNbZone + 1, cNbZspec, cNbZone + cNbZspec + 1, cNbZext, 1)
-        CALETC.sort_values(by=['ZONEO', 'ZONED'], inplace=True)
-        return CALETC
-
-#     6. Lecture des vecteurs voyageurs émis et attirés par les gares TC
-    def read_VGTC(self):
-        VGTC = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].sep)
-        VGTC.rename(columns={'Flux':'FLUX'}, inplace=True)
-        return VGTC
-
-    def read_VGVP(self):
-        VGVP = pd.read_csv(Vect_gare[f'VGTC_{self.per}_{self.n}'].path, sep=Vect_gare[f'VGTC_{self.per}_{self.n}'].sep)
-        VGVP.rename(columns={'Flux': 'FLUX'}, inplace=True)
-        return VGVP
-
-
-# read_mat = read_mat()
-# read_mat.n = 'actuel'
-# read_mat.per = 'PPS'
-#
-# CORDVP = read_mat.CORDVP_func()
-# CORDPL = read_mat.CORDPL_func()
-# CORDVP.FLUX.notna().sum()
-#
-# read_mat = read_mat()
-# read_mat.per = 'PPS'
-# read_mat.n = 'actuel'
-# CALEPL = read_mat.CALEPL_func()
-# CALEPL.FLUX.notna().sum()
-# PoidsVS, VS, VS_Emp_CDG, VS_Emp_ORLY, VS_Voy_CDG, VS_Voy_ORLY = read_mat.vect_spec()
-#
-# CALEPL_per
-#
-# CALEPL = pd.read_csv(Mat_Calees[f'CALEPL_PPS_scen'].path,
-#                                      sep=Mat_Calees[f'CALEPL_PPS_scen'].sep,
-#                                      skiprows=Mat_Calees[f'CALEPL_PPS_scen'].skip,
-#                                      encoding='latin-1', names=['ZONEO', 'ZONED', 'FLUX'])
-
-if __name__ == '__main__':
-    read_mat = read_mat()
-    read_mat.per = 'PPM'
-    read_mat.n = 'scen'
-    CALEUVP = read_mat.CALEUVP()
-    # CALEPL = read_mat.CALEPL_func()

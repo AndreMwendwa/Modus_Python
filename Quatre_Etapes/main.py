@@ -1,5 +1,6 @@
 from Quatre_Etapes import utility, distribution, choix_modal, bouclage
 from Traitement import traitement
+from affect import affect_PL
 # import streamlit as st
 from Traitement.gui3 import *
 import time
@@ -96,14 +97,17 @@ def bouclage_func(idBcl, MaxIter):
         if PPM == 1:
             distribution.distribution('scen', 'PPM')
             choix_modal.choix_modal('scen', 'PPM', itern)
+            affect_PL('PPM')
             # AFFECT_iter_PPM = bouclage.mat_iter('PPM', cParMatBcl)
         if PCJ == 1:
             distribution.distribution('scen', 'PCJ')
             choix_modal.choix_modal('scen', 'PCJ', itern)
+            affect_PL('PCJ')
             # AFFECT_iter_PCJ = bouclage.mat_iter('PCJ', cParMatBcl)
         if PPS == 1:
             distribution.distribution('scen', 'PPS')
             choix_modal.choix_modal('scen', 'PPS', itern)
+            affect_PL('PPS')
             # AFFECT_iter_PPS = bouclage.mat_iter('PPS', cParMatBcl)
         traitement.finalise('scen')
         traitement.report_calage(idTC, idVP)
@@ -216,6 +220,15 @@ def copy_files():
     except FileExistsError:
         pass
 
+def copy_data():
+    Data_orig = os.path.join(dir_modus_py, 'Data')
+    Data_new = os.path.join(programmes, 'Data')
+
+    try:
+        destination = shutil.copytree(Data_orig, Data_new)
+    except FileExistsError:
+        pass
+
 def main_func():
     # copy_files()
     print("Bienvenue à Modus_Python. \n Vous avez choisi d'utiliser le modèle en mode ")
@@ -240,6 +253,7 @@ def main_func():
 if __name__ == '__main__':
     # demande('scen', 1)
     # copy_files()
+    copy_data()
     print("Bienvenue à Modus_Python. \n Vous avez choisi d'utiliser le modèle en mode ")
     if idBcl == 0:
         print("sans bouclage")

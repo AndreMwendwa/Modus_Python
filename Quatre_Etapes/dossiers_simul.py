@@ -1,7 +1,7 @@
 import os
 from datetime import date
 from Data.CstesStruct import *
-# from Data.CstesStruct import dir_root
+# from Data.CstesStruct import dir_modus_py
 
 import yaml
 
@@ -10,18 +10,17 @@ yaml_content = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
 # dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..', '..', '..'))   # Pour créér
 # le fichier .exe
-dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))   # Pour tourner MODUS depuis
-# le IDE
-dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
-
+# dir_root = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', '..', '..'))   # Pour tourner MODUS depuis
+# # le IDE
+# dir_modus = os.path.join(dir_root, 'M3_Chaine', 'Modus_Python') # répertoire de MODUS sous SAS
+# dir_modus = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..'))
 
 
 # Nom de la simulation
-if yaml_content['idBcl'] != -1:
-    nom_simul = yaml_content['nom_simul']
-else:
-    nom_simul = 'test_pyinstaller'  # Maintenant YML
-out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{nom_simul}\\'   # Pour garder les
+nom_simul = yaml_content['nom_simul']
+
+out = os.path.join(dir_modus_py, 'Other_files', nom_simul)
+# out = dir_root + f'\\M3_Chaine\\Modus_Python\\Other_files\\{nom_simul}\\'   # Pour garder les
 # résultats intérmediaire
 
 try:

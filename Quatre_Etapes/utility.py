@@ -188,4 +188,5 @@ def utilite(n, hor):
     return UTM, UTMD
 
 if __name__ == '__main__':
-    utilite('actuel', 'PPM')
+    # utilite('actuel', 'PPM')
+    utilite('actuel', 'PPS')

@@ -100,7 +100,7 @@ def distribution(n, hor):
 
 if __name__ == '__main__':
     # distribution('scen', 'PPM')
-    distribution('scen', 'PPS')
+    distribution('scen', 'PPM')
     # distribution('actuel', 'PPM')
 
 

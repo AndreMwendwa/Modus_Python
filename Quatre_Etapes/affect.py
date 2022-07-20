@@ -5,6 +5,7 @@ import multiprocessing
 import os
 import pickle as pkl
 # from dossiers_simul import *
+from Data.read_mat_file import read_mat
 
 from Quatre_Etapes.dossiers_simul import *
 
@@ -42,6 +43,22 @@ def affect(ver, matVP, Iter, H, dir_itern):
     print(f'Affectation terminé pour {H}')
     return mat1
 
+def affect_PL(H):
+    '''Cette fonction lit la matrice de PL projetée et l'intègre dans le fichier VISUM, prêt pour l'affectation
+    multiclasse. '''
+    read_mat_scen = read_mat(n='scen', per=H)
+    matPL = read_mat_scen.CALEPL_func()
+
+    # Il faudra gérer ici les fichiers .ver pour PPM, PCJ, PPS
+    myvisum = win32.Dispatch("Visum.Visum")
+    myvisum.LoadVersion(Donnees_Res[f'Version_{H}_scen'])
+
+    helpers.SetODMatrix(myvisum, 'P', matPL)
+
+    # Sauvegarde de la version intérmediare contenant les PL
+    myvisum.SaveVersion(os.path.join(dir_dataTemp, f'Version_{H}_scen.ver'))
+    # pass
+
 # # # This is to test the route assignment code above.
 # myvisum = win32.Dispatch("Visum.Visum")
 # myvisum.LoadVersion(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver')
@@ -58,11 +75,11 @@ def affect(ver, matVP, Iter, H, dir_itern):
 
 if __name__ == '__main__':
 
-    mat1 = multiprocessing.Process(name='mat1', target=affect,
-                                   args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver', matVP, matPL, result))
-    mat2 = multiprocessing.Process(name='mat2', target=affect,
-                                   args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPS2030_edited.ver', matVP, matPL, result))
-    mat1.start()
-    mat2.start()
-
+    # mat1 = multiprocessing.Process(name='mat1', target=affect,
+    #                                args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPM2030_editedb.ver', matVP, matPL, result))
+    # mat2 = multiprocessing.Process(name='mat2', target=affect,
+    #                                args=(dir_dataScen + '\\210219_ReseauVPv4.6_PPS2030_edited.ver', matVP, matPL, result))
+    # mat1.start()
+    # mat2.start()
+    affect_PL('PPM')
 

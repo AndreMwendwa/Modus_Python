@@ -1,4 +1,4 @@
-nom_simul: 'Econtrans_sans_gratuite'
+nom_simul: Test_PL        # Nom de la simulation sur laquelle tu travaille actuellement.
 
 # 0. Caractéristiques du zonage
 cNbZone: 1289
@@ -115,12 +115,12 @@ valeur_dommages_materiels: 7065
 
 # Configuration du calcul des zones traversés par les tronçons et des noms des routes, tous les deux nécessaires dans l'évaluation socio-éco.
 calc_zones_traversed: 0         # Si == 1, le module ESE recalculera une nouvelle liste de zones traversées, sinon il utilisera la liste prédefini ci-dessous. 
-zones_traversed_file: C:\Users\mwendwa.kiko\Documents\VA Saclay\zones_traversed.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de zones traversés en faisant le calcul du coût de la pollution locale.        
+zones_traversed_file: C:\Users\mwendwa.kiko\Documents\VA_Saclay\zones_traversed.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de zones traversés en faisant le calcul du coût de la pollution locale.        
 
 calc_avg_density_along_links: 0    # Si == 1, le module ESE recalculera une nouvelle liste de densité moyenne des zones adjacentes à chacune des tronçons, sinon il utilisera la liste prédefini ci-dessous. 
-avg_density_along_links_file: C:\Users\mwendwa.kiko\Documents\VA Saclay\avg_density_along_links.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de densité moyenne des zones adjacentes à chacune des tronçons en faisant le calcul du coût de la pollution locale.
+avg_density_along_links_file: C:\Users\mwendwa.kiko\Documents\VA_Saclay\avg_density_along_links.xlsx    # Si calc_zones_traversed == 0, le module ESE utilisera cette liste de densité moyenne des zones adjacentes à chacune des tronçons en faisant le calcul du coût de la pollution locale.
 
 calc_routes_class: 0    # Si == 1, le module ESE recalculera une nouvelle liste des catégories des routes (autoroutes/nationales/départementales/communales) sinon il utilisera la liste prédefini ci-dessous. 
-routes_class_df_fle: C:\Users\mwendwa.kiko\Documents\VA Saclay\routes_class_df.xlsx     # Si calc_routes_class == 0, le module ESE utilisera cette liste de des catégories des routes en faisant le calcul du coût du coût d'usage des infrastructures et du bruit.
+routes_class_df_fle: C:\Users\mwendwa.kiko\Documents\VA_Saclay\routes_class_df.xlsx     # Si calc_routes_class == 0, le module ESE utilisera cette liste de des catégories des routes en faisant le calcul du coût du coût d'usage des infrastructures et du bruit.
 
 

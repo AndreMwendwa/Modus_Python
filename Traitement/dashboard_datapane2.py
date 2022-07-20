@@ -8,7 +8,7 @@ import sys
 import seaborn as sns
 import sys
 from textwrap import wrap
-from ESE import visum_data, user_veh, user_pt, externalites, user_md_cy_tc
+from ESE import visum_data, user_veh, externalites, user_md_cy_tc
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from Quatre_Etapes.dossiers_simul import dir_dataTemp
@@ -137,10 +137,10 @@ def dashboard_datapane():
 
     def parts_modaux_calc_df(hor, df_ttl, modes_choisis, numero_df):
         tous_mobs[f'part_actuel_{hor}'][numero_df].columns = modes_choisis
-        tous_mobs[f'part_actuel_{hor}'][numero_df].index = [f'{actuel} PPM']
+        tous_mobs[f'part_actuel_{hor}'][numero_df].index = [f'{actuel} {hor}']
         # dp.Table(tous_mobs.part_scen_PPM[0])
         tous_mobs[f'part_scen_{hor}'][numero_df].columns = modes_choisis
-        tous_mobs[f'part_scen_{hor}'][numero_df].index = [f'{scen} PPM']
+        tous_mobs[f'part_scen_{hor}'][numero_df].index = [f'{scen} {hor}']
         df_ttl = pd.concat([df_ttl, tous_mobs[f'part_actuel_{hor}'][numero_df], tous_mobs[f'part_scen_{hor}'][numero_df]])
         return df_ttl
     
@@ -264,7 +264,7 @@ def dashboard_datapane():
             dictionnaire_user_costs[f'Road user generalised cost - time component, {hor}'] = \
                 all_outputs_ROTH.avg_cost_time()
             dictionnaire_user_costs[f'Road user generalised cost - money component, {hor}'] = \
-                all_outputs_ROTH.generalised_cost_money()
+                all_outputs_ROTH.avg_cost_money()
             dictionnaire_user_costs[f'PT user generalised cost - time component, {hor}'] = \
                 user_md_cy_tc_object.avg_cost_time_tc()
             dictionnaire_user_costs[f'PT user generalised cost - money component, {hor}'] = \
@@ -360,7 +360,10 @@ def dashboard_datapane():
     #     return indic_socio_eco, ax
 
     # Créer les variables pour les utiliser après dans le dashboard à venir
-    indic_socio_eco, externalites_df = indicateurs_socio_eco()
+    if idBcl == 1:
+        indic_socio_eco, externalites_df = indicateurs_socio_eco()
+    else:
+        indic_socio_eco, externalites_df = pd.DataFrame(), pd.DataFrame()
 
     # Début du code qui lance le dashboard.
     report = dp.Report(

@@ -18,3 +18,10 @@ class dist_data:
             return pd.read_sas(DIST_PAR_DICT[self.per])
 
 
+if __name__ == '__main__':
+    dist_data_instance = dist_data()
+    dist_data_instance.per = 'PPM'
+    dist_data_instance.n = 'actuel'
+
+    DIST_PAR = dist_data_instance.DIST_PAR_FUNC()
+

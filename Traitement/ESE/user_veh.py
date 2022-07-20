@@ -128,6 +128,46 @@ def rule_of_half_vp_function(visum_data1, visum_data2):
     )
     return (delta_consumer_surp_business + delta_consumer_surp_commute_school_childcare + delta_consumer_surp_others).sum().sum()
 
+def rule_of_half_vp_sep_time_money(visum_data1, visum_data2):
+    '''
+    :param f1: Path to reference scenario
+    :param f2:  Path to project scenario
+    :param hor: PPM/PCJ/PPS
+    :return: Consumer surplus for a single scenario
+    '''
+    ROTH1 = all_outputs_ROTH(visum_data1)
+    ROTH2 = all_outputs_ROTH(visum_data2)
+    delta_consumer_surp_business = (
+        pd.DataFrame(0.5 * (ROTH1.flux_business + ROTH2.flux_business)) *
+        pd.DataFrame((
+                ROTH1.travel_time * ROTH1.visum_data.VTTS_business
+              - (ROTH2.travel_time * ROTH2.visum_data.VTTS_business)
+        ))
+    )       # Because when it's not a dataframe, it tries to multiply the two series like one is a row vector and the
+    # other a column vector
+    delta_consumer_surp_commute_school_childcare = (
+            pd.DataFrame(0.5 * (ROTH1.flux_commute_school_childcare + ROTH2.flux_commute_school_childcare)) *
+            pd.DataFrame((
+                    ROTH1.travel_time * ROTH1.visum_data.VTTS_commute_school_childcare
+                    - (ROTH2.travel_time * ROTH2.visum_data.VTTS_commute_school_childcare)
+            ))
+    )
+    delta_consumer_surp_others = (
+            pd.DataFrame(0.5 * (ROTH1.flux_others + ROTH2.flux_others)) *
+            pd.DataFrame((
+                    ROTH1.travel_time * ROTH1.visum_data.VTTS_others
+                    - (ROTH2.travel_time * ROTH2.visum_data.VTTS_others)
+            ))
+    )
+    delta_consumer_surp_money = (
+            pd.DataFrame(0.5 * (ROTH1.flux_others + ROTH1.flux_commute_school_childcare + ROTH1.flux_business +
+                                ROTH2.flux_others + ROTH2.flux_commute_school_childcare + ROTH2.flux_business)) *
+            pd.DataFrame(ROTH1.generalised_cost_money - ROTH2.generalised_cost_money)
+    )
+    return (delta_consumer_surp_business + delta_consumer_surp_commute_school_childcare + delta_consumer_surp_others).sum().sum()\
+        , delta_consumer_surp_money.sum().sum()
+
+
 def calc_rule_of_the_half(f1, f2):
     '''
     :return: The total consumer surplus for all the scenarios considered (PPM, PCJ and PPS)

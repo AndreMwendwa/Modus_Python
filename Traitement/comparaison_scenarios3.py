@@ -6,7 +6,7 @@ import seaborn as sns
 import sys
 from textwrap import wrap
 import PySimpleGUI as sg
-from ESE import visum_data, user_veh, user_pt, externalites, user_md_cy_tc
+from ESE import visum_data, user_veh, externalites, user_md_cy_tc
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -387,13 +387,17 @@ def dashboard_datapane_comparaison(f1, f2, f3):
 
         def somme_df(self):
             totals_df = self.totals_df
+            consumer_surplus_temps, consumer_surplus_money = user_veh.rule_of_half_vp_sep_time_money(self.visum_data1, self.visum_data2)
             totals_df['Total Cost per hour (€) - différence between scénarios'] = (
                     totals_df['Total Cost per hour (€) - scénario 1'] -
                     totals_df['Total Cost per hour (€) - scénario 2']
             )
-            totals_df.loc[f'Road users consumer surplus , {self.hor}'
-                f'Road users consumer surplus , {self.hor}', 'Total Cost per hour (€) - différence between scénarios'] = \
-                user_veh.rule_of_half_vp_function(self.visum_data1, self.visum_data2)
+            totals_df.loc[f'Road users consumer surplus (time), {self.hor}'
+                f'Road users consumer surplus (time) , {self.hor}', 'Total Cost per hour (€) - différence between scénarios'] = \
+                consumer_surplus_temps
+            totals_df.loc[f'Road users consumer surplus (money), {self.hor}'
+                          f'Road users consumer surplus (money), {self.hor}', 'Total Cost per hour (€) - différence between scénarios'] = \
+                consumer_surplus_money
             totals_df.loc[
                 f'PT users consumer surplus, , {self.hor}', 'Total Cost per hour (€) - différence between scénarios'] = \
                 user_md_cy_tc.rule_of_half_tc_function(self.user_md_cy_tc1, self.user_md_cy_tc2)

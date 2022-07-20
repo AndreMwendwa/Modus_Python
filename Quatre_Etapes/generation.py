@@ -182,8 +182,8 @@ def generation(n, per):
 
 
 if __name__ == '__main__':
-    generation('actuel', 'PPM')
-    generation('scen', 'PPM')
+    # generation('actuel', 'PPM')
+    # generation('scen', 'PPM')
     generation('actuel', 'PPS')
     generation('scen', 'PPS')
 
