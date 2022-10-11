@@ -45,16 +45,22 @@ def call_dashboard():
         return
 
     subdirs = [Path(os.path.join(f1, x)) for x in os.listdir(f1)]
+    results_dict_ESE = {}   # Dictionnaire où je vais mettre les résultats de l'ESE
+    results_dict_VKT_VHT = {}   # Dictionnaire où je vais mettre les résultats VKT, VHT
 
-    results_dict = {}   # Dictionnaire où je vais mettre les résultats
     for folder in subdirs:
         if folder != f2:
-            name, *files = dashboard_datapane_comparaison(f2, folder, f3)
-            results_dict[name] = files
+            name, *files, vkt_vht = dashboard_datapane_comparaison(f2, folder, f3)
+            results_dict_ESE[name] = files    # sauvegarde des résultats de l'ESE
+            results_dict_VKT_VHT[name] = vkt_vht
 
-    dbfile = open(f'{f3}/result_dfs', 'wb')
-    pkl.dump(results_dict, dbfile)
-    dbfile.close()
+    # Sauvegarde des résultats ESE
+    with open(f'{f3}/result_dfs', 'wb') as dbfile:
+        pkl.dump(results_dict_ESE, dbfile)
+
+    # Sauvegarde des résultats VKT, VHT
+    with open(f'{f3}/result_vkt_vht', 'wb') as dbfile:
+        pkl.dump(results_dict_VKT_VHT, dbfile)
 
 
 
@@ -341,6 +347,7 @@ def dashboard_datapane_comparaison(f1, f2, f3):
             self.externalites1 = externalites.externalites(self.visum_data1)
             self.externalites2 = externalites.externalites(self.visum_data2)
             self.user_df, self.totals_df = self.comparaison_df()
+            self.dictionnaire_vkt_vht = {}  # Pour en faire un dataframe après
 
 
         def user_dict(self, all_outputs_ROTH, user_md_cy_tc_object):
@@ -407,26 +414,37 @@ def dashboard_datapane_comparaison(f1, f2, f3):
             totals_df.fillna('-', inplace=True)
             return totals_df
 
+        def vkt_vht(self):
+            self.dictionnaire_vkt_vht['VKT Scen 1'] = self.visum_data1.vkt_total_links
+            self.dictionnaire_vkt_vht['VKT Scen 2'] = self.visum_data2.vkt_total_links
+            self.dictionnaire_vkt_vht['VHT Scen 1'] = self.visum_data1.vht_total_links
+            self.dictionnaire_vkt_vht['VHT Scen 2'] = self.visum_data2.vht_total_links
+            vkt_vht_df = pd.DataFrame(self.dictionnaire_vkt_vht, index=[self.name])
+            return vkt_vht_df
+            
 
     # Créer les variables pour les utiliser après dans le graphe à venir
     if PPM:
         socio_eco_obj = socio_eco(f1, f2, f3, 'PPM')
         comparaison_df_PPM = socio_eco_obj.user_df
         totals_PPM = socio_eco_obj.somme_df()
+        vkt_vht_df_PPM = socio_eco_obj.vkt_vht()
     else:
-        totals_PPM, comparaison_df_PPM = pd.DataFrame(), pd.DataFrame()
+        totals_PPM, comparaison_df_PPM, vkt_vht_df_PPM = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     if PCJ:
         socio_eco_obj = socio_eco(f1, f2, f3, 'PCJ')
         comparaison_df_PCJ = socio_eco_obj.user_df
         totals_PCJ = socio_eco_obj.somme_df()
+        vkt_vht_df_PCJ = socio_eco_obj.vkt_vht()
     else:
-        totals_PCJ, comparaison_df_PCJ = pd.DataFrame(), pd.DataFrame()
+        totals_PCJ, comparaison_df_PCJ, vkt_vht_df_PCJ = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
     if PPS:
         socio_eco_obj = socio_eco(f1, f2, f3, 'PPS')
         comparaison_df_PPS = socio_eco_obj.user_df
         totals_PPS = socio_eco_obj.somme_df()
+        vkt_vht_df_PPS = socio_eco_obj.vkt_vht()
     else:
-        totals_PPS, comparaison_df_PPS = pd.DataFrame(), pd.DataFrame()
+        totals_PPS, comparaison_df_PPS, vkt_vht_df_PPS = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     # Début du code qui lance le dashboard.
     report = dp.Report(
@@ -438,6 +456,9 @@ def dashboard_datapane_comparaison(f1, f2, f3):
 
             '# Indicateurs des totaux',
             dp.Table(totals_PPM), dp.Table(totals_PCJ), dp.Table(totals_PPS),
+
+            '# Indicateurs des VKT, VHT',
+            dp.Table(vkt_vht_df_PPM), dp.Table(vkt_vht_df_PCJ), dp.Table(vkt_vht_df_PPS),
 
             dp.Text('base originale MODUS (DRIEAT-IDF/SCDD/DMEM), modifié par le Laboratoire Ville Mobilité Transport'),
             title='Résumé',
@@ -508,7 +529,13 @@ def dashboard_datapane_comparaison(f1, f2, f3):
     ))
     name_file = name2
     report.save(os.path.join(f3, f"{name_file}.html"), open=True)
-    return name_file, totals_PPM, totals_PCJ, totals_PPS
+
+    ## On créet un dictionnaire des dataframe de VKT, VHT
+    # vkt_vht_dictionnaire = {}
+    # vkt_vht_dictionnaire[name_file] = vkt_vht_df_PPM, vkt_vht_df_PCJ, vkt_vht_df_PPS
+    vkt_vht = pd.concat([vkt_vht_df_PPM, vkt_vht_df_PCJ, vkt_vht_df_PPS])
+    return name_file, totals_PPM, totals_PCJ, totals_PPS, vkt_vht
+
 
 
 if __name__ == '__main__':

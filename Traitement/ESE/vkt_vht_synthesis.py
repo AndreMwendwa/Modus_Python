@@ -22,9 +22,8 @@ def vkt_vht():
 
     dbfile = open(f1, 'rb')
     dfs = pkl.load(dbfile)
-    vkt_vht_df = pd.DataFrame()  # Résultats ESE
-    for key, value in dfs.items():
-        vkt_vht_df = pd.concat([vkt_vht_df, value], axis=1)
+    # Résultats ESE
+    vkt_vht_df = pd.concat(dfs.values(), ignore_index=False)
     vkt_vht_df.to_excel(f2 + '/vkt_vht_totals.xlsx')
 
 if __name__ == '__main__':

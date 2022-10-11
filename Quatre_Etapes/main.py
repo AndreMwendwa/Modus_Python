@@ -10,6 +10,7 @@ import logging
 from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
 from Data.A_CstesModus import *
+from Traitement.dashboard_datapane2 import dashboard_datapane
 # from Traitement.dashboard_streamlit import dashboard_streamlit
 # from Traitement.dashboard_datapane import dashboard_datapane
 # from dossiers_simul import *
@@ -97,17 +98,17 @@ def bouclage_func(idBcl, MaxIter):
         if PPM == 1:
             distribution.distribution('scen', 'PPM')
             choix_modal.choix_modal('scen', 'PPM', itern)
-            affect_PL('PPM')
+            # affect_PL('PPM')
             # AFFECT_iter_PPM = bouclage.mat_iter('PPM', cParMatBcl)
         if PCJ == 1:
             distribution.distribution('scen', 'PCJ')
             choix_modal.choix_modal('scen', 'PCJ', itern)
-            affect_PL('PCJ')
+            # affect_PL('PCJ')
             # AFFECT_iter_PCJ = bouclage.mat_iter('PCJ', cParMatBcl)
         if PPS == 1:
             distribution.distribution('scen', 'PPS')
             choix_modal.choix_modal('scen', 'PPS', itern)
-            affect_PL('PPS')
+            # affect_PL('PPS')
             # AFFECT_iter_PPS = bouclage.mat_iter('PPS', cParMatBcl)
         traitement.finalise('scen')
         traitement.report_calage(idTC, idVP)
@@ -126,7 +127,7 @@ def bouclage_func(idBcl, MaxIter):
         if PPS == 1:
             RMSE_PPS = bouclage.RMSE('PPS', 1)
         bouclage.data_update(cParTpsBcl, 'scen')
-        while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern <= MaxIter:
+        while (RMSE_PPM > cConv_M or RMSE_PCJ > cConv_C or RMSE_PPS > cConv_S) and itern < MaxIter:
             itern += 1
             print(f'Iteration = {itern} \n\n')
             dir_iter = os.path.join(out_bcl, f'Iter{itern}')
@@ -189,13 +190,24 @@ def bouclage_func(idBcl, MaxIter):
                     RMSE_PPS = bouclage.RMSE('PPS', itern)
                 bouclage.data_update(cParTpsBcl, 'scen')
         # Dernière itération, avec paramètres à 0
-        dir_iter = os.path.join(out_bcl, f'Iter{itern}')
+        dir_iter = os.path.join(out_bcl, f'Iter{itern + 1}')   # itern + 1 Pour que la dernière itération n'écrase pas l'avant
+        # dernière
         try:
             os.mkdir(dir_iter)
         except OSError:
             pass
+
+        # done_affect nécessaire pour que la fonction 'affect' ne crash pas.
+        done_affect = 0
+        with open(f'{dir_dataTemp}done_affect{itern + 1}', 'wb') as dbfile:
+            pkl.dump(done_affect, dbfile)
         bouclage.data_update(0, 'scen')
-        bouclage.boucle(0, itern, dir_iter)
+        bouclage.boucle(0, itern + 1, dir_iter)
+
+        while done_affect < PPM + PCJ + PPS:
+            dbfile = open(f'{dir_dataTemp}done_affect{itern + 1}', 'rb')
+            done_affect = pkl.load(dbfile)
+            time.sleep(60)
 
 # Une fonction pour copier les fichiers Python comme SAS fait actuellement avec les fichiers SAS.
 def copy_files():
@@ -224,8 +236,16 @@ def copy_data():
     Data_orig = os.path.join(dir_modus_py, 'Data')
     Data_new = os.path.join(programmes, 'Data')
 
+    Quatre_orig = os.path.join(dir_modus_py, 'Quatre_Etapes')
+    Quatre_new = os.path.join(programmes, 'Quatre_Etapes')
+
     try:
         destination = shutil.copytree(Data_orig, Data_new)
+    except FileExistsError:
+        pass
+
+    try:
+        destination = shutil.copytree(Quatre_orig, Quatre_new)
     except FileExistsError:
         pass
 
@@ -267,6 +287,7 @@ if __name__ == '__main__':
     bouclage_func(idBcl, cNbBcl)
     indicateurs_func()
     print_typo()
+    dashboard_datapane()
     logging.info('Fin')
     print('Quatre étapes de MODUS terminées')
     input("Appuyer sur 'Enter' pour fermer")

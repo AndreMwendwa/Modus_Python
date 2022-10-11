@@ -8,13 +8,18 @@ import sys
 import seaborn as sns
 import sys
 from textwrap import wrap
-from ESE import visum_data, user_veh, externalites, user_md_cy_tc
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'ESE')))
+from Traitement.ESE import visum_data, user_veh, externalites, user_md_cy_tc
 from Quatre_Etapes.dossiers_simul import dir_dataTemp
 from Data.A_CstesModus import *
 from pandas.plotting import parallel_coordinates
 import datapane as dp
+
+# # Si on veut copier coller directement la localisation de tes scénarios, utilise la ligne en dessous. Sinon, mets en commentaire
+# dir_dataTemp = r'C:\Users\mwendwa.kiko\Documents\Stage\MODUSv3.1.3\M3_Chaine\Modus_Python\Other_' \
+#                r'files\teletravail_resultats\with_TTV_gen_nodist_recalibré_factech0.75\1_Fichiers_intermediares\\'
 
 
 def dashboard_datapane():
@@ -254,6 +259,7 @@ def dashboard_datapane():
     def indicateurs_socio_eco():
         dictionnaire_user_costs = {}  # Pour en faire un dataframe après
         dictionnaire_externalites = {}    # Pour en faire un dataframe après
+        dictionnaire_congestion = {}   # Pour en faire un dataframe après
         dossier_projet = os.path.abspath(os.path.join(dir_dataTemp, '..'))
                 
         def outputs_socio_eco(hor):
@@ -280,6 +286,10 @@ def dashboard_datapane():
             dictionnaire_externalites['Cost of infrastructure usage'] = externalites_object.usage_infras()
             dictionnaire_externalites['Cost of noise'] = externalites_object.noise()
 
+            # Excess delay, TTI selon méthode de Toledo (2011): Congestion indicators and congestion impacts
+            dictionnaire_congestion[f'Excess delay, {hor}'] = visum_data_object.excess_delay
+            dictionnaire_congestion[f'Travel time index, {hor}'] = visum_data_object.travel_time_index
+
 
         if PPM:
             outputs_socio_eco('PPM')
@@ -292,7 +302,9 @@ def dashboard_datapane():
 
         externalites_df = pd.DataFrame(dictionnaire_externalites, index=['Total Cost per hour (€)'])
         externalites_df = externalites_df.T.round(0)
-        return indic_socio_eco, externalites_df
+
+        congestion_df = pd.DataFrame(dictionnaire_congestion, index=['Congestion indicators'])
+        return indic_socio_eco, externalites_df, congestion_df
 
     # def indicateurs_socio_eco():
     #     dictionnaire_user_costs = {}       # Pour en faire un dataframe après
@@ -361,9 +373,9 @@ def dashboard_datapane():
 
     # Créer les variables pour les utiliser après dans le dashboard à venir
     if idBcl == 1:
-        indic_socio_eco, externalites_df = indicateurs_socio_eco()
+        indic_socio_eco, externalites_df, congestion_df = indicateurs_socio_eco()
     else:
-        indic_socio_eco, externalites_df = pd.DataFrame(), pd.DataFrame()
+        indic_socio_eco, externalites_df, congestion_df = pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
     # Début du code qui lance le dashboard.
     report = dp.Report(
@@ -435,6 +447,9 @@ def dashboard_datapane():
 
             '# Externalities',
             dp.Table(externalites_df),
+
+            '# Indicateurs de congestion',
+            dp.Table(congestion_df),
             
             title='Indicateurs socio-économiques'
         )

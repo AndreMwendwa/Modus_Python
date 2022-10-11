@@ -36,7 +36,7 @@ def read_and_not_consolidate():
 
     dbfile = open(f1, 'rb')
     dfs = pkl.load(dbfile)
-    sums = pd.DataFrame()
+    sums = pd.DataFrame()       # Résultats ESE
     for key, value in dfs.items():
         title = pd.DataFrame([key], index=['Title'])
         res = pd.concat([title, value[0].loc[:, 'Total Cost per hour (€) - différence between scénarios'],
@@ -49,6 +49,17 @@ def read_and_not_consolidate():
     #         for k, v in dfs.items()}
     # sums_df = pd.DataFrame(sums)
     sums.to_excel(f2 + '/sums_of_consumer_surpluses.xlsx')
+
+def vkt_vht():
+    button, values = GetFilesToCompare()
+    f1, f2 = values['-file1-'], values['-file2-']
+
+    dbfile = open(f1, 'rb')
+    dfs = pkl.load(dbfile)
+    vkt_vht_df = pd.DataFrame()  # Résultats ESE
+    for key, value in dfs.items():
+        vkt_vht_df = pd.concat([vkt_vht_df, value], axis=1)
+    vkt_vht_df.to_excel(f2 + '/vkt_vht_totals.xlsx')
 
 if __name__ == '__main__':
     # file = r'C:\Users\mwendwa.kiko\Documents\RFTM\Modus_ESE_new_results\result_dfs'

@@ -39,8 +39,19 @@ class visum_data:
         # Les temps et les distances pour notre scenario
         # The first two are matricial
         # The last two are for the links
-        self.temps, self.distance, self.lengths_links, self.flux_links, self.nom_routes = self.load_skims()
+        self.temps, self.distance, self.lengths_links, self.flux_links, self.nom_routes, self.temps_vide_links, \
+            self.temps_chg_links = self.load_skims()
+
+        # Indicateur de congestion
+        self.excess_delay, self.travel_time_index = self.congestion_indicators()
+
         self.vkm_links = self.flux_links * self.lengths_links       # The vkm flows along the links
+        self.vht_links = self.flux_links * self.temps_chg_links     # The vht flows along the links
+
+        # VHT, VKT totals that will be outputted by the dashboard, and saved in the comparaison_scenarios file
+        self.vkt_total_links = self.vkm_links.sum()
+        self.vht_total_links = self.vht_links.sum()
+
         self.temps_sum = self.temps[:cNbZone, :cNbZone].sum()    # Car dans VISUM il y a plus que les
         # cNbZone nombre de zones qui sont des zones ordinaires de MODUS
         if yaml_content['calc_zones_traversed'] == 1:
@@ -81,9 +92,11 @@ class visum_data:
         temps = helpers.GetSkimMatrix(myvisum, 'TpsCh', 'V')
         distance = helpers.GetSkimMatrix(myvisum, 'Dist', 'V')
         lengths_links = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('length'))
+        temps_vide_links = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('t0_PrTSys (V)'))
+        temps_chg_links = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('tCur_PrTSys (V)'))
         flux_links = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('VolVehPrT (AP)'))
         nomroutes = pd.DataFrame(myvisum.Net.Links.GetMultiAttValues('NomRoute'))
-        return temps, distance, lengths_links[1], flux_links[1], nomroutes
+        return temps, distance, lengths_links[1], flux_links[1], nomroutes, temps_vide_links[1], temps_chg_links[1]
 
     def zones_traversed_fn(self):
         # Liste de la moyenne des densité pous des zones traversées
@@ -150,3 +163,27 @@ class visum_data:
             (route_class[0] == 'A') | ((route_class[0] == 'B') & (route_class[1] == 'r')), 1, 0)
         route_class.fillna(0, inplace=True)
         return route_class[['Nat', 'Dep', 'Comm', 'Autoroute']]
+
+    def congestion_indicators(self):
+        '''Indicateur de congestion, calculé selon
+        Toledo, Carlos A. Moran. "Congestion indicators and congestion impacts: a study on the relevance of
+        area-wide indicators." Procedia-Social and Behavioral Sciences 16 (2011): 781-791.'''
+        # ExD
+        self.temps_chg_links = np.where(self.temps_chg_links != 3.6e8, self.temps_chg_links, 0)    # Les liens non-
+        # actifs sont montrés dans MODUS avec une vélocité = 0, temps à vide = 3.6e8
+        self.temps_vide_links = np.where(self.temps_vide_links != 3.6e8, self.temps_vide_links, 0)
+        travel_rate_observed = (self.flux_links * self.temps_chg_links).sum()/(self.flux_links * self.lengths_links).sum()
+        travel_rate_ref = (self.flux_links * self.temps_vide_links).sum()/(self.flux_links * self.lengths_links).sum()
+        excess_delay = travel_rate_observed - travel_rate_ref
+
+        # TTI
+        travel_time_index = (
+            (self.flux_links * self.lengths_links * self.temps_chg_links/self.temps_vide_links).sum() /
+            (self.flux_links * self.lengths_links).sum()
+        )
+        return excess_delay, travel_time_index
+
+
+
+
+

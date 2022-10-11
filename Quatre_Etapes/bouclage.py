@@ -132,18 +132,18 @@ def boucle(par1, itern, dir_itern):
     Result = {}
     if PPM == 1:
 
-        mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(os.path.join(dir_dataTemp, f'Version_PPM_scen.ver'),
+        mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
                                                                                      mat_iter('PPM', par1, itern), itern, 'PPM', dir_itern))
         mat1_M.start()
 
     if PCJ == 1:
 
-        mat1_C = multiprocessing.Process(name='mat1PCJ', target=affect.affect, args=(os.path.join(dir_dataTemp, f'Version_PCJ_scen.ver'),
+        mat1_C = multiprocessing.Process(name='mat1PCJ', target=affect.affect, args=(Donnees_Res[f'Version_PCJ_scen'],
                                                                                      mat_iter('PCJ', par1, itern), itern, 'PCJ', dir_itern))
         mat1_C.start()
     if PPS == 1:
 
-        mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(os.path.join(dir_dataTemp, f'Version_PPS_scen.ver'),
+        mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(Donnees_Res[f'Version_PPS_scen'],
                                                                                      mat_iter('PPS', par1, itern), itern, 'PPS', dir_itern))
         mat1_S.start()
 
