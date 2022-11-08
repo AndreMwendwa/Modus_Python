@@ -211,7 +211,7 @@ dir_dataRef = CstesStruct.dir_dataRef
 
 
 # 9. Télétravail
-fact_reducn = 0.75   # A appliquer à la génération ainsi qu'à la distribution.
+fact_reducn = 2   # A appliquer à la génération ainsi qu'à la distribution.
 idTTV = 1   # 1 = activation du module télétravail en scénario, 0 sinon
 jourTTV = 0.3 * fact_reducn    # part moyenne du temps de travail réalisée en télétravail (nb jour télétravaillé / nb jour travaillé)
 partTTV = 0.75   # part des emplois télétravaillables occupées par des télétravailleurs
@@ -232,7 +232,7 @@ tauxTTVAQ = Path_sep(os.path.join(dir_dataScen, 'tauxTTVAQ.txt'), '\t')
 
 # 9b. Télétravail_distribution
 # Module introduit pour prendre en compte le télétravail au niveau de la distribution.
-idTTVdist = 0
+idTTVdist = 1
 # ACTacc = 1.2      # Paramètre de modification du paramètre de distribution pour le catégorie-motif actif-accompagnement
 # EMPacc = 1      # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi-accompagnement
 # HQPro = 1       # Paramètre de modification du paramètre de distribution pour le catégorie-motif emploi HQ-professionnel
@@ -364,12 +364,16 @@ Donnees_Interz['tps_TC_SBclCM_scen'] = Path_sep(os.path.join(dir_dataScen, '2030
 # du temps TC scénario tendanciel en PPS
 Donnees_Interz['tps_VP_M_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPM_2012.txt'), '\t')
 # temps VP scénario tendanciel PPM
+#  # Pour teletravail seulement scen_ref
+# Donnees_Interz['tps_VP_M_scen'] = Path_sep(r'C:\Users\mwendwa.kiko\Documents\Teletravail_article_TRB\TVPM_ref2.txt', '\t')
 Donnees_Interz['tps_VP_C_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PCJ_2012.txt'), '\t')
 # temps VP scénario tendanciel PCJ
+
+# # Pour teletravail seulement scen_ref
+# Donnees_Interz['tps_VP_S_scen'] = Path_sep(r'C:\Users\mwendwa.kiko\Documents\Teletravail_article_TRB\TVPS_ref2.txt', '\t')
+# temps VP scénario tendanciel PPS
 Donnees_Interz['tps_VP_S_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPS_2012.txt'), '\t')
 # temps VP scénario tendanciel PPS
-# Donnees_Interz['tps_VP_S_scen'] = Path_sep(os.path.join(dir_dataAct, '191220_TVP_PPS_2012.txt'), '\t')
-# # temps VP scénario tendanciel PPS
 
 Donnees_Interz['dist_vol_scen'] = Path_sep(os.path.join(dir_dataRef, '090721_DVOL_km.txt'), '\t')
 # distance à vol d'oiseau scénario
@@ -704,6 +708,9 @@ for ligne, value in Motifs_Choix_Dist.items():
     for colonne in value:
         Duplication[ligne - 1, colonne - 1] = 1
         Duplication[ligne - 1 + 11, colonne - 1 + 14] = 1
+
+# Les communes, départements, et arrondissements auxquels appartiennent les zones MODUS
+zone_commune = Path_sep(os.path.join(dir_zonage, '130523_ZONE_COMMUNE.txt'), '\t')
 
 
 

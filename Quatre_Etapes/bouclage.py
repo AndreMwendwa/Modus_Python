@@ -8,6 +8,7 @@ from Data.fonctions_gen import ODvide_func
 from Quatre_Etapes.dossiers_simul import *
 
 
+
 # I. PRÉPARATION ET ANALYSE DES MATRICES VP
 
 # 1. Calcul des matrices d'affectation de l'itération
@@ -147,6 +148,46 @@ def boucle(par1, itern, dir_itern):
                                                                                      mat_iter('PPS', par1, itern), itern, 'PPS', dir_itern))
         mat1_S.start()
 
+def derniere_iteration(itern, dir_itern):
+    from Traitement.pp_hp import pp_hp
+    if PPM == 1:
+        pp_hp_obj = pp_hp('PPM')   # On initialize la classe qu'on utilise pour redresser nos flux
+        mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
+                                                                                     pp_hp_obj.redresse_matrice(), itern, 'PPM', dir_itern))
+        mat1_M.start()
+    if PPS == 1:
+        pp_hp_obj = pp_hp('PPS')   # On initialize la classe qu'on utilise pour redresser nos flux
+        mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(Donnees_Res[f'Version_PPS_scen'],
+                                                                                     pp_hp_obj.redresse_matrice(), itern, 'PPS', dir_itern))
+        mat1_S.start()
+
+def derniere_iteration_b(itern, dir_itern):
+    from Traitement.pp_hp import pp_hp
+    if PPM == 1:
+        pp_hp('PPM', dir_itern).redresse_matrice()   # On initialize la classe qu'on utilise pour redresser nos flux
+        dbfile = open(f'{dir_dataTemp}flux_derniere_iteration_PPM', 'rb')
+        matVP = pkl.load(dbfile)
+        mat1_M = multiprocessing.Process(name='mat1PPM', target=affect.affect, args=(Donnees_Res[f'Version_PPM_scen'],
+                                                                                     matVP, itern, 'PPM', dir_itern))
+        mat1_M.start()
+    if PPS == 1:
+        pp_hp('PPS', dir_itern).redresse_matrice()    # On initialize la classe qu'on utilise pour redresser nos flux
+        dbfile = open(f'{dir_dataTemp}flux_derniere_iteration_PPS', 'rb')
+        matVP = pkl.load(dbfile)
+        mat1_S = multiprocessing.Process(name='mat1PPS', target=affect.affect, args=(Donnees_Res[f'Version_PPS_scen'],
+                                                                                     matVP, itern, 'PPS', dir_itern))
+        mat1_S.start()
+
+def derniere_iteration_c(itern, dir_itern):
+    from Traitement.pp_hp import pp_hp
+    if PPM == 1:
+        # On initialize la classe qu'on utilise pour redresser nos flux
+        mat1_M = multiprocessing.Process(name='mat1PPM', target=pp_hp('PPM', dir_itern, itern).affect())
+        mat1_M.start()
+    if PPS == 1:
+        mat1_S = multiprocessing.Process(name='mat1PPS', target=pp_hp('PPS', dir_itern, itern).affect())
+        mat1_S.start()
+
 def data_update(par2, n):
     dbfile = open(f'{dir_dataTemp}bdinter_{n}', 'rb')
     bdinter = pkl.load(dbfile)
@@ -186,5 +227,6 @@ def data_update(par2, n):
 
 
 if __name__ == '__main__':
-    itern = 1
-    data_update(0.5, 'actuel')
+    # itern = 1
+    # data_update(0.5, 'actuel')
+    derniere_iteration_c(2, dir_iter)

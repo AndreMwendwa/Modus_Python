@@ -11,6 +11,7 @@ from Quatre_Etapes.dossiers_simul import *
 from Data.fonctions_gen import *
 from Data.A_CstesModus import *
 from Traitement.dashboard_datapane2 import dashboard_datapane
+import traceback
 # from Traitement.dashboard_streamlit import dashboard_streamlit
 # from Traitement.dashboard_datapane import dashboard_datapane
 # from dossiers_simul import *
@@ -202,7 +203,8 @@ def bouclage_func(idBcl, MaxIter):
         with open(f'{dir_dataTemp}done_affect{itern + 1}', 'wb') as dbfile:
             pkl.dump(done_affect, dbfile)
         bouclage.data_update(0, 'scen')
-        bouclage.boucle(0, itern + 1, dir_iter)
+        bouclage.boucle(0, itern + 1, dir_iter)    # HPM = PPM/4
+        # bouclage.derniere_iteration(itern + 1, dir_iter)     # HPM avec méthode de J. Perun
 
         while done_affect < PPM + PCJ + PPS:
             dbfile = open(f'{dir_dataTemp}done_affect{itern + 1}', 'rb')
@@ -283,11 +285,18 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename=f'{dir_dataTemp}{nom_simul}_log.log', level=logging.INFO)
     logging.info('Début')
-    demande('actuel', 0)
-    bouclage_func(idBcl, cNbBcl)
-    indicateurs_func()
-    print_typo()
-    dashboard_datapane()
+
+    # On met le 'try - except' block pour enregistrer les erreurs dans le log
+    try:
+        demande('actuel', 0)
+        bouclage_func(idBcl, cNbBcl)
+        indicateurs_func()
+        print_typo()
+        dashboard_datapane()
+    except:
+        erreur = traceback.format_exc()
+        logging.error(erreur)
+        print(erreur)
     logging.info('Fin')
     print('Quatre étapes de MODUS terminées')
     input("Appuyer sur 'Enter' pour fermer")

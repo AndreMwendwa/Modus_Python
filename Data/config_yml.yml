@@ -1,4 +1,4 @@
-nom_simul: Teleworking_wt_22,5       # Nom de la simulation sur laquelle tu travaille actuellement.
+nom_simul: Teleworking_induced_demand_60_test_pp_hpm_4       # Nom de la simulation sur laquelle tu travaille actuellement.
 
 # 0. Caractéristiques du zonage
 cNbZone: 1289
@@ -32,7 +32,7 @@ idBcl: 1        # identifiant d'exécution du bouclage sur la distribution (=1),
 cConv_M: 50     # critère de convergence du bouclage en HPM (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_C: 50     # critère de convergence du bouclage en HC (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
 cConv_S: 50     # critère de convergence du bouclage en HPS (ex : 100 pour le bouclage sur la dist, 30 pour le choix modal)
-cNbBcl: 10      # nombre maximum d'itérations lors du bouclage - doit être >1
+cNbBcl: 1      # nombre maximum d'itérations lors du bouclage - doit être >1
 cParTpsBcl: 0.6667      # paramètre du bouclage pour la pondération des temps des itérations n-1 et n
 cParMatBcl: 0.6667      # paramètre du bouclage pour la pondération des matrices des itérations n-1 et n
 

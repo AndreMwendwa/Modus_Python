@@ -19,23 +19,23 @@ def teletravail(n):   # Kiko - Il me semble que scen et n parlent finalement de 
     Modus_BD_zone = pd.merge(TTVAQ, Modus_BD_zone, on = 'ZONE')     # Equivalent du merge sur la ligne 22 de
     # 2_Modus entre TTVAQ et Modus.BDzone&scen
 
-    # # What was there before 01/08/22
-    # Modus_BD_zone['tauxTTVact'] = np.where(Modus_BD_zone.PACT > 0,
-    #                                 (Modus_BD_zone.PACTHQ * tauxTTVHQ + Modus_BD_zone.PACTAQ * tauxTTVAQact)/Modus_BD_zone.PACT,
-    #                                 1)      # Si Modus_BD_zone.PACT > 0, il met le résultat du calcul, sinon 1
-    # Modus_BD_zone['tauxTTVemp'] = np.where(Modus_BD_zone.PACT > 0,
-    #                                 (Modus_BD_zone.EMPHQ * tauxTTVHQ + Modus_BD_zone.EMPAQ * tauxTTVAQact)/Modus_BD_zone.PACT,
-    #                                 1)
-
-    # Change made on 01/08/22
+    # What was there before 01/08/22
     Modus_BD_zone['tauxTTVact'] = np.where(Modus_BD_zone.PACT > 0,
-                                           (
-                                                       Modus_BD_zone.PACTHQ * tauxTTVHQ + Modus_BD_zone.PACTAQ * tauxTTVAQact) / Modus_BD_zone.PACT,
-                                           1)  # Si Modus_BD_zone.PACT > 0, il met le résultat du calcul, sinon 1
-    Modus_BD_zone['tauxTTVemp'] = np.where(Modus_BD_zone.ETOT > 0,
-                                           (
-                                                       Modus_BD_zone.EMPHQ * tauxTTVHQ + Modus_BD_zone.EMPAQ * tauxTTVAQemp) / Modus_BD_zone.ETOT,
-                                           1)
+                                    (Modus_BD_zone.PACTHQ * tauxTTVHQ + Modus_BD_zone.PACTAQ * tauxTTVAQact)/Modus_BD_zone.PACT,
+                                    1)      # Si Modus_BD_zone.PACT > 0, il met le résultat du calcul, sinon 1
+    Modus_BD_zone['tauxTTVemp'] = np.where(Modus_BD_zone.PACT > 0,
+                                    (Modus_BD_zone.EMPHQ * tauxTTVHQ + Modus_BD_zone.EMPAQ * tauxTTVAQact)/Modus_BD_zone.PACT,
+                                    1)
+
+    # # Change made on 01/08/22
+    # Modus_BD_zone['tauxTTVact'] = np.where(Modus_BD_zone.PACT > 0,
+    #                                        (
+    #                                                    Modus_BD_zone.PACTHQ * tauxTTVHQ + Modus_BD_zone.PACTAQ * tauxTTVAQact) / Modus_BD_zone.PACT,
+    #                                        1)  # Si Modus_BD_zone.PACT > 0, il met le résultat du calcul, sinon 1
+    # Modus_BD_zone['tauxTTVemp'] = np.where(Modus_BD_zone.ETOT > 0,
+    #                                        (
+    #                                                    Modus_BD_zone.EMPHQ * tauxTTVHQ + Modus_BD_zone.EMPAQ * tauxTTVAQemp) / Modus_BD_zone.ETOT,
+    #                                        1)
 
     Result = pd.DataFrame()     # Nouveau variable, pas dans les fichier sas, utilisé à sauvegarder les résultats du
     # calcul
